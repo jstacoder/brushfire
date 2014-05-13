@@ -1,0 +1,10 @@
+{
+	"config": {
+		"vendor-dir": "utilities/composer/"
+	},
+	"require": {
+		"php": ">=5.3.3",
+		"ext-curl": "*",
+		"ext-json": "*",
+	}
+}

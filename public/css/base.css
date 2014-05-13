@@ -1,0 +1,287 @@
+/*+	reset {*/
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+tt, var,
+dl, dt, dd, 
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+/*+ }*/
+
+
+/*+	system messaaages {*/
+.error{
+	border-color:red;
+}
+#body .errorHighlight, .error{
+	background-color:rgba(255,230,230,.9);
+	color:#d00;
+}
+.success{
+	border-color:green;
+}
+#body .successHighlight, .success{
+	background-color:rgba(230,255,230,.9);
+	color:#0d0;
+}
+.notice{
+	border-color:blue;
+}
+#body .noticeHighlight, .notice{
+	background-color:rgba(230,230,255,.9);
+	color:#00d;
+}
+.warning{
+	border-color:orange;
+}
+#body .warningHighlight, .warning{
+	background-color:rgba(255,251,240,.9);
+	color:#ca0;
+}
+
+.message{
+	border-style: solid;
+	border-width: 1px;
+	padding:5px 20px 5px 10px;
+	margin:5px;
+	overflow:auto;
+}
+/*+	}*/
+
+
+
+.ln{
+	cursor:pointer;
+}
+
+
+/*+	standard table and table sort{*/
+
+table.standard{
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border-collapse: collapse;
+	text-align: left;
+}
+table.standard th{
+	padding: 8px 8px;
+}
+table.standard > tbody > tr > td{
+	padding: 6px 8px;
+}
+table.standard > tbody > tr:nth-child(2n){
+	background-color:rgba(240,240,240,.1);
+}
+
+
+.sortContainer *[data-field]{
+	background-image: url("/clr/img/style/sortBoth.png");
+	background-position: right center;
+	background-repeat: no-repeat;
+	cursor: pointer;
+}
+
+
+.sortContainer .sortAsc {
+    background-image: url("/clr/img/style/sortAsc.png");
+}
+.sortContainer .sortDesc{
+    background-image: url("/clr/img/style/sortDesc.png");
+}
+/*+	}*/
+
+
+/*+	paginater{*/
+.paginater{
+	margin:10px 5px 2px 5px;
+	height:30px;
+	padding-left:10px;
+	padding-right:10px;
+	vertical-align:middle;
+	min-width:800px;
+}
+
+.paginater .first, .paginater .prev, .paginater .pg, .paginater .next, .paginater .last, .paginater .range{
+	float:left;
+}
+.paginater .first, .paginater .prev, .paginater .pg, .paginater .next, .paginater .last, .paginater .range{
+	float:left;
+}
+.paginater .direct, .paginater .go{
+	float:right;
+}
+.paginater .prev.clk{
+	margin-right:10px;
+}
+.paginater .next.clk{
+	margin-left:10px;
+}
+.paginater .clk{
+	border-radius: 4px 4px 4px 4px;
+	background-color:#eee;
+	padding:0px 5px 0px 5px;
+	margin-left:2px;
+    height: 22px;
+    line-height:22px;
+    cursor:pointer;
+}
+.paginater .clk.pg.current{
+	background-color:#ccf;
+}
+
+.paginater .clk:hover{
+	background-color:#ddf;
+}
+.paginater .clk:active{
+	background-color:#99f;
+	color:#fff;
+}
+
+.paginater .clk.disabled{
+	background-color:#ddd;
+	color:#a9a9a9;
+	cursor:default;
+}
+.paginater .clk.disabled:hover{
+	background-color:#ddd;
+	color:#a9a9a9;
+}
+.paginater .clk.disabled:active{
+	background-color:#ddd;
+	color:#a9a9a9;
+}
+
+.paginater .range{
+	padding:0px 5px 0px 5px;
+	height: 22px;
+    line-height:22px;
+	padding-left:20px;
+}
+.paginater .range span{
+	vertical-align:middle;
+	display:inline;
+}
+.paginater .direct input{
+	width:30px;
+}
+.paginater .range .current,.paginater .range .total{
+	font-weight:bold;
+}
+/*+	}*/
+/*+	Tool tip {*/
+.tooltipMarker{
+	padding-left:8px;
+	position:relative;
+	top:3px;
+	cursor:pointer;
+	color:blue;
+	display:inline-block;
+	vertical-align:top;
+	font-size:7pt;
+}
+.tooltip{
+	position:absolute;
+	background:#DDF3FA;
+	padding:10px;
+	border:3px solid rgba(27,133,165,0.2);
+	max-width:500px;
+	color:black;
+	z-index:1000;
+	display:none;
+	border-radius:10px 10px 10px 10px;
+	opacity:0.9;
+}
+/*+	}*/
+
+.closeButton{
+	float:right;
+	padding-left:10px;
+	cursor:pointer;
+	background-image: url("/clr/img/closeButton.png");
+	background-position: right center;
+	background-repeat: no-repeat;
+	background-size: 16px 16px;
+	width:16px;
+	height:16px;
+	opacity:0.6;
+	filter:alpha(opacity=60); /* For IE8 and earlier */
+}
+
+body input[name="directPg"]{
+	padding:0px;
+	margin:0px;
+	line-height:1;
+}
+
+h1{
+	font-size:22px;
+}
+h2{
+	font-size:20px;
+}
+h3{
+	font-size:18px;
+}
+h4{
+	font-size:16px;
+}
+
+section > main {
+	clear:both;
+	padding-left:5px;
+}
+main{
+	font-size:13px;
+}
+section section {
+	padding-left:30px;
+}
+section section section{
+	padding-left:60px;
+}
+
+/*+	form looks {*/
+.button,input[type=submit]{
+	margin:4px 0 4px 0;
+	padding: 5px 10px 5px 10px;
+	font-weight:bold;
+	text-decoration:none;
+	line-height:33px;
+}
+a.button:hover,.button:hover, input[type=submit]:hover{
+	cursor:pointer;
+}
+
+/*+	}*/

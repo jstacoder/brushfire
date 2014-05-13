@@ -1,0 +1,82 @@
+.ln{
+	color:#00f;
+}
+
+/*+	form looks {*/
+.button,input[type=submit]{
+	margin:4px 0 4px 0;
+	padding: 5px 10px 5px 10px;
+	border: 2px solid #ff9100;
+	background-color:#ff9100;
+	font-weight:bold;
+	border-radius:10px;
+	color:white;
+	text-shadow: 0px 1px 1px #da1;
+	text-decoration:none;
+	line-height:33px;
+}
+a.button:visited{
+	color:white;
+}
+.button:active,input[type=submit]:active{
+	transition:all 0.2s ease;
+	transform: translate(2px, 2px);
+}
+a.button:hover,.button:hover, input[type=submit]:hover{
+	background-color:#ffb000;
+	border: 2px solid #ffb000;
+	cursor:pointer;
+}
+
+/*+	}*/
+
+
+
+/*+	system messaaages {*/
+.message{
+	padding:5px 20px 5px 28px;
+	background-repeat:no-repeat;
+	background-position:14px 2px;
+	background-size:8px 26px;
+	-webkit-border-radius: 0px 50px 50px 50px;
+	border-radius: 30px 50px 50px 30px; 
+}
+
+.error{
+	background-image:url('/public/img/40px-Important-3.svg.png');
+}
+.warning{
+	background-image:url('/public/img/40px-Important-2.svg.png');
+}
+.success{
+	background-image:url('/public/img/40px-Important-1.svg.png');
+}
+.notice{
+	background-image:url('/public/img/40px-Important-0.svg.png');
+}
+/*+	}*/
+
+
+/*+	standard table and table sort{*/
+
+table.standard{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 12px;
+	background: #fff;
+	border:1px solid #eef;
+}
+table.standard th{
+	font-size: 14px;
+	font-weight: normal;
+	color: #039;
+	border-bottom: 2px solid #6678b1;
+	background-color: #eef;
+}
+table.standard > tbody > tr > td{
+	border-bottom: 1px solid #ccc;
+	color: #669;
+}
+table.standard > tbody > tr:nth-child(2n){
+	background-color: #f3f3f3;
+}
+/*+	}*/
