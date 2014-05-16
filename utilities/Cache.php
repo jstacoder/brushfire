@@ -10,41 +10,30 @@ Underlying cache functions
 */
 
 class Cache{
-	use SDLL;
-	/// reference to underlying Cacher instance (ie, memcached)
-	public $cacher;	
+	use IFSDLL{	IFSDLL::load as IFSDLL_load; }
+
+	static $types = array('memcache'=>'Memcacher','apc'=>'ApCacher');
 	/**
+	@param	type	see static types variable
 	@param	connectionInfo	array:
 		@verbatim
 	 [
 		[ip/name,port,weight]
 	]
 	*/
-	function __construct($connectionInfo){
-		$this->connectionInfo = $connectionInfo;
-	}
 	function load(){
-		$this->cacher = new Memcached;
-		if(!is_array(current($this->connectionInfo))){
-			$this->connectionInfo = array($this->connectionInfo);
-		}
-		foreach($this->connectionInfo as $v){
-			if(!$this->cacher->addserver($v[0],$v[1],$v[2])){
-				Debug::quit('Failed to add cacher',$v);
-			}
-		}
-		$this->cacher->set('on',1);
-		if(!$this->cacher->get('on')){
-			Debug::toss('Failed to get cache','CacheException');
+		call_user_func_array([$this,'IFSDLL_load'],func_get_args());
+		if(!$this->check()){
+			Debug::toss('Failed to get check cache',__CLASS__.'Exception');
 		}
 	}
-	function __call($fnName,$args){
-		if(method_exists(__class__,$fnName)){
-			return parent::__call($fnName,$args);
-		}elseif(method_exists($this->db,$fnName)){
-			return call_user_func_array(array($this->cacher,$fnName),$args);
+	///sees if cache is working
+	protected function check(){
+		$this->under->set('on',1);
+		if(!$this->under->get('on')){
+			return false;
 		}
-		Debug::error(__class__.' Method not found: '.$fnName);
+		return true;
 	}
 	///updateGet for getting and potentially updating cache
 	/**
@@ -67,7 +56,7 @@ class Cache{
 	@param additional	any additinoal args are passed to the updateFunction
 	*/
 	protected function uGet($name,$updateFunction,$options){
-		$times = $this->cacher->get($name.':|:update:times',null,$casToken);
+		$times = $this->under->get($name.':|:update:times',null,$casToken);
 		if($times){
 			if(time() > $times['nextUpdate']){
 				if($options['timeout']){
@@ -75,12 +64,12 @@ class Cache{
 				}else{
 					$times = self::uTimes($options);
 				}
-				if($this->cacher->cas($casToken,$name.':|:update:times',$times,$times['nextExpiry'])){
+				if($this->under->cas($casToken,$name.':|:update:times',$times,$times['nextExpiry'])){
 					return self::uSet($name,$updateFunction,$options,array_slice(func_get_args(),3));
 				}
 			}
-			$value = $this->cacher->get($name);
-			if($this->cacher->getResultCode() == Memcached::RES_SUCCESS){
+			$value = $this->under->get($name);
+			if($value !== false){
 				return $value;
 			}
 		}
@@ -89,9 +78,9 @@ class Cache{
 	protected function uSet($name,$updateFunction,$options,$args){
 		$times = self::uTimes($options);
 		$value = call_user_func_array($updateFunction,$args);
-		$this->cacher->set($name,$value,$times['nextExpiry']);
-		$this->cacher->set($name.':|:update:times',$times,$times['nextExpiry']);
-		$this->cacher->set('bobs','sue',$times['nextExpiry']);
+		$this->under->set($name,$value,$times['nextExpiry']);
+		$this->under->set($name.':|:update:times',$times,$times['nextExpiry']);
+		$this->under->set('bobs','sue',$times['nextExpiry']);
 		return $value;
 	}
 	///generates all times necessary for uget functions
@@ -114,13 +103,36 @@ class Cache{
 	///local get, to save calls to memcached
 	protected function lGet($key){
 		if(!$this->local[$key]){
-			$this->local[$key] = $this->get($key);
+			$this->local[$key] = $this->under->get($key);
 		}
 		return $this->local[$key];
 	}
 	///local variable does not expire
 	protected function lSet($key,$value,$expiry){
 		$this->local[$key] = $value;
-		$this->set($key,$value,$expiry);
+		$this->under->set($key,$value,$expiry);
 	}
+}
+class Memcacher extends Cache{
+	public $_success = true;
+	function __construct($connectionInfo=null){
+		$this->connectionInfo = $connectionInfo;
+		if(!class_exists('Memcached') || !$connectionInfo){
+			$this->_success = false;
+		}
+	}
+	function load(){
+		$this->under = $this->cacher = new Memcached;
+		if(!is_array(current($this->connectionInfo))){
+			$this->connectionInfo = array($this->connectionInfo);
+		}
+		foreach($this->connectionInfo as $v){
+			if(!$this->cacher->addserver($v[0],$v[1],$v[2])){
+				Debug::toss('Failed to add cacher "'.$name.'"',__CLASS__.'Exception');
+			}
+		}
+	}
+}
+class ApCacher extends Cache{
+	public $_success = false;
 }

@@ -17,7 +17,8 @@ class Debug{
 		$type = $type ? $type : E_USER_ERROR;
 		trigger_error($error, $type);
 	}
-	static function toss($message,$type='Exception',$code=0,$previous=null){
+	///throws variable class exception
+	static function toss($message=null,$type='Exception',$code=0,$previous=null){
 		if(!Autoload::loaded($type)){
 			eval('class '.$type.' extends Exception{}');
 		}
@@ -209,13 +210,15 @@ class Debug{
 		exit;
 		
 	}
+	/// don't use class::__toString method on self::toString
+	static $ignoreToString = false;
 	///since var_export fails on objects pointing at each other, and var_dump is unreadable
 	/**
 	@param	objectMaxDepth	objectDepth at which function will no longer parse or show object attributes
 	*/
 	static function toString($variable,$objectMaxDepth=2,$depth=0,$objectDepth=0){
 		if(is_object($variable)){
-			if(method_exists($variable,'__toString')){
+			if(method_exists($variable,'__toString') && !self::$ignoreToString){
 				return (string)$variable;
 			}else{
 				if($objectDepth < $objectMaxDepth){

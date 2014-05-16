@@ -14,6 +14,11 @@ trait testCall{
 		}
 		return call_user_func_array(array($this,$fnName),$args);
 	}
+	function __methodExists($fnName){
+		if(!method_exists($this,$fnName)){
+			Debug::error(get_called_class().' Method not found: '.$fnName);
+		}
+	}
 }
 
 /**
@@ -97,4 +102,83 @@ trait SDLL{
 		return $this->__testCall($fnName,$args);
 	}
 	abstract function load();
+}
+/**
+The pattern: Pass in type to generic class, and henceforth generic class uses instance of class mapped to type.  Used b/c can't monkey patch and rewrite class.
+@note the overlayed class object, the under object, should have a public $_success to indicate whether to try next preference (on case of success = false)
+When combined with SDLL:
+	use SDLL, InlineFactory {
+			InlineFactory::__call as __testCall;
+			InlineFactory::__testCall insteadof SDLL;
+			SDLL::__construct insteadof InlineFactory;
+		}
+
+*/
+trait InlineFactory{
+	static $types;
+	
+	function __construct($typePreferences=null){
+		call_user_func_array([$this,'load'],func_get_args());
+	}
+	/**
+		@param	$typePreferences [type,...]
+	*/
+	function load($typePreferences=null){
+		$this->typePreferences = $typePreferences ? (array)$typePreferences : $this->typePreferences;
+		foreach((array)$this->typePreferences as $type){
+			if(self::$types[$type]){
+				$class = new ReflectionClass(self::$types[$type]);
+				$this->under = $class->newInstanceArgs(array_slice(func_get_args(),1));
+				if($this->under->_success){
+					Debug::toLog($type);
+					$this->type = $type;
+					break;
+				}
+			}
+		}
+		if(!$this->under){
+			Debug::toss(__class__.' Failed to get under with preferences: '.Debug::toString($this->typePreferences));
+		}
+	}
+	function __call($fnName,$args){
+		Debug::toLog([__class__,$fnName,$args]);
+		if(method_exists($this,$fnName)){
+			return call_user_func_array(array($this,$fnName),$args);
+		}elseif(method_exists($this->under,$fnName)){
+			return call_user_func_array(array($this->under,$fnName),$args);
+		}elseif(method_exists($this->under,'__call')){//under may have it's own __call handling
+			return call_user_func_array(array($this->under,$fnName),$args);
+		}
+		Debug::toss(__class__.' Method not found: '.$fnName);
+	}
+}
+
+///Inline Factor Lazy Loader
+trait IFSDLL{
+	use SingletonDefault, InlineFactory {
+		InlineFactory::__call as IF_call;
+		SingletonDefault::__call insteadof InlineFactory;
+		}
+	public $loaded = false;
+	public $constructArgs = array();
+	function __construct(){
+		$this->constructArgs = func_get_args();
+		call_user_func_array([$this,'load'],$this->constructArgs);
+	}
+	function __get($name){
+		//load if not loaded
+		if(!$this->loaded){
+			call_user_func_array(array($this,'load'),(array)$this->constructArgs);
+			$this->loaded = true;
+		}
+		return $this->$name;
+	}
+	function __call($fnName,$args){
+		//load if not loaded
+		if(!$this->loaded){
+			call_user_func_array(array($this,'load'),(array)$this->constructArgs);
+			$this->loaded = true;
+		}
+		return $this->IF_call($fnName,$args);
+	}
 }

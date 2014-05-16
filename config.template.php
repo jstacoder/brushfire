@@ -74,8 +74,6 @@ $config['errorDetail'] = 2;
 $config['displayErrors'] = true;
 ///the view page used by the system to display user level errors on
 $config['errorPage'] = 'view/templates/error.php';
-///whether to throw error or exit on error
-$config['throwErrors'] = 'view/templates/error.php';
 
 //+	}
 //+	Session config {

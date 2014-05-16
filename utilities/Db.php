@@ -9,16 +9,15 @@
 			@param	select	a select array.	See the Db::select function
 			@endverbatim
 	- protected functions are still callable due to __call and __callStatic
+	
+	@note public $db, the underlying PDO instance, set on lazy load
 */
 class Db{
 	use SDLL;
-	/// reference to underlying PDO instance
-	public $db;
 	/// latest result set returning from $db->query()
 	public $result;
 	/// last SQL statement
-	static $lastSql;			
-	
+	public $lastSql;
 	/**
 	@param	connectionInfo	array:
 		@verbatim
@@ -47,7 +46,6 @@ array(
 			#$this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
 		}
 	}
-
 	/// returns escaped string with quotes.	Use on values to prevent injection.
 	/**
 	@param	v	the value to be quoted
@@ -55,7 +53,10 @@ array(
 	protected function quote($v){
 		return $this->db->quote($v);
 	}
-	
+	/// return last run sql
+	protected function getLastSql(){
+		return $this->lastSql;
+	}
 	/// perform database query
 	/**
 	@param	sql	the sql to be run
@@ -65,7 +66,7 @@ array(
 		if($this->result){
 			$this->result->closeCursor();
 		}
-		self::$lastSql = $sql;
+		$this->lastSql = $sql;
 		$this->result = $this->db->query($sql);
 		if((int)$this->db->errorCode()){
 			$error = $this->db->errorInfo();
@@ -213,44 +214,50 @@ array(
 	/// internal use.	Key to value formatter (used for where clauses and updates)
 	/**
 	@param	kvA	various special syntax is applied:
-		- normally, sets key = to value, like "key = 'value'" with the value escaped
-		- if "?" is in the key, the part after the "?" will server as the "equator", ("bob?<>"=>'sue') -> "bob <> 'sue'"
-		- if key starts with ":", value is not escaped
-			- if value is "null", on where prefix with "is".	
-			- if value = null (php null), set string to null
-		- if value = null, set value to unescaped "null"
+		normally, sets key = to value, like "key = 'value'" with the value escaped
+		if key starts with '"', unescaped value taken as entire where line
+			ex: ['"':'1=1']
+		if "?" is in the key, the part after the "?" will serve as the "equator", ("bob?<>"=>'sue') -> "bob <> 'sue'"
+		if key starts with ":", value is not escaped
+			if value is "null", on where prefix with "is".	
+			if value = null (php null), set string to null
+		if value = null, set value to unescaped "null"
 	@param	type	1 = where, 2 = update
 	*/
 	protected function ktvf($kvA,$type=1){		
 		foreach($kvA as $k=>$v){
-			if(strpos($k,'?')!==false){
-				preg_match('@(^[^?]+)\?([^?]+)$@',$k,$match);
-				$k = $match[1];
-				$equator = $match[2];
+			if($k[0]=='"'){
+				$kvtA[] = $v;
 			}else{
-				$equator = '=';
-			}
-			
-			if($k[0]==':'){
-				$k = substr($k,1);
-				if($v == 'null' || $v === null){
+				if(strpos($k,'?')!==false){
+					preg_match('@(^[^?]+)\?([^?]+)$@',$k,$match);
+					$k = $match[1];
+					$equator = $match[2];
+				}else{
+					$equator = '=';
+				}
+				
+				if($k[0]==':'){
+					$k = substr($k,1);
+					if($v == 'null' || $v === null){
+						if($type == 1){
+							$equator = 'is';
+						}
+						$v = 'null';
+					}
+				}elseif($v === null){
 					if($type == 1){
 						$equator = 'is';
 					}
 					$v = 'null';
+				}else{
+					$v = $this->quote($v);
 				}
-			}elseif($v === null){
-				if($type == 1){
-					$equator = 'is';
-				}
-				$v = 'null';
-			}else{
-				$v = $this->quote($v);
+				$k = self::quoteIdentity($k);
+				$kvtA[] = $k.' '.$equator.' '.$v;
 			}
-			$k = self::quoteIdentity($k);
-			$kvtA[] = $k.' '.$equator.' '.$v;
 		}
-		return $kvtA;
+		return (array)$kvtA;
 	}
 	///so as to prevent the column, or the table prefix from be mistaken by db as db construct, quote the column
 	protected function quoteIdentity($identity){
@@ -272,7 +279,9 @@ array(
 	@note if the where clause does not exist, function will just return nothing; this generally leads to an error
 	*/
 	protected function where($where){
-		if(is_array($where)){
+		if(!$where){
+			return;
+		}elseif(is_array($where)){
 			$where = implode("\n\tAND ",$this->ktvf($where));
 		}elseif(!$where  && !Tool::isInt($where)){
 			return;
@@ -461,7 +470,7 @@ array(
 	@return sql string
 	@note	this function is just designed for simple queries
 	*/
-	protected function select($from,$where,$columns='*',$order=null,$limit=null){
+	protected function select($from,$where=null,$columns='*',$order=null,$limit=null){
 		if(is_array($from)){
 			$from = '"'.implode('", "',$from).'"';
 		}elseif(strpos($from,' ') === false){//ensure no space; don't quote a from statement
