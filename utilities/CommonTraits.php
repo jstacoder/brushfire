@@ -106,13 +106,6 @@ trait SDLL{
 /**
 The pattern: Pass in type to generic class, and henceforth generic class uses instance of class mapped to type.  Used b/c can't monkey patch and rewrite class.
 @note the overlayed class object, the under object, should have a public $_success to indicate whether to try next preference (on case of success = false)
-When combined with SDLL:
-	use SDLL, InlineFactory {
-			InlineFactory::__call as __testCall;
-			InlineFactory::__testCall insteadof SDLL;
-			SDLL::__construct insteadof InlineFactory;
-		}
-
 */
 trait InlineFactory{
 	static $types;
@@ -130,7 +123,6 @@ trait InlineFactory{
 				$class = new ReflectionClass(self::$types[$type]);
 				$this->under = $class->newInstanceArgs(array_slice(func_get_args(),1));
 				if($this->under->_success){
-					Debug::toLog($type);
 					$this->type = $type;
 					break;
 				}
@@ -141,7 +133,6 @@ trait InlineFactory{
 		}
 	}
 	function __call($fnName,$args){
-		Debug::toLog([__class__,$fnName,$args]);
 		if(method_exists($this,$fnName)){
 			return call_user_func_array(array($this,$fnName),$args);
 		}elseif(method_exists($this->under,$fnName)){
@@ -153,7 +144,7 @@ trait InlineFactory{
 	}
 }
 
-///Inline Factor Lazy Loader
+///Inline Factory Lazy Loader
 trait IFSDLL{
 	use SingletonDefault, InlineFactory {
 		InlineFactory::__call as IF_call;
