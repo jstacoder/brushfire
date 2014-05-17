@@ -1,17 +1,17 @@
 <?
-class ViewTool{
+class ViewCmn{
 	static $formFieldTypes = array(
 			'phone'=>'text'
 		);
-	///used to apply formatting for display of form value.  PageTool functions will override if PageTool::$formFieldTypes[key] present.
+	///used to apply formatting for display of form value.  SectionPage functions will override if SectionPage::$formFieldTypes[key] present.
 	///first argument is type, the rest get passed on to the form function
 	static function get(){
 		$arguments = func_get_args();
 		$type = array_shift($arguments);
 		
-		if(isset(PageTool::$formFieldTypes)  && PageTool::$formFieldTypes[$type]){
-			Form::$valueCallbacks[] = array(PageTool,$type);
-			$method = PageTool::$formFieldTypes[$type];
+		if(isset(SectionPage::$formFieldTypes)  && SectionPage::$formFieldTypes[$type]){
+			Form::$valueCallbacks[] = array(SectionPage,$type);
+			$method = SectionPage::$formFieldTypes[$type];
 		}else{
 			Form::$valueCallbacks[] = array(__class__,$type);
 			$method = self::$formFieldTypes[$type];

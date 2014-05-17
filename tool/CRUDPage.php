@@ -82,7 +82,7 @@ class CRUDPage{
 	///Add a CRUD concern to the $this->crud var
 	/**
 	Occasionally, there are interested besides the normal CRUMD.  And, in this case, it may be desired to add that interested within
-	the PageTool representing that interest
+	the SectionPage representing that interest
 	*/
 	function addConcern($concernData = null){
 		$this->lastConcern = $concern = $this->lastConcern*2;

@@ -4,10 +4,10 @@
 	Will default to use all table columns, and select from the input that which is avaible (set), but can be modified to use only certain columns.  
 */
 class CRUDModel{
-	function __construct($pageTool){
-		$this->PageTool = $pageTool;
-		$this->page = $this->PageTool->page;
-		$this->db = $pageTool->db;
+	function __construct($sectionPage){
+		$this->SectionPage = $sectionPage;
+		$this->page = $this->SectionPage->page;
+		$this->db = $sectionPage->db;
 	}
 	function columns($table){
 		if(!$this->columns[$table]){
@@ -17,8 +17,8 @@ class CRUDModel{
 	}
 	//determine various filters and validators based on database columns
 	function handleColumns(){
-		$columns = self::columns($this->PageTool->model['table']);
-		$usedColumns = $this->PageTool->model['columns'] ? $this->PageTool->model['columns'] : array_keys($columns);
+		$columns = self::columns($this->SectionPage->model['table']);
+		$usedColumns = $this->SectionPage->model['columns'] ? $this->SectionPage->model['columns'] : array_keys($columns);
 		
 		//create validation and deal with special columns
 		foreach($usedColumns as $column){
@@ -30,7 +30,7 @@ class CRUDModel{
 			}elseif($column == 'id'){
 				$validaters[$column][] = 'f:toString';
 				$validaters[$column][] = '?!v:filled';
-				$validaters[$column][] = '!v:existsInTable|'.$this->PageTool->model['table'];
+				$validaters[$column][] = '!v:existsInTable|'.$this->SectionPage->model['table'];
 			}else{
 				$validaters[$column][] = 'f:toString';
 				if(!$columns[$column]['nullable']){
@@ -75,25 +75,25 @@ class CRUDModel{
 	
 	function validate(){
 		$this->handleColumns();
-		if(method_exists($this->PageTool,'validate')){
-			$this->PageTool->validate();
+		if(method_exists($this->SectionPage,'validate')){
+			$this->SectionPage->validate();
 		}
-		//CRUD standard validaters come after due to them being just the requisite validaters for entering db; input might be changed to fit requisite by PageTool validaters.
+		//CRUD standard validaters come after due to them being just the requisite validaters for entering db; input might be changed to fit requisite by SectionPage validaters.
 		if($this->validaters){
 			$this->page->filterAndValidate($this->validaters);
 		}
 		return !$this->page->errors();
 	}
 	
-	//only run db changer functions if $this->PageTool->model['table'] available
+	//only run db changer functions if $this->SectionPage->model['table'] available
 	function create(){
 		if($this->validate()){
 			//since used keys can be dynamically generated, if the input does not contain a matching key, do not set it on the insert or update.  
 			// However, if the key exists but the value is null, the update and insert should include this key with value null
 			$this->insert = Arrays::extract($this->usedColumns,$this->page->in,$x=null,false);
 			unset($this->insert['id']);
-			$this->PageTool->insert = $this->insert;
-			$this->PageTool->id = $id = Db::insert($this->PageTool->model['table'],$this->insert);
+			$this->SectionPage->insert = $this->insert;
+			$this->SectionPage->id = $id = Db::insert($this->SectionPage->model['table'],$this->insert);
 			return $id;
 		}
 	}
@@ -101,19 +101,19 @@ class CRUDModel{
 		if($this->validate()){
 			$this->update = Arrays::extract($this->usedColumns,$this->page->in,$x=null,false);
 			unset($this->update['id']);
-			$this->PageTool->update = $this->update;
-			Db::update($this->PageTool->model['table'],$this->update,$this->PageTool->id);
+			$this->SectionPage->update = $this->update;
+			Db::update($this->SectionPage->model['table'],$this->update,$this->SectionPage->id);
 			return true;
 		}
 	}
 	///standardized to return id
 	function delete(){
-		if(Db::delete($this->PageTool->model['table'],$this->PageTool->id)){
-			return $this->PageTool->id;
+		if(Db::delete($this->SectionPage->model['table'],$this->SectionPage->id)){
+			return $this->SectionPage->id;
 		}
 	}
 	function read(){
-		if($this->PageTool->item = Db::row($this->PageTool->model['table'],$this->PageTool->id)){
+		if($this->SectionPage->item = Db::row($this->SectionPage->model['table'],$this->SectionPage->id)){
 			return true;
 		}
 		if(Config::$x['CRUDbadIdCallback']){

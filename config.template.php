@@ -106,10 +106,10 @@ $config['cryptKey'] = $config['projectName'];
 ///a list of directories to search recursively.  See Doc:Autoload Includes
 $config['autoloadIncludes'] = array(
 		'default'=>array(
-			$config['systemFolder'].'utilities/',
-			array($config['projectFolder'].'utilities/',array('moveDown'=>true,'stopPath'=>$config['projectFolder'].'utilities/section/')),
-			$config['systemFolder'].'view/utilities/',
-			array($config['projectFolder'].'view/utilities/',array('moveDown'=>true,'stopPath'=>$config['projectFolder'].'view/utilities/section/')),
+			$config['systemFolder'].'tool/',
+			array($config['projectFolder'].'tool/',array('moveDown'=>true,'stopFolders'=>['section','module'])),
+			$config['systemFolder'].'view/tool/',
+			array($config['projectFolder'].'view/tool/',array('moveDown'=>true,'stopFolders'=>['section','module'])),
 			'/www/composer/',
 		),
 	);

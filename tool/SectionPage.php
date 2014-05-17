@@ -1,5 +1,5 @@
 <?
-///Fallback used in case page has no PageTool utility
+///Fallback used in case page has no specific SectionPage tool
 
 
 //attempt to autoload setion if it is available
@@ -9,7 +9,7 @@ try{
 
 //if section found, use it
 if(class_exists('Section',false)){
-	class PageTool extends Section{
+	class SectionPage extends Section{
 		function __construct($page){
 			$this->page = $page;
 			$this->in =& $page->in;
@@ -20,7 +20,7 @@ if(class_exists('Section',false)){
 		}
 	}
 }else{
-	class PageTool{
+	class SectionPage{
 		static $model,$id;
 		function __construct($page){
 			$this->page = $page;

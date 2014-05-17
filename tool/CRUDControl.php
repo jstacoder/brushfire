@@ -2,13 +2,13 @@
 ///Create Read Update Delete general class
 class CRUDControl{
 	use SingletonDefault;
-	function __construct($pageTool=null){
-		$this->PageTool = $pageTool;
-		if(!$this->PageTool){
+	function __construct($sectionPage=null){
+		$this->SectionPage = $sectionPage;
+		if(!$this->SectionPage){
 			global $page;
-			$this->PageTool = $page->tool;
+			$this->SectionPage = $page->tool;
 		}
-		$this->page = $this->PageTool->page;
+		$this->page = $this->SectionPage->page;
 	}
 	function __call($fnName,$args){
 		if(in_array($fnName,array('create','update','delete','read'))){
@@ -43,16 +43,16 @@ class CRUDControl{
 		if(!$subcommand){
 			$subcommand = $this->page->in['_cmd_'.$command];
 		}
-		if(method_exists($this->PageTool,$command.'_'.$subcommand)){
-			return array($this->PageTool,$command.'_'.$subcommand);
-		}elseif(method_exists($this->PageTool,$command)){
-			return array($this->PageTool,$command);
-		}elseif(isset($this->PageTool->model) 
-			&& $this->PageTool->model['table'] 
-			&& $this->PageTool->CRUDModel
-			&& method_exists($this->PageTool->CRUDModel,$command)
+		if(method_exists($this->SectionPage,$command.'_'.$subcommand)){
+			return array($this->SectionPage,$command.'_'.$subcommand);
+		}elseif(method_exists($this->SectionPage,$command)){
+			return array($this->SectionPage,$command);
+		}elseif(isset($this->SectionPage->model) 
+			&& $this->SectionPage->model['table'] 
+			&& $this->SectionPage->CRUDModel
+			&& method_exists($this->SectionPage->CRUDModel,$command)
 		){
-			return array($this->PageTool->CRUDModel,$command);
+			return array($this->SectionPage->CRUDModel,$command);
 		}
 		return false;
 	}

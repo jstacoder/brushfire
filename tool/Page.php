@@ -1,5 +1,5 @@
 <?
-///Used for getting data from utilities (called in the control) to templates
+///Used for getting data from model (called in the control) to templates
 /**
 The philosophy:
 	Any server response which would normally engage the need for subdata collection (ie, not just outputting static html or images) is considered a "Page" response.
@@ -84,17 +84,17 @@ class Page{
 
 	}
 	/**
-	-Concerns not exposed to PageTool expect relavent data to be in Page, but, for convenience, PageTool writes to itself, so, if data is not in page, check PageTool.
+	-Concerns not exposed to SectionPage expect relavent data to be in Page, but, for convenience, SectionPage writes to itself, so, if data is not in page, check SectionPage.
 	*/
 	function __get($name){
 		if($name == 'tool'){
-			return $this->constructPageTool();
+			return $this->constructSectionPage();
 		}
 		return $this->tool->$name;
 	}
-	///various often used resources should be immediately available to PageTool
-	protected function constructPageTool($additional=null){
-		$this->tool = new PageTool($this,$additional);
+	///various often used resources should be immediately available to SectionPage
+	protected function constructSectionPage($additional=null){
+		$this->tool = new SectionPage($this,$additional);
 		if(!isset($this->tool->page)){
 			$this->tool->page = $this;
 			$this->tool->in =& $this->in;
@@ -191,7 +191,7 @@ class Page{
 				"v:name|param1;param2" indicates InputValidate function
 				"g:name|param1;param2" indicates global scoped function
 				"class:name|param1,param2,param3" indicates static method "name: of class "class" 
-				"p:name|param1,param2,param3" PageTool function
+				"p:name|param1,param2,param3" SectionPage function
 				"name" replaced by FieldIn fieldType of the same name
 		As an array, the rule function part (type:method) is the first element, and the parameters to the function part are the following elements.  Useful if function arguments contain commas or semicolons.  Ex:
 			array('type:method','arg1','arg2','arg3')

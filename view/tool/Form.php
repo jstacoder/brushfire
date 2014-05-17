@@ -93,9 +93,9 @@ class Form{
 			FieldIn::makeString($value);
 		}
 		
-		//PageTool integration with Form for field form output (use with FieldOut to format form fields)
-		if(isset(PageTool::$fieldOut) && PageTool::$fieldOut[$name]){
-			call_user_func_array(PageTool::$fieldOut[$name],array(&$value));
+		//SectionPage integration with Form for field form output (use with FieldOut to format form fields)
+		if(isset(SectionPage::$fieldOut) && SectionPage::$fieldOut[$name]){
+			call_user_func_array(SectionPage::$fieldOut[$name],array(&$value));
 		}
 		
 		return $value;

@@ -118,9 +118,9 @@ class Autoload{
 			return;
 		}elseif($excludePaths[$path]){
 			return;
-		}elseif(isset($options['stopPath']) && in_array($path,$options['stopPath'])){
+		}elseif(isset($options['stopPaths']) && in_array($path,$options['stopPaths'])){
 			return;
-		}elseif(isset($options['stopFolder']) && in_array(dirname($path),$options['stopFolder'])){
+		}elseif(isset($options['stopFolders']) && in_array(dirname($path),$options['stopFolders'])){
 			return;
 		}
 		
@@ -158,16 +158,16 @@ class Autoload{
 		}
 	}
 	
-	///adds folder PageTool is expected in
+	///adds folder SectionPage is expected in
 	protected function addSectionResources(){		
 		$section = implode('/',Route::$urlTokens).'/';
-		$base = Config::$x['projectFolder'].'utilities/section/';
+		$base = Config::$x['projectFolder'].'tool/section/';
 		array_unshift($this->nsF['default'],array(
-				$base.$section, array('moveUp'=>true, 'stopPath' => $base)
+				$base.$section, array('moveUp'=>true, 'stopPath' => [$base])
 			));
-		$base = Config::$x['projectFolder'].'view/utilities/section/';
+		$base = Config::$x['projectFolder'].'view/tool/section/';
 		array_unshift($this->nsF['default'],array(
-				$base.$section, array('moveUp'=>true, 'stopPath' => $base)
+				$base.$section, array('moveUp'=>true, 'stopPath' => [$base])
 			));
 		$this->addSection = false;
 	}

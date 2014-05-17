@@ -43,7 +43,7 @@ class Route{
 		self::routeRequest();
 		Hook::run('prePage');
 	
-//+	load control and page utilities{
+//+	load controls and section page{
 	
 		global $page;
 		$page = Page::init();//we are now in the realm of dynamic pages
@@ -55,23 +55,23 @@ class Route{
 		files::inc(config::$x['controlFolder'].'control.php');
 		
 		//page utility levels
-		$pageUtillityLevel = self::getPageUtilityLevel(Config::$x['projectFolder'].'utilities/section/');
-		$pageDisplayUtillityLevel = self::getPageUtilityLevel(Config::$x['projectFolder'].'view/utilities/section/');
+		$pageUtillityLevel = self::getSectionPageLevel(Config::$x['projectFolder'].'tool/section/');
+		$pageDisplayUtillityLevel = self::getSectionPageLevel(Config::$x['projectFolder'].'view/tool/section/');
 		
 		//get the section and page control
 		while(self::$unparsedUrlTokens){
 			self::$parsedUrlTokens[] = self::$currentToken = array_shift(self::$unparsedUrlTokens);
-//+		include page utilities, if at appropriate level {
+//+		include section page, if at appropriate level {
 			$level = count(self::$parsedUrlTokens);
 			if($pageUtillityLevel && $level == $pageUtillityLevel){
-				files::incOnce(Config::$x['projectFolder'].'utilities/section/'.implode('/',self::$parsedUrlTokens).'.php');
+				files::incOnce(Config::$x['projectFolder'].'tool/section/'.implode('/',self::$parsedUrlTokens).'.php');
 			}
 			if($pageDisplayUtillityLevel && $level == $pageDisplayUtillityLevel){
-				files::incOnce(Config::$x['projectFolder'].'view/utilities/section/'.implode('/',self::$parsedUrlTokens).'.php');
+				files::incOnce(Config::$x['projectFolder'].'view/tool/section/'.implode('/',self::$parsedUrlTokens).'.php');
 			}
 //+		}
 			
-			Hook::run('tokenUtilitiesLoaded',self::$parsedUrlTokens);
+			Hook::run('tokenToolsLoaded',self::$parsedUrlTokens);
 			//load the control
 			$loaded = self::getTokenFile('control',null,array('page'));
 			//not loaded and was last token, page not found
@@ -87,9 +87,9 @@ class Route{
 		
 //+	}
 	}
-	///get the first (most specific to page) token based utility (if config page utilities is on)
-	/**@return tokens at which utility was found*/
-	private static function getPageUtilityLevel($base){
+	///get the first (most specific to page) section-page tool
+	/**@return tokens at which tool was found*/
+	private static function getSectionPageLevel($base){
 		$tokens = self::$urlTokens;
 		while($tokens){
 			if(is_file($base.implode('/',$tokens).'.php')){

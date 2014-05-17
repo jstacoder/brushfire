@@ -328,7 +328,7 @@ array(
 	}
 	///Adds to the $bottomJs array and overrides duplicate elements.  Each argument considered js file.  See self::addTag for args details
 	/**
-	The point of putting JS at the bottom is that often the js doesn't immediately have an effect on the page display, yet, if put at the top, the browser will wait until the javascript is loading to load the rest of the page.  This has to be balanced with the fact that some utility javascript at the top of the page is needed for inline javascript that uses those utilities to work.  So, really, it comes done to preference.
+	The point of putting JS at the bottom is that often the js doesn't immediately have an effect on the page display, yet, if put at the top, the browser will wait until the javascript is loading to load the rest of the page.  This has to be balanced with the fact that some base javascript at the top of the page is needed for inline javascript that uses that base.  So, really, it comes done to preference.
 	*/
 	protected function addBottomJs(){
 		$args =	func_get_args();
