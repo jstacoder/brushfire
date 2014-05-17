@@ -104,10 +104,10 @@ trait SDLL{
 	abstract function load();
 }
 /**
-The pattern: Pass in type to generic class, and henceforth generic class uses instance of class mapped to type.  Used b/c can't monkey patch and rewrite class.
-@note the overlayed class object, the under object, should have a public $_success to indicate whether to try next preference (on case of success = false)
+The pattern: Pass in type to over-class, and henceforth over-class uses instance of under-class mapped by type.  Used instead of factory (b/c more elegant), and b/c can't monkey patch.
+@note the under class should have a public $_success to indicate whether to try next preference (on case of $_success = false)
 */
-trait InlineFactory{
+trait OverClass{
 	static $types;
 	
 	function __construct($typePreferences=null){
@@ -145,10 +145,10 @@ trait InlineFactory{
 }
 
 ///Inline Factory Lazy Loader
-trait IFSDLL{
-	use SingletonDefault, InlineFactory {
-		InlineFactory::__call as IF_call;
-		SingletonDefault::__call insteadof InlineFactory;
+trait OCSDLL{
+	use SingletonDefault, OverClass {
+		OverClass::__call as OC_call;
+		SingletonDefault::__call insteadof OverClass;
 		}
 	public $loaded = false;
 	public $constructArgs = array();
@@ -170,6 +170,6 @@ trait IFSDLL{
 			call_user_func_array(array($this,'load'),(array)$this->constructArgs);
 			$this->loaded = true;
 		}
-		return $this->IF_call($fnName,$args);
+		return $this->OC_call($fnName,$args);
 	}
 }

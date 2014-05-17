@@ -1,9 +1,9 @@
 <?
 ///class to allow mutually exclusive operations
 class Lock{
-	use SingletonDefault, InlineFactory { 
-		InlineFactory::__call insteadof SingletonDefault;
-		InlineFactory::__testCall insteadof SingletonDefault; }
+	use SingletonDefault, OverClass { 
+		OverClass::__call insteadof SingletonDefault;
+		OverClass::__testCall insteadof SingletonDefault; }
 	static $types = array('file'=>'FileLock','cache'=>'CacheLock');
 	public $typePreferences=['cache','file'];
 }

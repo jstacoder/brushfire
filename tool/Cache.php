@@ -10,9 +10,9 @@ Underlying cache functions
 */
 
 class Cache{
-	use IFSDLL{	IFSDLL::load as IFSDLL_load; }
+	use OCSDLL{	OCSDLL::load as OCSDLL_load; }
 
-	static $types = array('memcache'=>'Memcacher','apc'=>'ApCacher');
+	static $types = array('memcache'=>'MemCacher','apc'=>'ApCacher','file'=>'FileCacher');
 	/**
 	@param	type	see static types variable
 	@param	connectionInfo	array:
@@ -22,7 +22,7 @@ class Cache{
 	]
 	*/
 	function load(){
-		call_user_func_array([$this,'IFSDLL_load'],func_get_args());
+		call_user_func_array([$this,'OCSDLL_load'],func_get_args());
 		if(!$this->check()){
 			Debug::toss('Failed to get check cache',__CLASS__.'Exception');
 		}
@@ -113,7 +113,7 @@ class Cache{
 		$this->under->set($key,$value,$expiry);
 	}
 }
-class Memcacher extends Cache{
+class MemCacher extends Cache{
 	public $_success = true;
 	function __construct($connectionInfo=null){
 		$this->connectionInfo = $connectionInfo;
