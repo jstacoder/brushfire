@@ -16,8 +16,8 @@ class Autoload{
 		[
 			moveUp => true/false
 			moveDown => true/false
-			stopFolder => folder name at traversal stops.  Files within the stop folder are not searched.
-			stopPath => folder path at traversal stops.  Files within the stop path are not searched.
+			stopFolders => folder names at traversal stops.  Files within the stop folder are not searched.
+			stopPaths => folder paths at traversal stops.  Files within the stop path are not searched.
 			stopMove => move (up or down) at which point to stop, not to include searching at the stop move
 		]
 	*/
@@ -118,9 +118,9 @@ class Autoload{
 			return;
 		}elseif($excludePaths[$path]){
 			return;
-		}elseif($options['stopPath'] == $path){
+		}elseif(isset($options['stopPath']) && in_array($path,$options['stopPath'])){
 			return;
-		}elseif(isset($options['stopFolder']) && $options['stopFolder'] == dirname($path)){
+		}elseif(isset($options['stopFolder']) && in_array(dirname($path),$options['stopFolder'])){
 			return;
 		}
 		
