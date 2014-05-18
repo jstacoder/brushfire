@@ -44,7 +44,7 @@ class DOMTools{
 		$rootNamespace = $dom->lookupNamespaceUri($dom->namespaceURI);
 		if($rootNamespace){
 			if($dom->documentElement->getAttribute('xmlns:d')){
-				Debug::error('Namespace prefix "'.$nsPrefix.'" taken');
+				Debug::toss('Namespace prefix "'.$nsPrefix.'" taken');
 			}
 			$xpath->registerNamespace($nsPrefix, $rootNamespace);
 			$nsPrefix .= ':';

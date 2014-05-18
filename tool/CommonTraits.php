@@ -10,13 +10,13 @@ trait testCall{
 	
 	function __testCall($fnName,$args){
 		if(!method_exists($this,$fnName)){
-			Debug::error(get_called_class().' Method not found: '.$fnName);
+			Debug::toss(get_called_class().' Method not found: '.$fnName);
 		}
 		return call_user_func_array(array($this,$fnName),$args);
 	}
 	function __methodExists($fnName){
 		if(!method_exists($this,$fnName)){
-			Debug::error(get_called_class().' Method not found: '.$fnName);
+			Debug::toss(get_called_class().' Method not found: '.$fnName);
 		}
 	}
 }

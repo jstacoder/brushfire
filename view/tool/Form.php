@@ -28,7 +28,7 @@ class Form{
 		if(!method_exists($this,$name)){
 			$name = substr($name,1);
 			if(!method_exists(__class__,$name)){
-				Debug::error('Bad Form class method');
+				Debug::toss('Bad Form class method');
 			}
 			$formerValueBehavior = $this->valueBehavior;
 			$this->valueBehavior = array_shift($arguments);

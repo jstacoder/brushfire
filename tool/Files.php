@@ -112,7 +112,7 @@ class Files{
 			return true;
 		}
 		self::logIncluded(false);
-		Debug::error('Could not include file "'.$_file.'"');
+		Debug::toss('Could not include file "'.$_file.'"');
 	}
 	///require a file once
 	/**
@@ -145,7 +145,7 @@ class Files{
 			return true;
 		}
 		self::logIncluded(false);
-		Debug::error('Could not include file "'.$_file.'"');
+		Debug::toss('Could not include file "'.$_file.'"');
 	}
 	private static function logIncluded($result){
 		self::$currentInclude['result'] = $result;

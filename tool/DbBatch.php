@@ -17,7 +17,7 @@ class DbBatch implements Iterator{
 	/// used to translate static calls to the primary database instance
 	static function __callStatic($name,$arguments){
 		if(!method_exists(__class__,$name)){
-			Debug::error('DbBatch method not found: '.$name);
+			Debug::toss('DbBatch method not found: '.$name);
 		}
 		$class = __class__;
 		$that = new $class();

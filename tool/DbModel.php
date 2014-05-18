@@ -22,7 +22,7 @@ class DbModel{
 			$sql = $this->select($args[0],$args[1],$args[2],$args[3],$args[4]);
 			return call_user_func(array($this->db,$fnName),$sql);
 		}
-		Debug::error(__class__.' Method not found: '.$fnName);
+		Debug::toss(__class__.' Method not found: '.$fnName);
 	}
 	function load($db,$savePath){
 		$this->loadModel();
@@ -268,7 +268,7 @@ class DbModel{
 				}
 			}
 		}
-		Debug::error('DbModel failed to find link',var_export(func_get_args(),1));
+		Debug::toss('DbModel failed to find link',var_export(func_get_args(),1));
 	}
 	protected function columnKey($column,$table,$columns,$where=array(),$order=null,$limit=null){
 		$sql = $this->select($table,$columns,$where,$order,$limit);

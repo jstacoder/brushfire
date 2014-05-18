@@ -80,7 +80,7 @@ class Route{
 					Config::loadUserFiles(Config::$x['pageNotFound'],'control',array('page'));
 					exit;
 				}else{
-					Debug::error('Request handler encountered unresolvable token at control level.'."\nCurrent token: ".self::$currentToken."\nTokens parsed".print_r(self::$parsedUrlTokens,true));
+					Debug::toss('Request handler encountered unresolvable token at control level.'."\nCurrent token: ".self::$currentToken."\nTokens parsed".print_r(self::$parsedUrlTokens,true));
 				}
 			}
 		}

@@ -44,11 +44,11 @@ class DbTree{
 			$return = call_user_func_array(array($this,$fnName),$args);
 			$this->db->db->commit();
 		}catch (Exception $e){
+			Lock::off($lockName);
 			$this->db->db->rollBack();
 			throw $e;
-		}finally{
-			Lock::off($lockName);
 		}
+		Lock::off($lockName);
 		return $return;
 	}
 	function deleteTree($fk=null){
@@ -155,30 +155,49 @@ class DbTree{
 	}
 	
 	
-	protected function parents($node,$columns=['id','order_in','order_out','order_depth']){
-		if(is_array($columns)){
-			$columns = array_map(function($value){return 't1.'.$value;},$columns);
-			$columns = implode(', ',array_map([$this->db,'quoteIdentity'],$columns));
-		}
-		
+	protected function parentsSql($node){
 		$joinWhere = implode("\n\tAND ",$this->db->ktvf($this->baseWhere + [':t2.order_in' => 't1.order_in']));
 		$where = $this->db->where($this->baseWhere + ['order_in?<' => $node['order_in'],'order_depth?<'=>$node['order_depth']]);
-		return $this->db->rows('select '.$columns.' 
+		return 'select t1.*
 			from '.$this->db->quoteIdentity($this->table).' t1
 				inner join (
 					select max(order_in) order_in
 					from '.$this->db->quoteIdentity($this->table).
 					$where.'
 					group by order_depth
-				) t2 on '.$joinWhere.'
+				) t2 on '.$joinWhere;
+	}
+	protected function parents($node,$columns=['id','order_in','order_out','order_depth']){
+		if(is_array($columns)){
+			$columns = array_map(function($value){return 't1.'.$value;},$columns);
+			$columns = implode(', ',array_map([$this->db,'quoteIdentity'],$columns));
+		}
+		$joinWhere = implode("\n\tAND ",$this->db->ktvf($this->baseWhere + [':t2.order_in' => 't1.order_in']));
+		$where = $this->db->where($this->baseWhere + ['order_in?<' => $node['order_in'],'order_depth?<'=>$node['order_depth']]);
+		return $this->db->rows('select '.$columns.' 
+			from ('.$this->parentsSql($node).') t1
 			order by t1.order_depth desc');
 		
+	}
+	protected function hasParent($node,$parent){
+		$parent = $this->getNode($parent);
+		return (bool)$this->db->row('select 1 
+			from ('.$this->parentsSql($node).') t1
+			where id = '.$parent['id']);
 	}
 	protected function children($node=null,$columns=['id','order_in','order_out','order_depth']){
 		$where = $node ? ['order_in?>' => $node['order_in'],'order_out?<'=>$node['order_out']] : [];
 		return $this->db->rows($this->table,
 			$this->baseWhere + $where,
 			$columns);
+	}
+	protected function hasChild($node,$child){
+		$child = $this->getNode($child);
+		$where = $node ? ['order_in?>' => $node['order_in'],'order_out?<'=>$node['order_out']] : [];
+		$where['id'] = $child['id'];
+		return (bool)$this->db->row($this->table,
+			$this->baseWhere + $where);
+		
 	}
 /*
 //+ order_in + order_depth only functions {

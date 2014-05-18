@@ -216,7 +216,7 @@ array(
 	protected function replaceTemplateAlias($alias,$children=null){
 		$tree = $this->aliases[$alias];
 		if(!$tree){
-			Debug::error('Could not find alias: '.$alias);
+			Debug::toss('Could not find alias: '.$alias);
 		}
 		if(!is_array($tree)){
 			$tree = Arrays::at(self::parseTemplateString($tree),0);
@@ -476,7 +476,7 @@ array(
 		}elseif(Config::$x['resourceNotFound']){
 			Config::loadUserFiles(Config::$x['resourceNotFound'],'control');
 		}else{
-			Debug::error('Request handler encountered unresolvable file.  Searched at '.$path);
+			Debug::toss('Request handler encountered unresolvable file.  Searched at '.$path);
 		}
 		if($exit){
 			exit;

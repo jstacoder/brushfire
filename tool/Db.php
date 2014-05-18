@@ -404,7 +404,7 @@ array(
 	*/
 	protected function update($table,$update,$where){
 		if(!$where){
-			Debug::error('Unqualified update is too risky.  Use 1=1 to verify');
+			Debug::toss('Unqualified update is too risky.  Use 1=1 to verify');
 		}
 		$vf=implode(', ',$this->ktvf($update,2));
 		$res = $this->query('UPDATE '.$this->quoteIdentity($table).' SET '.$vf.$this->where($where));
@@ -420,7 +420,7 @@ array(
 	*/
 	protected function delete($table,$where){
 		if(!$where){
-			Debug::error('Unqualified delete is too risky.  Use 1=1 to verify');
+			Debug::toss('Unqualified delete is too risky.  Use 1=1 to verify');
 		}
 		return $this->query('DELETE FROM '.$this->quoteIdentity($table).$this->where($where))->rowCount();
 	}
