@@ -2,8 +2,7 @@
 ///class to allow mutually exclusive operations
 class Lock{
 	use SingletonDefault, OverClass { 
-		OverClass::__call insteadof SingletonDefault;
-		OverClass::__testCall insteadof SingletonDefault; }
+		OverClass::__call insteadof SingletonDefault; }
 	static $types = array('file'=>'FileLock','cache'=>'CacheLock');
 	public $typePreferences=['cache','file'];
 }
@@ -20,18 +19,27 @@ class CacheLock{
 			$this->_success = false;
 		}
 	}
-	///ensure lock by using cas_token
+	///ensure lock by using mutual exclusion logic
 	function lock($name){
-		if(Cache::get($name,null,$casToken) == false){
-			if(Cache::cas($casToken,$name,1)){
-				return true;
+		if(Cache::get($name) == false){
+			$token = mt_rand(1,999999);
+			Cache::set($name.'-interest',$token);
+			if(!Cache::get($name.'-interested')){
+				Cache::set($name.'-interested',1);//must have passed if on all contenders
+				$existingToken = Cache::get($name.'-interest');
+				if($existingToken == $token && !Cache::get($name)){//only one contender will match existing token
+					Cache::set($name,1);
+					Cache::delete($name.'-interest');
+					return true;
+				}
 			}
+			Cache::delete($name.'-interest');
 		}
 		return false;
 	}
 	function on($name,$timeout=0){
 		$cacheName = 'lock-'.$name;
-		while($this->locks[$name] || !Cache::lock($cacheName)){
+		while($this->locks[$name] || !$this->lock($cacheName)){
 			if(!$timeout || time() - $start >= $timeout){
 				return false;
 			}
@@ -54,11 +62,9 @@ class CacheLock{
 	}
 	function off($name){
 		$cacheName = 'lock-'.$name;
-		
-		if($this->locks[$name]){
-			Cache::delete($cacheName);
-			unset($this->locks[$name]);
-		}
+		Cache::delete($cacheName);
+		unset($this->locks[$name]);
+		Cache::delete($cacheName.'-interested');//variable excution point makes deleting this in lock() to be impractical
 	}
 }
 ///Uses flock.  Flock does not persist after termination of the script, so locks will not persist then either.

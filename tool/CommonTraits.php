@@ -26,6 +26,7 @@ The convenience of acting like there is just one, with the ability to handle mul
 Static calls default to primary instance.  If no primary instance, attempt to create one.
 
 @note	__construct can not be protected because the RelfectionClass call to it is not considered a relative
+@note __call doesn't take arguments by reference, so don't applly to classes requiring reference args
 */
 trait SingletonDefault{
 	use testCall;
@@ -106,6 +107,7 @@ trait SDLL{
 /**
 The pattern: Pass in type to over-class, and henceforth over-class uses instance of under-class mapped by type.  Used instead of factory (b/c more elegant), and b/c can't monkey patch.
 @note the under class should have a public $_success to indicate whether to try next preference (on case of $_success = false)
+@note __call doesn't take arguments by reference, so don't applly to classes requiring reference args
 */
 trait OverClass{
 	static $types;

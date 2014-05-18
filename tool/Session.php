@@ -192,7 +192,7 @@ class SessionData{
 		if(Config::$x['sessionUseDb']){
 			$insert = Session::$other;
 			$insert['id'] = $_COOKIE['sessionId'];
-			$insert['time'] = time();
+			$insert['updated__unix'] = time();
 			Db::insert(Config::$x['sessionDbTable'],$insert);
 		}else{
 			$this->file = Config::$x['sessionFolder'].$_COOKIE['sessionId'];
@@ -203,7 +203,7 @@ class SessionData{
 	function writeOther(){
 		if(Config::$x['sessionUseDb']){
 			$update = Session::$other;
-			$update['time'] = time();
+			$update['updated__unix'] = time();
 			Db::update(Config::$x['sessionDbTable'],$update,array('id'=>$_COOKIE['sessionId']));
 		}else{
 			//other corresponds to nothing on file based sessions
@@ -212,7 +212,7 @@ class SessionData{
 	function write($data){
 		if(Config::$x['sessionUseDb']){
 			$update = Session::$other;
-			$update['time'] = time();
+			$update['updated__unix'] = time();
 			$update['data'] = $data;
 			Db::update(Config::$x['sessionDbTable'],$update,array('id'=>$_COOKIE['sessionId']));
 		}else{
@@ -221,7 +221,7 @@ class SessionData{
 	}
 	function updateTime(){
 		if(Config::$x['sessionUseDb']){
-			Db::update(Config::$x['sessionDbTable'],array('time'=>time()),array('id'=>$_COOKIE['sessionId']));
+			Db::update(Config::$x['sessionDbTable'],array('updated__unix'=>time()),array('id'=>$_COOKIE['sessionId']));
 		}else{
 			touch($this->file);
 		}

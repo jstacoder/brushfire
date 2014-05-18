@@ -319,8 +319,8 @@ class CRUDPage{
 			$options['allowedSort'] = array_keys($this->get('show',self::MANAGE));
 		}
 		if(!$options['defaultSort']){
-			if(in_array('time_created',$options['allowedSort'])){
-				$options['defaultSort'] = '-time_created';
+			if(in_array('created',$options['allowedSort'])){
+				$options['defaultSort'] = '-created';
 			}elseif(in_array('id',$options['allowedSort'])){
 				$options['defaultSort'] = '-id';
 			}else{

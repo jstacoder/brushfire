@@ -23,9 +23,9 @@ class CRUDModel{
 		//create validation and deal with special columns
 		foreach($usedColumns as $column){
 			//special columns
-			if($column == 'time_created'){
+			if($column == 'created'){
 				$this->page->in[$column] = new Time('now',Config::$x['timezone']);
-			}elseif($column == 'time_updated'){
+			}elseif($column == 'updated'){
 				$this->page->in[$column] = new Time('now',Config::$x['timezone']);
 			}elseif($column == 'id'){
 				$validaters[$column][] = 'f:toString';

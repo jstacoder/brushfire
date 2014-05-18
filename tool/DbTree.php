@@ -83,15 +83,15 @@ class DbTree{
 	
 	private function insert($node,$position=[]){
 		if($node['order_in']){//node is being moved
-			$this->expand($node,$position['order_in'],$position['id__parent']);
+			$this->expand($node,$position['order_in']);
 			if($node['order_in'] >= $position['order_in']){
 				$additionalAdjustment = $node['order_out'] - $node['order_in'] + 1;
 			}
 			$this->adjust($node,$position['order_in'],$position['order_depth'],$additionalAdjustment);
-			$this->collapse($node,$node['id__parent']);
+			$this->collapse($node);
 			$this->db->update($this->table,['id__parent'=>$position['id__parent']],$node['id']);
 		}else{//node is being inserted
-			$this->expand($node,$position['order_in'],$position['id__parent']);
+			$this->expand($node,$position['order_in']);
 			$node['order_in'] = $position['order_in'];
 			$node['order_out'] = $node['order_in'] + 1;
 			$node['order_depth'] = $position['order_depth'];
@@ -114,29 +114,26 @@ class DbTree{
 		$this->collapse($node,$node['id__parent']);
 	}
 	///collapse order after node deletion or move
-	protected function collapse($node,$parentId){
+	protected function collapse($node){
 		$adjustment = $node['order_out'] - $node['order_in'] + 1;
-		if($parentId){
-			$this->db->update($this->table,[':order_out'=>'order_out - '.$adjustment],$this->baseWhere + ['id'=>$parentId]);
-		}
 		$this->db->update($this->table,
-			[':order_in'=> 'order_in - '.$adjustment,
-				':order_out'=> 'order_out - '.$adjustment],
+			[':order_in'=> 'order_in - '.$adjustment],
 			$this->baseWhere + ['order_in?>'=>$node['order_out']]);
+		$this->db->update($this->table,
+			[':order_out'=> 'order_out - '.$adjustment],
+			$this->baseWhere + ['order_out?>'=>$node['order_out']]);
+		
 	}
 	///expand order (>=order_in) for after node insert or move
 	/**@note  */
-	function expand($node,$targetIn,$parentId){
+	function expand($node,$targetIn){
 		$adjustment = $node['order_out'] ? $node['order_out'] - $node['order_in'] + 1 : 2;
-		//update parent
-		if($parentId){
-			$this->db->update($this->table,[':order_out'=>'order_out + '.$adjustment],$this->baseWhere + ['id'=>$parentId]);
-		}
 		//update following nodes
 		$this->db->update($this->table,
-			[':order_in'=> 'order_in + '.$adjustment,
-				':order_out'=> 'order_out + '.$adjustment],
-			$this->baseWhere + ['order_in?>='=>$targetIn]);
+			[':order_in'=> 'order_in + '.$adjustment], $this->baseWhere + ['order_in?>='=>$targetIn]);
+		//update containing and following nodes
+		$this->db->update($this->table,
+			[':order_out'=> 'order_out + '.$adjustment], $this->baseWhere + ['order_out?>='=>$targetIn]);
 	}
 	///adjust node and children order_in after move
 	/**
@@ -155,6 +152,33 @@ class DbTree{
 				':order_out'=> 'order_out + '.$orderAdjustment,
 				':order_depth' => 'order_depth + '.$depthAdjustment],
 			$this->baseWhere + ['order_in?>='=>$node['order_in'], 'order_in?<='=>$node['order_out']]);
+	}
+	
+	
+	protected function parents($node,$columns=['id','order_in','order_out','order_depth']){
+		if(is_array($columns)){
+			$columns = array_map(function($value){return 't1.'.$value;},$columns);
+			$columns = implode(', ',array_map([$this->db,'quoteIdentity'],$columns));
+		}
+		
+		$joinWhere = implode("\n\tAND ",$this->db->ktvf($this->baseWhere + [':t2.order_in' => 't1.order_in']));
+		$where = $this->db->where($this->baseWhere + ['order_in?<' => $node['order_in'],'order_depth?<'=>$node['order_depth']]);
+		return $this->db->rows('select '.$columns.' 
+			from '.$this->db->quoteIdentity($this->table).' t1
+				inner join (
+					select max(order_in) order_in
+					from '.$this->db->quoteIdentity($this->table).
+					$where.'
+					group by order_depth
+				) t2 on '.$joinWhere.'
+			order by t1.order_depth desc');
+		
+	}
+	protected function children($node=null,$columns=['id','order_in','order_out','order_depth']){
+		$where = $node ? ['order_in?>' => $node['order_in'],'order_out?<'=>$node['order_out']] : [];
+		return $this->db->rows($this->table,
+			$this->baseWhere + $where,
+			$columns);
 	}
 /*
 //+ order_in + order_depth only functions {

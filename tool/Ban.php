@@ -2,9 +2,9 @@
 /**
 Expects tables:
 	ban
-		id,	identity, type_id, time_expire, time_created
+		id,	identity, type_id, expire, created
 	ban_types
-		id, name, reason, time_span, limit, ban_time
+		id, name, reason, threshold_time, limit, ban_duration
 
 */
 class Ban extends SingletonDefault{
@@ -25,7 +25,7 @@ class Ban extends SingletonDefault{
 		$this->db = $db;
 		
 		if(mt_rand(1,200) === 1){
-			$this-maintenance();
+			$this->maintenance();
 		}
 		$this->identity = $identity;
 		$bans = unserialize(Cache::get('bans-'.$this->identity));
@@ -45,15 +45,15 @@ class Ban extends SingletonDefault{
 	}
 	///load bans from db
 	protected function maintenance(){
-		$rows = $this->db->rows('select identity, bt.reason, b.time_expire
+		$rows = $this->db->rows('select identity, bt.reason, b.expire
 			from ban b
 				left join ban_type bt on b.type_id_ = bt.id
-			where (b.time_expire >= '.$this->db->quote(new Time).' or time_expire is null)');
+			where (b.expire >= '.$this->db->quote(new Time).' or expire is null)');
 		$identityBans = Arrays::compileSubsOnKey($rows,'identity');
 		foreach($identityBans as $identity => $bans){
 			$putBans = array();
 			foreach($bans as $ban){
-				$putBans[] = Arrays::extract(array('reason','time_expire'),$ban);
+				$putBans[] = Arrays::extract(array('reason','expire'),$ban);
 			}
 			Cache::set('bans-'.$identity,serialize($putBans));
 		}
@@ -61,8 +61,8 @@ class Ban extends SingletonDefault{
 	///presents ban message, or clears ban if all expired
 	protected function banned($bans){
 		foreach($bans as $k=>$ban){
-			if($ban['time_expire'] == -1 || $ban['time_expire'] > (new Time)->unix){
-				die('Banned.  Reason: '.$ban['reason'].'; Until: '.($ban['time_expire'] == -1 ? 'Indefinite' : (new Time($ban['time_expire'])).' UTC'));
+			if($ban['expire'] == -1 || $ban['expire'] > (new Time)->unix){
+				die('Banned.  Reason: '.$ban['reason'].'; Until: '.($ban['expire'] == -1 ? 'Indefinite' : (new Time($ban['expire'])).' UTC'));
 			}
 		}
 		//died on no ban, so all of them expired.  So, clear ban cache.
@@ -95,7 +95,7 @@ class Ban extends SingletonDefault{
 		$banning[$name][] = array(time(),$points);
 		
 		//+	check if over limit {
-		$expired = time() - $banType['time_span'];
+		$expired = time() - $banType['threshold_time'];
 		foreach($banning[$name] as $k=>$instance){
 			if($instance[0] < $expired){
 				unset($banning[$name][$k]);
@@ -122,11 +122,11 @@ class Ban extends SingletonDefault{
 		$this->db->insert('ban',array(
 				'identity' => $this->identity,
 				'type_id_' => $banType['id'],
-				'time_expire' => ($banType['ban_time'] ? new Time($banType['ban_time']) : null),
-				'time_created' => new Time
+				'expire' => ($banType['ban_duration'] ? new Time($banType['ban_duration']) : null),
+				'created' => new Time
 			));
 		$bans = unserialize(Cache::get('bans-'.$this->identity));
-		$bans[] = array('reason' =>$banType['reason'],'time_expire'=>(new Time($banType['ban_time']))->unix);
+		$bans[] = array('reason' =>$banType['reason'],'expire'=>(new Time($banType['ban_duration']))->unix);
 		Cache::set('bans-'.$this->identity,serialize($bans));
 		if($exit){
 			$this->banned($bans);

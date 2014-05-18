@@ -132,6 +132,14 @@ class MemCacher extends Cache{
 			}
 		}
 	}
+	public $casToken;
+	function lastCasToken(){
+		return $this->casToken;
+	}
+	///@note casToken not set if key not in cache
+	function casGet($name){
+		$got = $this->under->get($name,null,$this->casToken);
+	}
 }
 class ApCacher extends Cache{
 	public $_success = false;

@@ -54,7 +54,7 @@ array(
 		return $this->db->quote($v);
 	}
 	/// return last run sql
-	protected function getLastSql(){
+	protected function lastSql(){
 		return $this->lastSql;
 	}
 	/// perform database query
@@ -259,6 +259,7 @@ array(
 		}
 		return (array)$kvtA;
 	}
+	
 	///so as to prevent the column, or the table prefix from be mistaken by db as db construct, quote the column
 	protected function quoteIdentity($identity){
 		$identity = '"'.$identity.'"';
@@ -477,7 +478,7 @@ array(
 			$from = '"'.$from.'"';
 		}
 		if(is_array($columns)){
-			$columns = '"'.implode('", "',$columns).'"';
+			$columns = implode(', ',array_map([$this,'quoteIdentity'],$columns));
 		}
 		$select = 'SELECT '.$columns."\nFROM ".$from.$this->where($where);
 		if($order){
