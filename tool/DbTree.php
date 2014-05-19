@@ -59,7 +59,7 @@ class DbTree{
 		$parent = $this->getNode($parent);
 		$position['order_in'] = $parent['order_in'] + 1;
 		$position['order_depth'] = $parent['order_depth'] + 1;
-		$position['id__parent'] = $parent['id'];
+		$position['id__parent'] = $parent['id'] ? $parent['id'] : 0;
 		return $this->insert($node,$position);
 	}
 	///append (optionally create)
@@ -189,7 +189,7 @@ class DbTree{
 		$where = $node ? ['order_in?>' => $node['order_in'],'order_out?<'=>$node['order_out']] : [];
 		return $this->db->rows($this->table,
 			$this->baseWhere + $where,
-			$columns);
+			$columns, 'order_in asc');
 	}
 	protected function hasChild($node,$child){
 		$child = $this->getNode($child);
@@ -197,46 +197,19 @@ class DbTree{
 		$where['id'] = $child['id'];
 		return (bool)$this->db->row($this->table,
 			$this->baseWhere + $where);
-		
 	}
-/*
-//+ order_in + order_depth only functions {
-	protected function children($node,$columns='*'){
-		list($node,$child,$where) = $this->fathom($node);
-		return Db::rows($this->table,$where,$columns);
-	}
-	///get boundaries and child where
-	protected function fathom($node){
-		$node = $this->getNode($node);
-		$child = $this->lastChild($node);
-
-		$where = $this->baseWhere + ['order_in?>'=>$node['order_in']];
-		if($child){
-			$where['order_in?<='] = $child['order_in'];
-		}
-		return [$node,$where];
-	}
-	///get next node not child of provided
-	protected function next($node){
-		//get child range
-		return Db::row($this->table,
-			$this->baseWhere + ['order_in?>'=>$node['order_in'], 'order_depth?<='=>$node['order_depth']],
-			'id, order_in, order_depth','order_in asc');
-	}
-	///highest order_in child
-	function lastChild($node){
-		$next = $this->next($node);
-		if($next){
-			$child = $this->db->row($this->table,$this->baseWhere + ['order_in' => $next['order_in'] - 1],
-				'id, order_in, order_depth');
-			if($child['order_in'] != $node['order_in']){
-				return $child;
+	protected function nestedChildren($node,$columns=['id','order_in','order_out','order_depth']){
+		$children = $this->children($node,$columns);
+		$depth = $baseDepth = $children[0]['order_depth'];
+		$lineage = [];
+		foreach($children as $k=>&$child){
+			//note, + 2 to acccount for baseDepth assignment (consder baseDepth key to array containing immediate children)
+			$lineage[$child['order_depth'] + 1]['children'][] = &$child;
+			$lineage[$child['order_depth'] + 2] =&$child;
+			if($child['order_depth'] == $baseDepth){
+				$lineage[$baseDepth][] =&$child;
 			}
-		}else{
-			$child = $this->db->row($this->table,$this->baseWhere + ['order_in?>' => $node['order_in']],
-				'id, order_in, order_depth','order_in desc');
 		}
+		return $lineage[$baseDepth];
 	}
-//+ }
-*/
 }
