@@ -114,19 +114,19 @@ class Tool{
 	@return	underscope separated string
 	*/
 	static function camelToSeparater($string,$separater='_'){
-		$string = preg_replace('@(?<![A-Z])[A-Z](?![A-Z])@e','\''.addslashes($separater).'\'.strtolower("$0")',$string);
-		//although accronyms are not lower cased, they are block separated
-		return preg_replace('@(?<![A-Z])[A-Z]@e','\''.addslashes($separater).'\'."$0"',$string);
+		return preg_replace_callback('@[A-Z]@',
+			function($matches) use ($separater){return $separater.strtolower($matches[0]);},
+			$string);
 	}
 	
-	///turns a string into a camel cased string
+	///turns a string into a lower camel cased string
 	/**
 	@param	string	string to camelCase
 	*/
-	static function toCamel($string){
+	static function toCamel($string,$upperCamel=false){
+		$string = strtolower($string);
 		preg_match('@[ _]*[^ _]*@',$string,$match);
-		$firstWord = strtolower($match[0]);
-		$cString = $firstWord;
+		$cString = $upperCamel ? ucfirst($match[0]) : $match[0];//first word
 		preg_match_all('@[ _]+([^ _]+)@',$string,$match);
 		if($match[1]){
 			foreach($match[1] as $word){

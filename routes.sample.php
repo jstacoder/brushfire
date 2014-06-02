@@ -1,22 +1,29 @@
 <?
-///Information of how rules.php should be formatted and some samples
 /**
 Format:
-	- each rule should be an array of at least 2 elements, but possibly 3 elements
-	- the first element is the matching string
-	- the second element is the replacement string.  If regex flag is on, replacement string is a preg_replace replacement string
-	- the third element is the flags
-	- flags can be combined with commas.  There are various flags:
-		- ignore: ignores rule on all following runs
-		- nextFile: bypasses all the rest of the rules in the file and parses the next file before parsing the "current" file again
-		- last: is the last rule run for the file.  Route does not parse any more rules in the containing file, but will parse rules in subsequent files
-		- veryLast: is the last rule run for all files; Route will just stop parsing
-		- insensitive: match is case insensitive
-		- token: token based; match is against current token.  Replacement argument still replaces entire url
-		- regex: applies regex pattern matching
+	each rule should be an array of at least 2 elements, but possibly 3 elements:
+		1: the matching string
+			the matching string matches against path
+		2: the replacement string.  If regex flag is on, replacement string is a preg_replace replacement string excluding the delimiters
+			the replacement string will replace the entire path
+		3: the flags
+	
+	flags can be combined with commas.  There are various flags:
+		once: applies rule once, then ignores it the rest of the time
+		file:last: last rule matched in the file.  Route does not parse any more rules in the containing file, but will parse rules in subsequent files
+		loop:last is the last matched rule.  Route will just stop parsing rules after this.
+		
+		caseless: ingore capitalisation
+		regex: applies regex pattern matching
+			last-matched-rule regex-match-groups are saved to Route::$regexMatch
+				Note, regex uses '(?<'.$gropuName.'>'.$pattern.')' for named matches
+				Note, named regexes are extracted (see php "extract") into all control files.
 	
 */
 
 /** @file */
-$rules[] = array('^$','blogs/post','regex,insensitive');
-$rules[] = array('documentation','doc','token');
+//set default to point to a control named index
+$rules[] = array('^$','index','regex,caseless');
+
+//identify id part of path for inclusion in control
+$rules[] = array('^/blog/(?<id>[0-9]+)','/blog/view/$1','loop:last');

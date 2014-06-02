@@ -48,6 +48,7 @@ class Files{
 			return true;
 		}
 		self::logIncluded(false);
+		return false;
 	}
 	///include a file once
 	/**
@@ -80,6 +81,7 @@ class Files{
 			return true;
 		}
 		self::logIncluded(false);
+		return false;
 	}
 	///require a file
 	/**

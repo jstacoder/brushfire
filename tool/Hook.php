@@ -1,7 +1,8 @@
 <?
 ///For applying hooks
 /**
-With hooks, there are spots, which represent where the hooks will be called, and there are hooks, which represent the variable code that is run at the spots.  Thus, to identify particulars, there are spot names and hook names.
+spotname: where a run-hooks will be called
+hookname: a name of a particular hook attached to a spotname
 */
 class Hook{
 	///it is not intended that hooks be applied in some specific order

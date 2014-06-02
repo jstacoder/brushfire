@@ -51,7 +51,7 @@ trait SingletonDefault{
 		return static::$instances[$instanceName];
 	}
 	/// overwrite any existing primary with new construct
-	static function primary($instanceName=null){
+	static function resetPrimary($instanceName=null){
 		$instanceName = $instanceName !== null ? $instanceName : 0;
 		$class = new ReflectionClass(get_called_class());
 		$instance = $class->newInstanceArgs(array_slice(func_get_args(),1));
@@ -64,6 +64,12 @@ trait SingletonDefault{
 	/// sets primary to some named instance
 	static function setPrimary($instanceName){
 		static::$primary = static::$instances[$instanceName];//php already assigns objects by reference
+	}
+	static function primary(){
+		if(!static::$primary){
+			static::init();
+		}
+		return static::$primary;
 	}
 
 	/// used to translate static calls to the primary instance
@@ -105,7 +111,7 @@ trait SDLL{
 	abstract function load();
 }
 /**
-The pattern: Pass in type to over-class, and henceforth over-class uses instance of under-class mapped by type.  Used instead of factory (b/c more elegant), and b/c can't monkey patch.
+The pattern: Pass in type to over-class, and henceforth over-class uses instance of under-class mapped by type.  Used as an abstraction, used instead of factory (b/c more elegant), and b/c can't monkey patch.
 @note the under class should have a public $_success to indicate whether to try next preference (on case of $_success = false)
 @note __call doesn't take arguments by reference, so don't applly to classes requiring reference args
 */

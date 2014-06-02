@@ -154,7 +154,7 @@ class DbTree{
 			$this->baseWhere + ['order_in?>='=>$node['order_in'], 'order_in?<='=>$node['order_out']]);
 	}
 	
-	
+	//sql to get all columns for parents (enclose it in other sql for further restrictions)
 	protected function parentsSql($node){
 		$joinWhere = implode("\n\tAND ",$this->db->ktvf($this->baseWhere + [':t2.order_in' => 't1.order_in']));
 		$where = $this->db->where($this->baseWhere + ['order_in?<' => $node['order_in'],'order_depth?<'=>$node['order_depth']]);
@@ -167,6 +167,7 @@ class DbTree{
 					group by order_depth
 				) t2 on '.$joinWhere;
 	}
+	///returns parents in order of desc depth
 	protected function parents($node,$columns=['id','order_in','order_out','order_depth']){
 		if(is_array($columns)){
 			$columns = array_map(function($value){return 't1.'.$value;},$columns);

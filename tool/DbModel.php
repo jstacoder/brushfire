@@ -73,22 +73,12 @@ class DbModel{
 		$basePath = '/'.str_replace('_','/',$table).'/';
 		$mTable['links'] = array();
 		foreach($columns as $column=>$info){
-			//check if forward relative reference
-			$fowardRelative = false;
-			if(substr($column,-1) == '_'){
-				$fowardRelative = true;
-			}
-			
 			//first, check for fc_ indicater
 			if(preg_match('@^fc_@',$column)){
 				preg_match('@(^_+)(.*)@',$column,$match);
 				$parts = explode('__',substr($match[2],3));
-				if($fowardRelative){
-					$mTable['links'][] = array('ft'=>$table.'_'.$parts[0],'fc'=>$parts[1],'dc'=>$column);
-				}else{
-					$absoluteTable = self::getAbsolute($basePath,$part[0],$match[1]);
-					$mTable['links'][] = array('ft'=>$absoluteTable,'fc'=>$part[1],'dc'=>$column);
-				}
+				$absoluteTable = self::getAbsolute($basePath,$part[0],$match[1]);
+				$mTable['links'][] = array('ft'=>$absoluteTable,'fc'=>$part[1],'dc'=>$column);
 			}else{
 				//+	Id Column referencing {
 				if($column[0] != '_' && preg_match('@(.+)_id($|__)@',$column,$match)){//named column

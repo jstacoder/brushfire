@@ -32,25 +32,27 @@ class Autoload{
 					$this->nsF[$ns][] = $folder;
 				}
 			}
-			
-			
-			if(Config::$x['autoloadSection']){
-				Hook::add('prePage',array($this,'addSectionResources'),array('delete'=>1));
-			}
+		}
+		if(Config::$x['autoloadSection']){
+			Hook::add('prePage',array($this,'addSectionResources'),array('delete'=>1));
 		}
 	}
+
 	///spl autoload doesn't like protected methods.
 	function auto($className){
 		$this->req($className);
 	}
+
 	protected function req($className){
 		$result = $this->load($className);
-		//this is the only autoload and it has failed
-		if(!$result['found'] && count(spl_autoload_functions()) == 1){
+		$lastAutoloader = array_pop(spl_autoload_functions())[0];
+		//this is the last autoload and it has failed
+		if(!$result['found'] && is_a($lastAutoloader,'Autoload')){
 			$error = 'Attempt to autoload class "'.$className.'" has failed.  Tested folders: '."\n".implode("\n",array_keys($result['searched']));
 			Debug::toss($error,__CLASS__.'Exception');
 		}
 	}
+
 	///load a class based on current autoload nsF
 	/**
 	@param	className	name of the class and the name of the file without the ".php" extension
@@ -72,6 +74,7 @@ class Autoload{
 		}
 		return array('found'=>false,'searched'=>$excludePaths);
 	}
+
 	///Tries to load class, returns true on success
 	protected function loaded($className){
 		$result = $this->load($className);
@@ -82,6 +85,7 @@ class Autoload{
 	@param	name	name of the class
 	@param	folders	array of folders to check in
 	*/
+
 	protected function findClass($name,&$excludePaths){
 		//resolve namespace
 		$parts = explode('\\',$name);
@@ -89,7 +93,6 @@ class Autoload{
 		$fileName = $name.'.php';
 		
 		if($parts){
-			array_shift($parts);//clear empty value
 			while($parts){
 				if($folders = $this->nsF['\\'.implode('\\',$parts)]){
 					break;
@@ -108,6 +111,7 @@ class Autoload{
 			}
 		}
 	}
+
 	protected function checkPath($fileName,$path,$options,&$excludePaths,$move=0){
 		if(isset($options['stopMove']) && $options['stopMove'] <= $move){
 			return;

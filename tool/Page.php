@@ -13,6 +13,8 @@ The philosophy:
 		Warnings: Things tthat may later prevent movement forward
 		Notices: Things to optmize movement forward
 		Success: Indicator of movement forward
+	
+	Additionally, a Page::tool from class SectionPage is attached that provided page specific functionality apart from control flow.
 */
 class Page{
 	use SingletonDefault;
