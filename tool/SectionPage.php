@@ -1,5 +1,5 @@
 <?
-///Fallback used in case page has no specific SectionPage tool
+///Fallback used in case page has no specific Page tool
 
 
 //attempt to autoload setion if it is available
@@ -9,23 +9,25 @@ try{
 
 //if section found, use it
 if(class_exists('Section',false)){
-	class SectionPage extends Section{
+	class Page extends Section{
 		function __construct($page){
-			$this->page = $page;
+			$this->control = $page;
 			$this->in =& $page->in;
 			$this->messages =& $page->messages;
+			$this->db = Db::primary();
 			if(method_exists(get_parent_class(),'__construct')){
 				return parent::__construct();
 			}
 		}
 	}
 }else{
-	class SectionPage{
+	class Page{
 		static $model,$id;
 		function __construct($page){
-			$this->page = $page;
+			$this->control = $page;
 			$this->in =& $page->in;
 			$this->messages =& $page->messages;
+			$this->db = Db::primary();
 		}
 	}
 }

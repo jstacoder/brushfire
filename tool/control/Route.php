@@ -1,4 +1,5 @@
 <?
+namespace control;
 ///Used to handle requests by determining path, then determining controls
 /**
 Route Rules Logic
@@ -31,26 +32,26 @@ class Route{
 		self::parseRequest($uri);
 		
 		//url corresponds to public file directory, provide file
-		if(self::$urlTokens[0] == Config::$x['urlProjectFileToken']){
-			self::sendFile(Config::$x['instancePublicFolder']);
-		}elseif(self::$urlTokens[0] == Config::$x['urlSystemFileToken']){
-			self::sendFile(Config::$x['systemPublicFolder']);
+		if(self::$urlTokens[0] == \Config::$x['urlProjectFileToken']){
+			self::sendFile(\Config::$x['instancePublicFolder']);
+		}elseif(self::$urlTokens[0] == \Config::$x['urlSystemFileToken']){
+			self::sendFile(\Config::$x['systemPublicFolder']);
 		}
 		
 		self::routeRequest();
-		Hook::run('prePage');
+		\Hook::run('prePage');
 	
 //+	load controls and section page{
 	
 		global $page;
-		$page = Page::init();//we are now in the realm of dynamic pages
+		$page = \Control::init();//we are now in the realm of dynamic pages
 		
 		//after this following line, self::$urlTokens has no more influence on routing.  Modify self::$unparsedUrlTokens if you want modify control flow
 		self::$unparsedUrlTokens = array_merge([''],self::$urlTokens);
 		
 		//page utility levels
-		$pageUtillityLevel = self::getSectionPageLevel(Config::$x['projectFolder'].'tool/section/');
-		$pageDisplayUtillityLevel = self::getSectionPageLevel(Config::$x['projectFolder'].'view/tool/section/');
+		$pageUtillityLevel = self::getPageLevel(\Config::$x['projectFolder'].'tool/section/');
+		$pageDisplayUtillityLevel = self::getPageLevel(\Config::$x['projectFolder'].'view/tool/section/');
 		
 		//get the section and page control
 		while(self::$unparsedUrlTokens){
@@ -61,24 +62,24 @@ class Route{
 //+		include section page, if at appropriate level {
 			$level = count(self::$parsedUrlTokens);
 			if($pageUtillityLevel && $level == $pageUtillityLevel){
-				Files::incOnce(Config::$x['projectFolder'].'tool/section/'.implode('/',self::$parsedUrlTokens).'.php');
+				\Files::incOnce(\Config::$x['projectFolder'].'tool/section/'.implode('/',self::$parsedUrlTokens).'.php');
 			}
 			if($pageDisplayUtillityLevel && $level == $pageDisplayUtillityLevel){
-				Files::incOnce(Config::$x['projectFolder'].'view/tool/section/'.implode('/',self::$parsedUrlTokens).'.php');
+				\Files::incOnce(\Config::$x['projectFolder'].'view/tool/section/'.implode('/',self::$parsedUrlTokens).'.php');
 			}
 //+		}
 			
 			//++ load the control {
-			$path = Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
+			$path = \Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
 			//if named file, load, otherwise load generic control in directory
 			$file = !is_dir($path) ? $path.'.php' : $path.'/control.php';
-			$loaded = Files::inc($file,['page'],self::$regexMatch);
+			$loaded = \Files::inc($file,['page'],self::$regexMatch);
 			//++ }
 			
 			//not loaded and was last token, page not found
 			if($loaded === false && !self::$unparsedUrlTokens){
-				if(Config::$x['pageNotFound']){
-					Config::loadUserFiles(Config::$x['pageNotFound'],'control',array('page'));
+				if(\Config::$x['pageNotFound']){
+					\Config::loadUserFiles(\Config::$x['pageNotFound'],'control',array('page'));
 					exit;
 				}else{
 					Debug::toss('Request handler encountered unresolvable token at control level.'."\nCurrent token: ".self::$currentToken."\nTokens parsed".print_r(self::$parsedUrlTokens,true));
@@ -90,7 +91,7 @@ class Route{
 	}
 	///get the first (most specific to page) section-page tool
 	/**@return tokens at which tool was found*/
-	private static function getSectionPageLevel($base){
+	private static function getPageLevel($base){
 		$tokens = self::$urlTokens;
 		while($tokens){
 			if(is_file($base.implode('/',$tokens).'.php')){
@@ -119,7 +120,7 @@ class Route{
 	*/
 	static $urlCaselessBase;///<urlBase, but cases removed
 	private static function tokenise($urlDir){
-		self::$urlTokens = Tool::explode('/',$urlDir);
+		self::$urlTokens = \Tool::explode('/',$urlDir);
 		self::$urlBase = $urlDir;
 		self::$urlCaselessBase = strtolower($urlDir);
 	}
@@ -137,7 +138,7 @@ class Route{
 			
 				//parse flags for determining match string
 				if($rule['flags']['regex']){
-					$rule['match'] = Tool::pregDelimit($rule[0]);
+					$rule['match'] = \Tool::pregDelimit($rule[0]);
 					if($rule['flags']['caseless']){
 						$rule['match'] .= 'i';
 					}
@@ -213,9 +214,9 @@ class Route{
 				self::$parsedUrlTokens[] = self::$currentToken;
 			}
 			
-			$path = Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
+			$path = \Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
 			if(!isset(self::$ruleSets[$path])){
-				self::$ruleSets[$path] = (array)Files::inc($path.'/routes.php',null,null,['rules'])['rules'];
+				self::$ruleSets[$path] = (array)\Files::inc($path.'/routes.php',null,null,['rules'])['rules'];
 			}
 			if(!self::$ruleSets[$path]){
 				continue;
@@ -228,27 +229,27 @@ class Route{
 	}
 	///internal use. Gets a file based on next token in the unparsedUrlTokens variable
 	private static function getTokenFile($defaultName,$globalize=null,$extract=null){
-		$path = Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
+		$path = \Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
 		//if path not directory, possibly is file
 		if(!is_dir($path)){
 			$file = $path.'.php';
 		}else{
 			$file = $path.'/'.$defaultName.'.php';
 		}
-		return Files::inc($file,$globalize,null,$extract);
+		return \Files::inc($file,$globalize,null,$extract);
 	}
 	///internal use. attempts to find non php file and send it to the browser
 	private static function sendFile($base){
 		array_shift(self::$urlTokens);
 		$filePath = escapeshellcmd(implode('/',self::$urlTokens));
 		if($filePath == 'index.php'){
-			Config::loadUserFiles(Config::$x['pageNotFound'],'control',array('page'));
+			\Config::loadUserFiles(\Config::$x['pageNotFound'],'control',array('page'));
 		}
 		$path = $base.$filePath;
-		if(Config::$x['downloadParamIndicator']){
-			$saveAs = $_GET[Config::$x['downloadParamIndicator']] ? $_GET[Config::$x['downloadParamIndicator']] : $_POST[Config::$x['downloadParamIndicator']];
+		if(\Config::$x['downloadParamIndicator']){
+			$saveAs = $_GET[\Config::$x['downloadParamIndicator']] ? $_GET[\Config::$x['downloadParamIndicator']] : $_POST[\Config::$x['downloadParamIndicator']];
 		}
-		View::sendFile($path,$saveAs);
+		\View::sendFile($path,$saveAs);
 	}
 	static function currentPath(){
 		return '/'.implode('/',self::$parsedUrlTokens).'/';

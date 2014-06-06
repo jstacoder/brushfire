@@ -1,13 +1,14 @@
 <?
-///To standardize the normal use of CRUD
+namespace control;
+///To standardize the normal use of Crud
 /**
-Most simple sites have pages representing some basic CRUD operation around one primary table.
+Most simple sites have pages representing some basic Crud operation around one primary table.
 
 standard concerns standards
 	for ease of use, two formats available
 		for arrays, key=>null value means to exclude, a missing key means to default, and key=>'' means to include or default
 		for strings, url form, where keys starting with "-" are excluded
-	in place of data, functions can be used to generate values at the time CRUDPage and subsequent code use them.  For functions, the standard is:
+	in place of data, functions can be used to generate values at the time CrudPage and subsequent code use them.  For functions, the standard is:
 		param 1: the value of the item at the context.  
 			show: this is the formatted value.
 			format: this is the value via the db or input
@@ -44,7 +45,7 @@ standard concerns
 	validate
 		Upon input, how the model part input should be validated
 */
-class CRUDPage{
+class CrudPage{
 	const CREATE = 1;
 	const READ = 2;
 	const UPDATE = 4;
@@ -65,10 +66,10 @@ class CRUDPage{
 	
 	function __construct(){
 		//there is a chance these things will have been already created with another db instance, so check
-		$this->CRUDModel = new CRUDModel($this);
+		$this->CrudModel = new CrudModel($this);
 		$this->DbModel = DbModel::init($this->db->name,$this->db);
 		
-		$columns = $this->CRUDModel->columns($this->model['table']);
+		$columns = $this->CrudModel->columns($this->model['table']);
 		$keys = array_keys($columns);
 		$this->defaultConcernData= array();
 		foreach($keys as $key){
@@ -76,13 +77,13 @@ class CRUDPage{
 		}
 		krsort($this->crud);//reverse key sorted so specific rules outweight combined rules
 		
-		Hook::run('newCRUDPage',$this);
+		Hook::runWithReferences('newCrudPage',$this);
 	}
 	
-	///Add a CRUD concern to the $this->crud var
+	///Add a Crud concern to the $this->crud var
 	/**
 	Occasionally, there are interested besides the normal CRUMD.  And, in this case, it may be desired to add that interested within
-	the SectionPage representing that interest
+	the Page representing that interest
 	*/
 	function addConcern($concernData = null){
 		$this->lastConcern = $concern = $this->lastConcern*2;
@@ -95,7 +96,7 @@ class CRUDPage{
 	
 	///get multiple concerns
 	function gets($concerns,$crudType=null){
-		$crudType = $this->getCRUDType($crudType);
+		$crudType = $this->getCrudType($crudType);
 		$concerns = Arrays::stringArray($concerns);
 		foreach($concerns as $concern){
 			$concernsData[$concern] = $this->get($concern,$crudType);
@@ -109,7 +110,7 @@ class CRUDPage{
 	@param	concern	the concern within one of the types within CRUMD
 	*/
 	function get($concern,$crudType=null,$exclusive=false){
-		$crudType = $this->getCRUDType($crudType);
+		$crudType = $this->getCrudType($crudType);
 		
 		if(!$exclusive && $this->typeConcerns[$crudType][$concern]){
 			return $this->typeConcerns[$crudType][$concern];
@@ -157,7 +158,7 @@ class CRUDPage{
 	
 	///so as to provide some special handling of database fields
 	function default_input(){
-		foreach($this->CRUDModel->columns[$this->model['table']] as $column => $info){
+		foreach($this->CrudModel->columns[$this->model['table']] as $column => $info){
 			switch($info['type']){
 				case 'int':
 					$inputs[$column] = array('form'=>'text','options'=>array($column));
@@ -227,7 +228,7 @@ class CRUDPage{
 	@param	formatOnlyFields	if you don't want to apply formatting to entire object, pass array of fields to format
 	*/
 	function formatItem($crudType=null,$formatOnlyFields=null){
-		$crudType = $this->getCRUDType($crudType);
+		$crudType = $this->getCrudType($crudType);
 		$format = $this->get('format',$crudType);
 		if($formatOnlyFields){
 			foreach($formatOnlyFields as $field){
@@ -255,15 +256,15 @@ class CRUDPage{
 	}
 
 	function create($handler=null){
-		$this->prepareWrite(CRUDPage::CREATE);
-		$handler = $handler ? $handler : array($this->CRUDModel,'create');
+		$this->prepareWrite(CrudPage::CREATE);
+		$handler = $handler ? $handler : array($this->CrudModel,'create');
 		return call_user_func($handler);
 	}
 	
 	///pulls the validater and write concern and appies them.
 	function update($handler=null){
-		$this->prepareWrite(CRUDPage::UPDATE);
-		$handler = $handler ? $handler : array($this->CRUDModel,'update');
+		$this->prepareWrite(CrudPage::UPDATE);
+		$handler = $handler ? $handler : array($this->CrudModel,'update');
 		return call_user_func($handler);
 	}
 	function prepareWrite($concern){
@@ -271,9 +272,9 @@ class CRUDPage{
 		$this->validaters = $fields['validate'];
 		foreach($fields['write'] as $k=>$v){
 			if(is_a($v,'closure')){
-				$this->page->in[$k] = $v($this->page->in[$k]);
+				$this->control->in[$k] = $v($this->control->in[$k]);
 			}elseif($v !== true){
-				$this->page->in[$k] = $v;
+				$this->control->in[$k] = $v;
 			}
 			$this->model['columns'][] = $k;
 		}
@@ -281,9 +282,9 @@ class CRUDPage{
 	
 	///handles single or multiple delete
 	function delete($handler=null){
-		$handler = $handler ? $handler : array($this->CRUDModel,'delete');
-		if(is_array($this->page->in['delete'])){
-			foreach($this->page->in['delete'] as $delete){
+		$handler = $handler ? $handler : array($this->CrudModel,'delete');
+		if(is_array($this->control->in['delete'])){
+			foreach($this->control->in['delete'] as $delete){
 				$this->id = $delete;
 				$returns[] = call_user_func($handler);
 			}
@@ -295,7 +296,7 @@ class CRUDPage{
 	}
 	
 	function readCheck($crudType=null){
-		$crudType = $this->getCRUDType($crudType);
+		$crudType = $this->getCrudType($crudType);
 		$this->read($crudType);
 		if($this->item){
 			return true;
@@ -336,13 +337,13 @@ class CRUDPage{
 	}
 	function validate(){
 		if($this->validaters){
-			$this->page->filterAndValidate($this->validaters);
+			$this->control->filterAndValidate($this->validaters);
 		}
 	}
 	
 	///append to the $crud.  You can append a null, or a -key to remove
 	function append($part,$concern,$crudType=null){
-		$crudType = $this->getCRUDType($crudType);
+		$crudType = $this->getCrudType($crudType);
 		$concernData = &$this->crud[$crudType][$concern];
 		if($concernData){
 			$part = $this->standardizeConcernData($part);
@@ -368,8 +369,8 @@ class CRUDPage{
 		}
 		return $concernData;
 	}
-	///determine which CRUD type should be used
-	function getCRUDType($crudType=null,$default = CRUDPage::READ){
+	///determine which Crud type should be used
+	function getCrudType($crudType=null,$default = CrudPage::READ){
 		if(!is_int($crudType)){
 			if(is_string($crudType)){
 				$crudType = strtolower($crudType);

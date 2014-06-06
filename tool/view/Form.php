@@ -1,8 +1,11 @@
 <?
+namespace view;
+class Form{
+	use SingletonDefaultPublic;
+}
 ///handling displaying inputs, potentially with prior input to be displayed
 /** All values are escaped*/
-class Form{
-	use SingletonDefault;
+class FormPublic{
 	function __construct($data=null,$options=null){
 		global $page;
 		$this->in = $page->in;
@@ -28,7 +31,7 @@ class Form{
 		if(!method_exists($this,$name)){
 			$name = substr($name,1);
 			if(!method_exists(__class__,$name)){
-				Debug::toss('Bad Form class method');
+				\Debug::toss('Bad Form class method');
 			}
 			$formerValueBehavior = $this->valueBehavior;
 			$this->valueBehavior = array_shift($arguments);
@@ -48,9 +51,9 @@ class Form{
 		if (isset($this->in[$name])){
 			return $this->in[$name];
 		}else{
-			$matches = Http::getSpecialSyntaxKeys($name);
-			if($matches && Arrays::isElement($matches,$this->in)){
-				return Arrays::getElementReference($matches,$this->in);
+			$matches = \Http::getSpecialSyntaxKeys($name);
+			if($matches && \Arrays::isElement($matches,$this->in)){
+				return \Arrays::getElementReference($matches,$this->in);
 			}else{
 				if($useArray){
 					return $this->in[$name];
@@ -82,20 +85,24 @@ class Form{
 	}
 	
 	/// resolves the value for a given form field name
-	function resolveValue($name, $value=null, $behavior=null,$allowArrays=false){
-		$behavior = $behavior ? $behavior : $this->valueBehavior;
+	/**
+		@param options
+			behavior	either a string of one of the Form methods, or a custom callback - for selecting a value (where multiple inputs might be present). 
+			allowArray	whether to allow the value return to be an array (useful for multi-selects)
+			format	callback for formatting the value after it is found
+	*/
+	function resolveValue($name, $value=null, $options=[]){
+		$behavior = $options['behavior'] ? $options['behavior'] : $this->valueBehavior;
 		if(!is_array($behavior)){
 			$behavior = array($this,$behavior);
 		}
 		$value = call_user_func_array($behavior,array($name,$value));
 		
-		if(!$allowArrays){
-			FieldIn::makeString($value);
+		if(!$options['allowArray']){
+			\control\Field::makeString($value);
 		}
-		
-		//SectionPage integration with Form for field form output (use with FieldOut to format form fields)
-		if(isset(SectionPage::$fieldOut) && SectionPage::$fieldOut[$name]){
-			call_user_func_array(SectionPage::$fieldOut[$name],array(&$value));
+		if($options['format']){
+			$value = call_user_func_array($options['format'],array($value,$name));
 		}
 		
 		return $value;
@@ -108,7 +115,7 @@ class Form{
 				list($x,$name) = call_user_func($parser,$x,$name);
 			}
 		}
-		$classes = Arrays::remove(explode(' ',$x['class']));
+		$classes = \Arrays::remove(explode(' ',$x['class']));
 		unset($x['class']);
 		if($classes){
 			$additions[] = 'class="'.implode(' ',$classes).'"';
@@ -157,14 +164,16 @@ class Form{
 	@note	this is a simplified version which doesn't have option groups or freeform options.  I might introduce the more complicated version later
 	*/
 	private function select($name, $options, $value = null, $x = null){
-		$values = $this->resolveValue($name, $value,null,true);
+		$resolveValue = (array)$x['value'];
+		$resolveValue['allowArray'] = true;
+		$values = $this->resolveValue($name, $value, $resolveValue);
 		if(!is_array($values)){
 			$values = array($values);
 		}
 		//makes an array where values are turned into an array of keys (= value) where each element is true
 		$values = array_fill_keys($values, true);
 		
-		$specialX = Arrays::separate(array('none','noneValue'),$x);
+		$specialX = \Arrays::separate(array('none','noneValue'),$x);
 		
 		//create an array specifying the selected options
 		$detailedOptions = array();
@@ -215,7 +224,7 @@ class Form{
 	*/
 	private function radio($name, $option, $checked=null, $x=null){
 		$checked = $checked ? $option : $checked;
-		$value = $this->resolveValue($name,$checked);//ie, if checked, pass in name of option as value, otherwise, pass in the blank value to serve as referenced variable
+		$value = $this->resolveValue($name,$checked,$x['value']);//ie, if checked, pass in name of option as value, otherwise, pass in the blank value to serve as referenced variable
 		return '<input type="radio" name="'.$name.'" '.($value == $option ?' checked':null).$this->attributes($x,$name).' value="'.htmlspecialchars($option).'" />';
 	}
 	/// create an <input type="checkbox"> element
@@ -226,7 +235,7 @@ class Form{
 	@note	the only value is 1, because checkboxes should probably be unique in the name and values other than 1 are unnecessary
 	*/
 	private function checkbox($name, $checked=null, $x=null, $value=null){
-		$checkedValue = $this->resolveValue($name,$checked);
+		$checkedValue = $this->resolveValue($name,$checked,$x['value']);
 		$value = $value ? $value : 1;
 		$on = $this->hasValue($checkedValue) && $checkedValue != '0';
 		return '<input type="checkbox" name="'.$name.'" '.($on?' checked="1" ':null).$this->attributes($x,$name).' value="'.htmlspecialchars($value).'" />';
@@ -239,7 +248,7 @@ class Form{
 	@param	x	list of options including "id", "class", "on[click|mouseover|...]", "alt", "title" and "extra", which is included in the tag
 	*/
 	private function text($name, $value=null, $x=null){
-		$value = $this->resolveValue($name,$value);
+		$value = $this->resolveValue($name,$value,$x['value']);
 		return '<input type="text" name="'.$name.'" '.($this->hasValue($value)?' value="'.htmlspecialchars($value).'" ':null).$this->attributes($x,$name).'/>';
 	}
 
@@ -250,7 +259,7 @@ class Form{
 	@param	x	list of options including "id", "class", "on[click|mouseover|...]", "alt", "title" and "extra", which is included in the tag
 	*/
 	private function file($name, $value=null, $x=null){
-		$value = $this->resolveValue($name,$value);
+		$value = $this->resolveValue($name,$value,$x['value']);
 		return '<input type="file" name="'.$name.'" '.($this->hasValue($value)?' value="'.htmlspecialchars($value).'" ':null).$this->attributes($x,$name).'/>';
 	}
 
@@ -261,7 +270,7 @@ class Form{
 	@param	x	list of options including "id", "class", "on[click|mouseover|...]", "alt", "title" and "extra", which is included in the tag
 	*/
 	private function textarea($name, $value=null, $x=null){
-		$value = $this->resolveValue($name,$value);
+		$value = $this->resolveValue($name,$value,$x['value']);
 		return '<textarea name="'.$name.'" '.$this->attributes($x,$name).'>'.($this->hasValue($value)?htmlspecialchars($value):null).'</textarea>';
 	}
 
@@ -272,7 +281,7 @@ class Form{
 	@param	x	list of options including "id", "class", "on[click|mouseover|...]", "alt", "title" and "extra", which is included in the tag
 	*/
 	private function password($name, $value=null, $x=null){
-		$value = $this->resolveValue($name,$value);
+		$value = $this->resolveValue($name,$value,$x['value']);
 		return '<input type="password" name="'.$name.'"'.($this->hasValue($value)?'value="'.htmlspecialchars($value).'" ':null).$this->attributes($x,$name).'/>';
 	}
 
@@ -283,7 +292,7 @@ class Form{
 	@param	x	list of options including "id", "class", "on[click|mouseover|...]", "alt", "title" and "extra", which is included in the tag
 	*/
 	private function hidden($name,$value=null,$x=null){
-		$value = $this->resolveValue($name,$value);
+		$value = $this->resolveValue($name,$value,$x['value']);
 		return '<input type="hidden" name="'.$name.'" '.($this->hasValue($value)?'value="'.htmlspecialchars($value).'" ':null).$this->attributes($x,$name).'/>';
 	}
 

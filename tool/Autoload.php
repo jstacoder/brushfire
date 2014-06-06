@@ -1,10 +1,11 @@
 <?
 /**
-Namespaced class matched against ns folders.  If ns folders don't exist in $nsF, broaden scope, ending on default scope
+@note	namespaces always matter with autoloading.  Any subset of namespace path as nsF key, then take remaining path an affix it to tested folders (which may be the entire namespace path affixed to the default folders)
 */
 class Autoload{
-	use SingletonDefault;
-	
+	use SingletonDefaultPublic;
+}
+class AutoloadPublic{
 	///name space resource folders
 	public $nsF = array();
 	/**
@@ -43,7 +44,7 @@ class Autoload{
 		$this->req($className);
 	}
 
-	protected function req($className){
+	function req($className){
 		$result = $this->load($className);
 		$lastAutoloader = array_pop(spl_autoload_functions())[0];
 		//this is the last autoload and it has failed
@@ -57,7 +58,7 @@ class Autoload{
 	/**
 	@param	className	name of the class and the name of the file without the ".php" extension
 	*/
-	protected function load($className){
+	function load($className){
 		$excludePaths = array();
 		//go throught all possible paths until either finding the class or failing
 		while(!class_exists($className,false)){
@@ -76,7 +77,7 @@ class Autoload{
 	}
 
 	///Tries to load class, returns true on success
-	protected function loaded($className){
+	function loaded($className){
 		$result = $this->load($className);
 		return $result['found'];
 	}
@@ -86,18 +87,27 @@ class Autoload{
 	@param	folders	array of folders to check in
 	*/
 
-	protected function findClass($name,&$excludePaths){
+	function findClass($name,&$excludePaths){
 		//resolve namespace
 		$parts = explode('\\',$name);
 		$name = array_pop($parts);
 		$fileName = $name.'.php';
+		$affix = '';
 		
 		if($parts){
+			$partsCopy = $parts;
+			//test nsF keys
 			while($parts){
 				if($folders = $this->nsF['\\'.implode('\\',$parts)]){
+					$found = true;
 					break;
 				}
 				array_pop($parts);
+			}
+			if($found){
+				$affix = $parts ? implode('/',$parts).'/' : '';
+			}else{
+				$affix = implode('/',$partsCopy).'/';
 			}
 		}
 		if(!$folders){
@@ -106,13 +116,13 @@ class Autoload{
 		
 		foreach($folders as $resource){
 			list($path,$options) = $resource;
-			if($path = $this->checkPath($fileName,$path,$options,$excludePaths)){
+			if($path = $this->checkPath($fileName,$path.$affix,$options,$excludePaths)){
 				return $path;
 			}
 		}
 	}
 
-	protected function checkPath($fileName,$path,$options,&$excludePaths,$move=0){
+	function checkPath($fileName,$path,$options,&$excludePaths,$move=0){
 		if(isset($options['stopMove']) && $options['stopMove'] <= $move){
 			return;
 		}
@@ -162,8 +172,8 @@ class Autoload{
 		}
 	}
 	
-	///adds folder SectionPage is expected in
-	protected function addSectionResources(){		
+	///adds folder Page is expected in
+	function addSectionResources(){		
 		$section = implode('/',Route::$urlTokens).'/';
 		$base = Config::$x['projectFolder'].'tool/section/';
 		array_unshift($this->nsF['default'],array(

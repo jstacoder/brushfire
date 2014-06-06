@@ -125,9 +125,9 @@ $config['autoloadSection'] = true;
 $config['aliasesFiles'] = $config['projectFolder'].'view/aliases.php';
 //+	}
 
-//+	CRUD related config {
-//what to call when CRUD model encounters a bad id
-$config['CRUDbadIdCallback'] = 'badId';
+//+	Crud related config {
+//what to call when Crud model encounters a bad id
+$config['CrudbadIdCallback'] = 'badId';
 //+	}
 
 //+	Misc config {

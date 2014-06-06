@@ -6,7 +6,7 @@ class View{
 		if(!$page){
 			global $page;
 		}
-		$this->page = $page;
+		$this->control = $page;
 	}
 	function load(){
 		foreach(Config::$x['aliasesFiles'] as $file){
@@ -23,7 +23,7 @@ class View{
 	*/
 	protected function getTemplate($template,$vars=null){
 		$vars['thisTemplate'] = $template;
-		$vars['page'] = $this->page;
+		$vars['page'] = $this->control;
 		$vars['view'] = $this;//$this is reserved, can not use outside of object context
 		
 		ob_start();
@@ -40,9 +40,9 @@ class View{
 	///used as the primary method to show a collection of templates.  @attention parameters are the same as the View::get function
 	protected function show(){
 		$this->showArgs = func_get_args();
-		Hook::run('viewPreShow',$this->showArgs);
+		Hook::runWithReferences('viewPreShow',$this->showArgs);
 		$output = call_user_func_array(array($this,'get'),$this->showArgs);
-		Hook::run('viewPostShow',$output);
+		Hook::runWithReferences('viewPostShow',$output);
 		Hook::run('preHTTPMessageBody');
 		echo $output['combine'];
 	}

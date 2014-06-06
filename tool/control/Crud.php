@@ -1,14 +1,15 @@
 <?
+namespace control;
 ///Create Read Update Delete general class
-class CRUDControl{
+class Crud{
 	use SingletonDefault;
-	function __construct($sectionPage=null){
-		$this->SectionPage = $sectionPage;
-		if(!$this->SectionPage){
+	function __construct($page=null){
+		$this->page = $page;
+		if(!$this->page){
 			global $page;
-			$this->SectionPage = $page->tool;
+			$this->page = $page->page;
 		}
-		$this->page = $this->SectionPage->page;
+		$this->control = $this->page->control;
 	}
 	function __call($fnName,$args){
 		if(in_array($fnName,array('create','update','delete','read'))){
@@ -21,38 +22,38 @@ class CRUDControl{
 	@param	default	the command to use if none of the provided were found.  Will be run regardless of whether corersponding input command found
 	*/
 	protected function handle($commands=array(),$default='read'){
-		$commands = Arrays::stringArray($commands);
+		$commands = \Arrays::stringArray($commands);
 		
 		$this->attempted = $this->called = array();
 		foreach($commands as $command){
-			if($this->page->in['_cmd_'.$command]){
+			if($this->control->in['_cmd_'.$command]){
 				$return = $this->callFunction($command);
 				if($return === null || $return === false){
 					continue;
 				}
-				return new CRUDResult($command,$return,$this->page->in['_cmd_'.$command],array('control'=>$this));
+				return new CrudResult($command,$return,$this->control->in['_cmd_'.$command],array('control'=>$this));
 			}
 		}
 		if($default && !in_array($default,$this->attempted)){
-			$return = $this->callFunction($default,$this->page->in['_cmd_'.$command]);
-			return new CRUDResult($default,$return,null,array('control'=>$this));
+			$return = $this->callFunction($default,$this->control->in['_cmd_'.$command]);
+			return new CrudResult($default,$return,null,array('control'=>$this));
 		}
-		return new CRUDResult('',null);
+		return new CrudResult('',null);
 	}
 	protected function getFunction($command,$subcommand=null){
 		if(!$subcommand){
-			$subcommand = $this->page->in['_cmd_'.$command];
+			$subcommand = $this->control->in['_cmd_'.$command];
 		}
-		if(method_exists($this->SectionPage,$command.'_'.$subcommand)){
-			return array($this->SectionPage,$command.'_'.$subcommand);
-		}elseif(method_exists($this->SectionPage,$command)){
-			return array($this->SectionPage,$command);
-		}elseif(isset($this->SectionPage->model) 
-			&& $this->SectionPage->model['table'] 
-			&& $this->SectionPage->CRUDModel
-			&& method_exists($this->SectionPage->CRUDModel,$command)
+		if(method_exists($this->page,$command.'_'.$subcommand)){
+			return array($this->page,$command.'_'.$subcommand);
+		}elseif(method_exists($this->page,$command)){
+			return array($this->page,$command);
+		}elseif(isset($this->page->model) 
+			&& $this->page->model['table'] 
+			&& $this->page->CrudModel
+			&& method_exists($this->page->CrudModel,$command)
 		){
-			return array($this->SectionPage->CRUDModel,$command);
+			return array($this->page->CrudModel,$command);
 		}
 		return false;
 	}
@@ -66,12 +67,12 @@ class CRUDControl{
 			return $return;
 		}
 		if($error){
-			$this->page->error('Unsupported command');
+			$this->control->error('Unsupported command');
 		}
 	}
 }
 /*Note, the handling of a result in a standard way would potentially require standard action names, item titles, directory structure, id parameters, etc.  So, just make it easy to handle, don't actually handle*/
-class CRUDResult{
+class CrudResult{
 	function __construct($type,$return,$subType=null,$info=null){
 		$this->type = $type;
 		$this->return = $return;

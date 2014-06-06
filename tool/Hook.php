@@ -25,9 +25,13 @@ class Hook{
 		$hook = array('callback'=>$callback,'options'=>$options);
 		return Arrays::addOnKey($options['hookName'],$hook,self::$hooks[$spotName]);
 	}
+	///run spot name with passed (non reference) values
+	static function run($spotName){
+		call_user_func_array(['Hook','runWithReferences'],func_get_args());
+	}
 	///pass by reference + variable number of parameters does not work with func_get_args, so either use debug_backtrace (expensive), or just prefill vars
 	///this uses prefill, and prefills 13 params, thus limiting its use to 13 referenced variables (or 13 variables on closures), but unlimited non-reference variables
-	static function run($spotName,&$a1=null,&$a2=null,&$a3=null,&$a4=null,&$a5=null,&$a6=null,&$a7=null,&$a8=null,&$a9=null,&$a10=null,&$a11=null,&$a12=null,&$a13=null){
+	static function runWithReferences($spotName,&$a1=null,&$a2=null,&$a3=null,&$a4=null,&$a5=null,&$a6=null,&$a7=null,&$a8=null,&$a9=null,&$a10=null,&$a11=null,&$a12=null,&$a13=null){
 		if(self::$hooks[$spotName]){
 			$argC = func_num_args();
 			for($i = 1;$i<$argC;$i++){

@@ -79,10 +79,12 @@ class Session{
 	static function create(){
 			$id = md5(Http::getIp().$_SERVER['HTTP_USER_AGENT'].microtime().rand(1,20));
 			
-			Cookie::set('sessionId',$id,array('expire'=>Config::$x['sessionCookieExpiry']));
+			$expiry = Config::$x['sessionCookieExpiry'] ? (new Time(Config::$x['sessionCookieExpiry']))->unix : 0;
+			
+			Cookie::set('sessionId',$id,array('expire'=>$expiry));
 			
 			$key = self::makeKey();
-			Cookie::set('sessionKey',$key,array('expire'=>Config::$x['sessionCookieExpiry']));
+			Cookie::set('sessionKey',$key,array('expire'=>$expiry));
 			
 			self::$started = true;
 			self::$data->create();
@@ -112,7 +114,7 @@ class Session{
 	}
 	private static function _gc(){
 		if(Config::$x['sessionUseDb']){
-			Db::delete(Config::$x['sessionDbTable'],'time < '.strtotime(Config::$x['sessionExpiry']).' and permanent is null');
+			Db::delete(Config::$x['sessionDbTable'],'updated__unix < '.strtotime(Config::$x['sessionExpiry']).' and permanent is null');
 		}else{
 			foreach(scandir(Config::$x['sessionFolder']) as $file){
 				//file is not folder and is not permanent session

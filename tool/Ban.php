@@ -20,7 +20,7 @@ class Ban extends SingletonDefault{
 	static $banTypes;
 	protected function __construct($identity,$db=null){
 		if(!$db){
-			$db = Db::$primary;
+			$db = Db::primary();
 		}
 		$this->db = $db;
 		

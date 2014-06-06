@@ -1,4 +1,5 @@
 <?
+namespace view;
 //since there is integration with display-page level activity, this is a tool of the view
 class SortPage{
 	/**
@@ -26,7 +27,7 @@ class SortPage{
 			}
 			if(in_array($field,$allowed)){
 				if($quoteColumns){
-					$field = Db::quoteIdentity($field);
+					$field = \Db::quoteIdentity($field);
 				}
 				$orders[]  = $field.$order;
 				$usedSorts[] = $sort;
@@ -53,7 +54,7 @@ class SortPage{
 		
 		$offset = $pageBy * $pageNumber;
 		$sql .= "\nLIMIT ".$offset.', '.$pageBy;
-		list($count,$rows) = Db::countAndRows(($max ? $max + 1 : null),$sql);
+		list($count,$rows) = \Db::countAndRows(($max ? $max + 1 : null),$sql);
 		$top = $count;
 		if($max && $count > $max){
 			$top = $max;

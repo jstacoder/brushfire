@@ -9,7 +9,7 @@ class DbBatch implements Iterator{
 	public $db;
 	function __construct($db=null){
 		if(!$db){
-			$db = Db::$primary;
+			$db = Db::primary();
 		}
 		$this->db = $db;
 		$this->position = 0;

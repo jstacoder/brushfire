@@ -1,4 +1,5 @@
 <?php
+namespace view;
 class FormStructure{
 	//Form method names and FormStructure method names don't conflict, so assume non FormStructure method names are Form method names, and encapsulate in formStructure where first argument is display param
 	static function __callStatic($method,$arguments){

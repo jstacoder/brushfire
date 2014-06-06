@@ -123,7 +123,7 @@ class Debug{
 		}
 		
 		$code = self::getLine($eFile,$eLine);
-		$eFile = preg_replace('@'.PU.'@','',$eFile);
+		$eFile = self::abbreviateFilePath($eFile);
 		$eFile = preg_replace('@'.PR.'@','',$eFile);
 		$err = "+=+=+=+ ".date("Y-m-d H:i:s").' | '.Config::$x['projectName']." | $type | ".self::abbreviateFilePath($eFile).":$eLine +=+=+=+\n$eStr\n";
 		
@@ -137,25 +137,23 @@ class Debug{
 				array_shift($bTrace);
 			}
 			
-			if(Config::$x['debugAssumePerfection']){
-				//Exclude system files (presume they are errorless)
-				foreach($bTrace as $k=>$v){
-					if(preg_match('@'.Config::$x['systemFolder'].'@',$v['file'])){
-						$systemFileFound = true;
-						array_shift($bTrace);
-						if($nullFileFound){
-							array_shift($bTrace);
-						}
-					}elseif($systemFileFound && !$v['file']){
-						$nullFileFound = true;
+			//remove undesired stack points, and non-named points stemming from
+			foreach($bTrace as $k=>&$v){
+				$v['shortName'] = self::abbreviateFilePath($v['file']);
+				foreach(Config::$x['errorStackExclude'] as $exclusionPattern){
+					if(!$v['file']){
+						$unnamed++;
 					}else{
-						break;
+						if($found = preg_match($exclusionPattern,$v['shortName'])){
+							array_splice($bTrace,$k - $unnamed, 1 + $unnamed);
+						}
+						$unnamed = 0;
 					}
 				}
 			}
 			
 			foreach($bTrace as $v){
-				$err .= "\n".'(-'.$v['line'].'-) '.self::abbreviateFilePath($v['file'])."\n";
+				$err .= "\n".'(-'.$v['line'].'-) '.$v['shortName']."\n";
 				$code = self::getLine($v['file'],$v['line']);
 				if($v['class']){
 					$err .= "\t".'Class: '.$v['class'].$v['type']."\n";
@@ -243,7 +241,7 @@ class Debug{
 		}
 	}
 	static function abbreviateFilePath($path){
-		return preg_replace(array('@'.Config::$x['projectFolder'].'@','@'.Config::$x['systemFolder'].'@'),array('instance:','system:'),$path);
+		return preg_replace(array('@'.Config::$x['projectFolder'].'@','@'.Config::$x['systemFolder'].'@'),array('project:','system:'),$path);
 	}
 	///print a variable and kill the script
 	/** first cleans the output buffer in case there was one.  Echo in <pre> tag

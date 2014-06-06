@@ -1,6 +1,6 @@
 <?
-class FieldIn{
-	static $types = array(
+class Field{
+	static $ruleAliases = array(
 		'phone' => 'f:toDigits,!v:filled,v:phone',
 		'zip' => '!v:filled,v:zip',
 		'name' => 'f:toName,f:trim,!v:filled',

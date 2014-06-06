@@ -10,14 +10,14 @@ class DbTree{
 	public $baseWhere = array();
 	function __construct($table, $fkColumn=null, $db=null){
 		if(!$db){
-			$db = Db::$primary;
+			$db = Db::primary();
 		}
 		$this->db = $db;
 		$this->table = $table;
 		$this->fkColumn = $fkColumn;
 		$this->baseWhere = $this->fkColumn ? [$this->fkColumn => null] : array();
 	}
-	static $functionExceptions = ['deleteTree'];
+	static $functionExceptions = ['deleteTree','getNode'];
 	///tree operations need to be atomic, and mutex
 	function __call($fnName,$args){
 		if(in_array($fnName,self::$functionExceptions)){
@@ -55,7 +55,7 @@ class DbTree{
 		$this->db->delete($this->table, $this->baseWhere + ['"'=>'1=1']);
 	}
 	///prepend (optionally create)
-	private function prepend($node,$parent=[]){
+	protected function prepend($node,$parent=[]){
 		$parent = $this->getNode($parent);
 		$position['order_in'] = $parent['order_in'] + 1;
 		$position['order_depth'] = $parent['order_depth'] + 1;
@@ -63,7 +63,12 @@ class DbTree{
 		return $this->insert($node,$position);
 	}
 	///append (optionally create)
-	private function append($node,$parent=[]){
+	/**
+		@param	node	creation fields, or node id, or node array
+			will create node if only creation fields present (ie, nothing identifying an existing node)
+		@param	parent	empty array, or null, or node id, or node array
+	*/
+	protected function append($node,$parent=[]){
 		$parent = $this->getNode($parent);
 		if(!$parent['order_out']){//no parent, add to end of top level
 			$lastOrderIn = $this->db->row($this->table,$this->baseWhere,'order_out','order_in desc');
@@ -81,7 +86,7 @@ class DbTree{
 		return $this->insert($node,$position);
 	}
 	
-	private function insert($node,$position=[]){
+	protected function insert($node,$position=[]){
 		if($node['order_in']){//node is being moved
 			$this->expand($node,$position['order_in']);
 			if($node['order_in'] >= $position['order_in']){
