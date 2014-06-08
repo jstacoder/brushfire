@@ -125,8 +125,9 @@ class Debug{
 		$code = self::getLine($eFile,$eLine);
 		$eFile = self::abbreviateFilePath($eFile);
 		$eFile = preg_replace('@'.PR.'@','',$eFile);
-		$err = "+=+=+=+ ".date("Y-m-d H:i:s").' | '.Config::$x['projectName']." | $type | ".self::abbreviateFilePath($eFile).":$eLine +=+=+=+\n$eStr\n";
+		$header = "+=+=+=+ ".date("Y-m-d H:i:s").' | '.Config::$x['projectName']." | $type | ".self::abbreviateFilePath($eFile).":$eLine +=+=+=+\n$eStr\n";
 		
+		$err= '';
 		if(Config::$x['errorDetail'] > 0){
 			if(!$bTrace){
 				$bTrace = debug_backtrace();
@@ -180,6 +181,10 @@ class Debug{
 			}
 			$err.= "\n";
 		}
+		//identify error
+		$errorHash = sha1($err);
+		$header = 'Error Id: '.$errorHash."\n".$header;
+		$err = $header.$err;
 		
 		$file = Config::$x['logLocation'];
 		if(!file_exists($file) || filesize($file)>Tool::byteSize(Config::$x['maxLogSize'])){
@@ -192,13 +197,16 @@ class Debug{
 		
 		if(!Config::$x['inScript']){
 			if(Config::$x['errorPage']){
-				Config::loadUserFiles(Config::$x['errorPage']);
-			}elseif(Config::$x['errorMessage']){
+				Config::loadUserFiles(Config::$x['errorPage'],'.',null,['error'=>$err,'errorId'=>$errorHash]);
+				exit;
+			}
+			if(Config::$x['errorMessage']){
 				if(is_array(Config::$x['errorMessage'])){
 					$message = Config::$x['errorMessage'][rand(0,count(Config::$x['errorMessage'])-1)];
 				}else{
 					$message = Config::$x['errorMessage'];
 				}
+				preg_replace('@\$errorId@',$errorHash,$message);
 				echo $message;
 			}
 		}

@@ -2,7 +2,7 @@
 namespace control;
 ///Standard control functions
 class Common{
-	use SingletonDefault;
+	use \SingletonDefault;
 	function __construct($page=null){
 		if(!$page){
 			global $page;

@@ -92,22 +92,32 @@ class Arrays{
 	
 	
 	///finds all occurrences of value and replaces them in arbitrarily deep array
-	static function replaceAll($value,$replacement,$array){
+	static function replaceAll($value,$replacement,$array,&$found=false){
 		foreach($array as &$element){
 			if(is_array($element)){
-				$element = self::replaceAll($value,$replacement,$element);
+				$element = self::replaceAll($value,$replacement,$element,$found);
 			}elseif($element == $value){
+				$found = true;
 				$element = $replacement;
 			}
 		}
 		unset($element);
 		return $array;
 	}
-	///finds all occurrences of value and replaces parents (parent array of the value) in arbitrarily deep array
-	static function replaceAllParents($value,$replacement,$array,$parentDepth=1){
+	///finds all occurences of value and replaces parents (parent array of the value) in arbitrarily deep array
+	/**
+	Ex
+		$bob = ['sue'=>['jill'=>['dave'=>['bill'=>'bob']]]];
+		replaceAllParents('bob','bill',$bob);
+		#	['sue'=>['jill'=>['dave'=>'bill']]]
+		replaceAllParents('bob','bill',$bob,2);
+		#	['sue'=>['jill'=>'bill']];    
+	
+	*/
+	static function replaceAllParents($value,$replacement,$array,$parentDepth=1,&$found=false){
 		foreach($array as &$element){
 			if(is_array($element)){
-				$newValue = self::replaceAllParents($value,$replacement,$element,$parentDepth);
+				$newValue = self::replaceAllParents($value,$replacement,$element,$parentDepth,$found);
 				if(is_int($newValue)){
 					if($newValue == 1){
 						$element = $replacement;
@@ -118,6 +128,7 @@ class Arrays{
 					$element = $newValue;
 				}
 			}elseif($element == $value){
+				$found = true;
 				return (int)$parentDepth;
 			}
 		}

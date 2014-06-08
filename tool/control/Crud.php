@@ -2,7 +2,7 @@
 namespace control;
 ///Create Read Update Delete general class
 class Crud{
-	use SingletonDefault;
+	use \SingletonDefault;
 	function __construct($page=null){
 		$this->page = $page;
 		if(!$this->page){

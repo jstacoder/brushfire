@@ -174,7 +174,7 @@ class AutoloadPublic{
 	
 	///adds folder Page is expected in
 	function addSectionResources(){		
-		$section = implode('/',Route::$urlTokens).'/';
+		$section = implode('/',\control\Route::$urlTokens).'/';
 		$base = Config::$x['projectFolder'].'tool/section/';
 		array_unshift($this->nsF['default'],array(
 				$base.$section, array('moveUp'=>true, 'stopPath' => [$base])

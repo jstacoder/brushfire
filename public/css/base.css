@@ -257,6 +257,9 @@ h3{
 h4{
 	font-size:16px;
 }
+h5,h6,h7{
+	font-weight:bold;
+}
 
 section > main {
 	clear:both;

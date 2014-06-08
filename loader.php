@@ -27,5 +27,5 @@ set_exception_handler(Config::$x['exceptionHandler']);
 Config::loadUserFiles(Config::$x['preRoute']);
 
 #pre session request handling; for file serving and such.
-require_once $config['systemFolder'].'tool/Route.php';
-Route::handle($_SERVER['REQUEST_URI']);
+require_once $config['systemFolder'].'tool/control/Route.php';
+\control\Route::handle($_SERVER['REQUEST_URI']);

@@ -1,7 +1,7 @@
 <?
 namespace view;
 class Form{
-	use SingletonDefaultPublic;
+	use \SingletonDefaultPublic;
 }
 ///handling displaying inputs, potentially with prior input to be displayed
 /** All values are escaped*/

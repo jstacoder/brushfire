@@ -42,7 +42,7 @@ class View{
 		$this->showArgs = func_get_args();
 		Hook::runWithReferences('viewPreShow',$this->showArgs);
 		$output = call_user_func_array(array($this,'get'),$this->showArgs);
-		Hook::runWithReferences('viewPostShow',$output);
+		Hook::runWithReferences('viewPostShow',$output,$this->showArgs);
 		Hook::run('preHTTPMessageBody');
 		echo $output['combine'];
 	}
@@ -63,14 +63,14 @@ class View{
 	@return output from the templates
 	*/
 	protected function get($templates,$parseTemplates=true){
-		if(!$recursing){
+		if($parseTemplates){
 			//this parses all levels, so only need to run on non-recursive call
 			if(!is_array($templates)){
 				$templates = self::parseTemplateString($templates);
 			}
-			$templates = self::parseAliases($templates,$this->aliases);
+			$templates = $this->parseAliases($templates);
+			$templates = self::attachChildren($templates);
 		}
-			
 		$return['collect'] = array();
 		while($templates){
 			$template = array_pop($templates);
@@ -97,7 +97,18 @@ class View{
 	
 	
 	/**
-		3 forms exceptable.
+		handling examples
+			@current:
+				1: ['@current']
+				2: ['@standard',null,'!current']
+				3: ['@standard',null,'currentPage']
+				
+				bare,,page,,,!children
+				
+				4: ['@standard',null,'currentPage']
+		
+		
+		3 forms acceptable.
 
 		Multiline:
 			$templateString = '
@@ -162,10 +173,10 @@ array(
 		$array = self::generateTemplatesArray($templates);
 		
 		#replace !current with current control to template location
-		$array = Arrays::replaceAll('!current',implode('/',Route::$parsedUrlTokens),$array);
+		$array = Arrays::replaceAll('!current',implode('/',\control\Route::$parsedUrlTokens),$array);
 		
 		#set !children to work with parseAliases
-		$array = Arrays::replaceAllParents('!children','!children',$array,2);
+		#$array = Arrays::replaceAllParents('!children','!children',$array,2);
 		return $array;
 	}
 	///internal use for parseTemplateString
@@ -197,29 +208,51 @@ array(
 	}
 	///replaces aliases identified with @ALIAS_NAME in template array and defined in the alias file
 	protected function parseAliases(&$array){
-		foreach($array as &$item){
+		foreach($array as $i=>$v){
 			//is aliased, find replacement
-			if($item[0][0] == '@'){
-				$item = $this->replaceTemplateAlias(substr($item[0],1),$item[2]);
-			}
-			if($item[2][0] == '@'){
-				$item = $this->replaceTemplateAlias(substr($item[0],1));
-			}
-			if(is_array($item[2])){
-				$item[2] = $this->parseAliases($item[2]);
+			$tree = &$array[$i];
+			do{
+				$replaced = false;
+				if(substr($tree[0],0,1) == '@'){
+					$newTree = $this->replaceTemplateAlias(substr($tree[0],1),$tree[2]);
+					array_splice($array,$i,1,$newTree);
+					$replaced = true;
+				}
+				if(is_string($tree[2]) && substr($tree[2],0,1) == '@'){
+					$tree[2] = $this->replaceTemplateAlias(substr($tree[2],1));
+					$replaced = true;
+				}
+				$tree = &$array[$i];
+			} while($replaced);
+			if(is_array($tree[2])){
+				$tree[2] = $this->parseAliases($tree[2]);
 			}
 		}
-		unset($item);
+		unset($tree);
 		
 		return $array;
 	}
+	/// !children from aliases results in following tree being put into the !children
+	static function attachChildren(&$array){
+		$count = count($array);
+		for($i=1;$i<$count;$i++){
+			$found = false;
+			$array[$i-1] = Arrays::replaceAllParents('!children',$array[$i],$array[$i-1],1,$found);
+			if($found){
+				//collapse tree
+				array_splice($array,$i-1,2,[$array[$i-1]]);
+			}
+		}
+		return $array;
+	}
+	///returns the tree stucture that get expects after replace 1 alias (the root)
 	protected function replaceTemplateAlias($alias,$children=null){
 		$tree = $this->aliases[$alias];
 		if(!$tree){
 			Debug::toss('Could not find alias: '.$alias);
 		}
 		if(!is_array($tree)){
-			$tree = Arrays::at(self::parseTemplateString($tree),0);
+			$tree = self::parseTemplateString($tree);
 		}
 		
 		if($children){
@@ -484,7 +517,7 @@ array(
 	}
 	//simple standard logic to generate page title
 	static function pageTitle(){
-		return Tool::capitalize(Tool::camelToSeparater(implode(' ',Route::$parsedUrlTokens),' '));
+		return Tool::capitalize(Tool::camelToSeparater(implode(' ',\control\Route::$parsedUrlTokens),' '));
 	}
 	static function contentHeaders($mime=null,$filename=null){
 		if($mime){
