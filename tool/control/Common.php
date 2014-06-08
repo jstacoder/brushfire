@@ -96,6 +96,6 @@ class Common{
 	//+	}
 	static function req($path){
 		$file = \Config::userFileLocation($path,'control').'.php';
-		return \Files::req($file,array('page'));
+		return \Files::req($file,array('control'));
 	}
 }

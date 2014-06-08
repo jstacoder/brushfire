@@ -43,8 +43,8 @@ class Route{
 	
 //+	load controls and section page{
 	
-		global $page;
-		$page = \Control::init();//we are now in the realm of dynamic pages
+		global $control;
+		$control = \Control::init();//we are now in the realm of dynamic pages
 		
 		//after this following line, self::$urlTokens has no more influence on routing.  Modify self::$unparsedUrlTokens if you want modify control flow
 		self::$unparsedUrlTokens = array_merge([''],self::$urlTokens);
@@ -73,13 +73,13 @@ class Route{
 			$path = \Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
 			//if named file, load, otherwise load generic control in directory
 			$file = !is_dir($path) ? $path.'.php' : $path.'/control.php';
-			$loaded = \Files::inc($file,['page'],self::$regexMatch);
+			$loaded = \Files::inc($file,['control'],self::$regexMatch);
 			//++ }
 			
 			//not loaded and was last token, page not found
 			if($loaded === false && !self::$unparsedUrlTokens){
 				if(\Config::$x['pageNotFound']){
-					\Config::loadUserFiles(\Config::$x['pageNotFound'],'control',array('page'));
+					\Config::loadUserFiles(\Config::$x['pageNotFound'],'control',array('control'));
 					exit;
 				}else{
 					Debug::toss('Request handler encountered unresolvable token at control level.'."\nCurrent token: ".self::$currentToken."\nTokens parsed".print_r(self::$parsedUrlTokens,true));

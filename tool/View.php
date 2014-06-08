@@ -2,11 +2,11 @@
 ///For handling output and templates, generally assuming use of http
 class View{
 	use SDLL;
-	function __construct($page=null){
-		if(!$page){
-			global $page;
+	function __construct($control=null){
+		if(!$control){
+			global $control;
 		}
-		$this->control = $page;
+		$this->control = $control;
 	}
 	function load(){
 		foreach(Config::$x['aliasesFiles'] as $file){
@@ -23,7 +23,7 @@ class View{
 	*/
 	protected function getTemplate($template,$vars=null){
 		$vars['thisTemplate'] = $template;
-		$vars['page'] = $this->control;
+		$vars['control'] = $this->control;
 		$vars['view'] = $this;//$this is reserved, can not use outside of object context
 		
 		ob_start();
