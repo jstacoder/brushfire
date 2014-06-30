@@ -213,7 +213,7 @@ class Http{
 				#get first ip (should be client's ip)
 				#X-Forwarded-For: clientIPAddress, previousLoadBalancerIPAddress-1, previousLoadBalancerIPAddress-2
 				$ips = preg_split('@\s*,\s*@',$_SERVER['HTTP_X_FORWARDED_FOR']);
-				if(Config::$x['loadBalancerIps']){
+				if(class_exists('Config',false) && Config::$x['loadBalancerIps']){
 					$ips = array_diff($ips,Config::$x['loadBalancerIps']);
 				}
 				
