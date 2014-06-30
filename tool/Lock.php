@@ -71,8 +71,14 @@ class CacheLock{
 /** With multiple servers, would either need to make the storage folder networked or use separate locking mechanism*/
 class FileLock{
 	public $_success = true;
+	function construct($storageFolder=null){
+		if(!$storageFolder){
+			$storageFolder = class_exists('Config',false) ? Config::$x['storageFolder'] : '/tmp/';
+		}
+		$this->storageFolder = $storageFolder;
+	}
 	function on($name,$timeout=0){
-		$file = Config::$x['storageFolder'].'lock-'.$name;
+		$file = $this->storageFolder.'lock-'.$name;
 		$fh = fopen($file,'w');
 		
 		while($this->locks[$name] || !flock($fh,LOCK_EX|LOCK_NB)){
@@ -86,7 +92,7 @@ class FileLock{
 	}
 	function req($name,$timeout=0){
 		if(!$this->on($name,$timeout)){
-			Debug::toss('Failed to acquire lock "'.$name.'"',__CLASS__.'Exception');
+			throw Exception('Failed to acquire lock "'.$name.'" in '.__CLASS__);
 		}
 	}
 	function isOn($name){
@@ -97,7 +103,7 @@ class FileLock{
 		return true;
 	}
 	function off($name){
-		$file = Config::$x['storageFolder'].'lock-'.$name;
+		$file = $this->storageFolder.'lock-'.$name;
 		if($this->locks[$name]){
 			flock($this->locks[$name], LOCK_UN);
 			unset($this->locks[$name]);
