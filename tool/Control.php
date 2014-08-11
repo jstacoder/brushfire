@@ -96,23 +96,24 @@ class ControlPublic{
 		Add Page data-interface to Control
 	*/
 	function __get($name){
-		if($name == 'page'){
-			return $this->constructPage();
-		}
 		return $this->page->$name;
 	}
-	///various often used resources should be immediately available to Page
-	function constructPage($additional=null){
-		$this->page = new Page($this,$additional);
-		if(!isset($this->page->control)){
-			$this->page->control = $this;
-			$this->page->in =& $this->in;
-			$this->page->messages =& $this->messages;
+	function addLocalTool($tokens){
+		Files::incOnce(\Config::$x['projectFolder'].'tool/section/'.implode('/',$tokens).'.php');
+		$class = '\\local\\'.implode('\\',$tokens);
+		
+		if(!$this->lt){
+			$this->lt = new $class;
+			$this->lt->control = $this;
+			$this->lt->in =& $this->in;
+			$this->lt->messages =& $this->messages;
+			if(!$this->lt->db){
+				$this->lt->db =& $this->db;
+				if(Config::$x['database']['default']){
+					$this->db = Db::init(null,Config::$x['database']['default']);
+				}
+			}
 		}
-		if(!$this->page->db){
-			$this->page->db = Db::primary();
-		}
-		return $this->page;
 	}
 	
 	function error($message,$name=null,$options=null){

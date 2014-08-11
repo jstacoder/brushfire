@@ -39,7 +39,6 @@ class Route{
 		}
 		
 		self::routeRequest();
-		\Hook::run('prePage');
 	
 //+	load controls and section page{
 	
@@ -49,9 +48,7 @@ class Route{
 		//after this following line, self::$urlTokens has no more influence on routing.  Modify self::$unparsedUrlTokens if you want modify control flow
 		self::$unparsedUrlTokens = array_merge([''],self::$urlTokens);
 		
-		//page utility levels
-		$pageUtillityLevel = self::getPageLevel(\Config::$x['projectFolder'].'tool/section/');
-		$pageDisplayUtillityLevel = self::getPageLevel(\Config::$x['projectFolder'].'view/tool/section/');
+		self::addLocalTool(\Config::$x['projectFolder'].'tool/local/');
 		
 		//get the section and page control
 		while(self::$unparsedUrlTokens){
@@ -59,15 +56,6 @@ class Route{
 			if(self::$currentToken){
 				self::$parsedUrlTokens[] = self::$currentToken;
 			}
-//+		include section page, if at appropriate level {
-			$level = count(self::$parsedUrlTokens);
-			if($pageUtillityLevel && $level == $pageUtillityLevel){
-				\Files::incOnce(\Config::$x['projectFolder'].'tool/section/'.implode('/',self::$parsedUrlTokens).'.php');
-			}
-			if($pageDisplayUtillityLevel && $level == $pageDisplayUtillityLevel){
-				\Files::incOnce(\Config::$x['projectFolder'].'view/tool/section/'.implode('/',self::$parsedUrlTokens).'.php');
-			}
-//+		}
 			
 			//++ load the control {
 			$path = \Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
@@ -89,15 +77,23 @@ class Route{
 		
 //+	}
 	}
-	///get the first (most specific to page) section-page tool
+	///find the most specific to tool
 	/**@return tokens at which tool was found*/
-	private static function getPageLevel($base){
+	private static function addLocalTool($base){
 		$tokens = self::$urlTokens;
 		while($tokens){
 			if(is_file($base.implode('/',$tokens).'.php')){
-				return count($tokens);
+				break;
 			}
 			array_pop($tokens);
+			$tokens[] = 'local';
+			if(is_file($base.implode('/',$tokens).'.php')){
+				break;
+			}
+			array_pop($tokens);
+		}
+		if($tokens){
+			\Control::addLocalTool($tokens);
 		}
 	}
 	///internal use. initial breaking apart of url

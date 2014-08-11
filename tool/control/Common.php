@@ -57,15 +57,6 @@ class Common{
 		unset($this->control->page->id);
 		$this->error('Id not found');
 	}
-	//+	special handling of class "model" to localize to page section specific model{
-	protected function sectionAutoloadSetup(){
-		spl_autoload_register(array($this,'sectionAutoload'),true,true);
-	}
-	protected function sectionClass(){
-		if($type = ucwords(\Tool::toCamel(implode(' ',array_slice(Route::$parsedUrlTokens,0,-1))))){
-			return $type.'Section';
-		}
-	}
 	protected function getOwner($item){
 		if($item['user_id__owner']){
 			return $item['user_id__owner'];
@@ -83,17 +74,6 @@ class Common{
 			}
 		}
 	}
-	protected function sectionAutoload($className){
-		if($className == 'Section'){
-			if($sectionClass = $this->sectionClass()){
-				$result = \Autoload::load($sectionClass);
-				if($result['found']){
-					class_alias($sectionClass,'Section',true);
-				}
-			}
-		}
-	}
-	//+	}
 	static function req($path){
 		$file = \Config::userFileLocation($path,'control').'.php';
 		return \Files::req($file,array('control'));

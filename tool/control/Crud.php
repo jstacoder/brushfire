@@ -3,13 +3,8 @@ namespace control;
 ///Create Read Update Delete general class
 class Crud{
 	use \SingletonDefault;
-	function __construct($page=null){
-		$this->page = $page;
-		if(!$this->page){
-			global $page;
-			$this->page = $page->page;
-		}
-		$this->control = $this->page->control;
+	function __construct($control=null){
+		$this->control = $control ? $control : Control::primary();
 	}
 	function __call($fnName,$args){
 		if(in_array($fnName,array('create','update','delete','read'))){
@@ -44,16 +39,16 @@ class Crud{
 		if(!$subcommand){
 			$subcommand = $this->control->in['_cmd_'.$command];
 		}
-		if(method_exists($this->page,$command.'_'.$subcommand)){
-			return array($this->page,$command.'_'.$subcommand);
-		}elseif(method_exists($this->page,$command)){
-			return array($this->page,$command);
-		}elseif(isset($this->page->model) 
-			&& $this->page->model['table'] 
-			&& $this->page->CrudModel
-			&& method_exists($this->page->CrudModel,$command)
+		if(method_exists($this->control->local,$command.'_'.$subcommand)){
+			return array($this->control->local,$command.'_'.$subcommand);
+		}elseif(method_exists($this->control->local,$command)){
+			return array($this->control->local,$command);
+		}elseif(isset($this->control->local->model) 
+			&& $this->control->local->model['table'] 
+			&& $this->control->local->CrudModel
+			&& method_exists($this->control->local->CrudModel,$command)
 		){
-			return array($this->page->CrudModel,$command);
+			return array($this->control->local->CrudModel,$command);
 		}
 		return false;
 	}

@@ -34,9 +34,6 @@ class AutoloadPublic{
 				}
 			}
 		}
-		if(Config::$x['autoloadSection']){
-			Hook::add('prePage',array($this,'addSectionResources'),array('delete'=>1));
-		}
 	}
 
 	///spl autoload doesn't like protected methods.
@@ -93,7 +90,6 @@ class AutoloadPublic{
 		$name = array_pop($parts);
 		$fileName = $name.'.php';
 		$affix = '';
-		
 		if($parts){
 			$partsCopy = $parts;
 			//test nsF keys
@@ -102,10 +98,10 @@ class AutoloadPublic{
 					$found = true;
 					break;
 				}
-				array_pop($parts);
+				$poppedParts[] = array_pop($parts);
 			}
 			if($found){
-				$affix = $parts ? implode('/',$parts).'/' : '';
+				$affix = $poppedParts ? implode('/',$poppedParts).'/' : '';
 			}else{
 				$affix = implode('/',$partsCopy).'/';
 			}
@@ -170,20 +166,6 @@ class AutoloadPublic{
 				return $path;
 			}	
 		}
-	}
-	
-	///adds folder Page is expected in
-	function addSectionResources(){		
-		$section = implode('/',\control\Route::$urlTokens).'/';
-		$base = Config::$x['projectFolder'].'tool/section/';
-		array_unshift($this->nsF['default'],array(
-				$base.$section, array('moveUp'=>true, 'stopPath' => [$base])
-			));
-		$base = Config::$x['projectFolder'].'view/tool/section/';
-		array_unshift($this->nsF['default'],array(
-				$base.$section, array('moveUp'=>true, 'stopPath' => [$base])
-			));
-		$this->addSection = false;
 	}
 	
 	static $lastUndeployed;///< array of last undeployed autoloads

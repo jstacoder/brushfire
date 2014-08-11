@@ -8,14 +8,11 @@
 			@param	table	the table to be used
 			@param	select	a select array.	See the Db::select function
 			@endverbatim
-	- functions are still callable due to __call and __callStatic
 	
 	@note public $db, the underlying PDO instance, set on lazy load
 */
 Class Db{
-	use SDLLPublic;
-}
-Class DbPublic{
+	use SDLL;
 	/// latest result set returning from $db->query()
 	public $result;
 	/// last SQL statement
@@ -42,18 +39,18 @@ array(
 		}else{
 			$dsn = $this->connectionInfo['driver'].':dbname='.$this->connectionInfo['database'].';host='.$this->connectionInfo['host'];
 		}
-		$this->db = new PDO($dsn,$this->connectionInfo['user'],$this->connectionInfo['password']);
-		if($this->db->getAttribute(PDO::ATTR_DRIVER_NAME)=='mysql'){
+		$this->under = new PDO($dsn,$this->connectionInfo['user'],$this->connectionInfo['password']);
+		if($this->under->getAttribute(PDO::ATTR_DRIVER_NAME)=='mysql'){
 			$this->query('SET SESSION sql_mode=\'ANSI\'');
-			#$this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
+			#$this->under->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
 		}
 	}
 	/// returns escaped string with quotes.	Use on values to prevent injection.
 	/**
 	@param	v	the value to be quoted
 	*/
-	function quote($v){
-		return $this->db->quote($v);
+	protected function quote($v){
+		return $this->under->quote($v);
 	}
 	/// return last run sql
 	function lastSql(){
@@ -64,14 +61,14 @@ array(
 	@param	sql	the sql to be run
 	@return the PDOStatement object
 	*/
-	function query($sql){
+	protected function query($sql){
 		if($this->result){
 			$this->result->closeCursor();
 		}
 		$this->lastSql = $sql;
-		$this->result = $this->db->query($sql);
-		if((int)$this->db->errorCode()){
-			$error = $this->db->errorInfo();
+		$this->result = $this->under->query($sql);
+		if((int)$this->under->errorCode()){
+			$error = $this->under->errorInfo();
 			$error = "--DATABASE ERROR--\n".' ===ERROR: '.$error[0].'|'.$error[1].'|'.$error[2]."\n ===SQL: ".$sql;
 			Debug::toss($error,__CLASS__.'Exception');
 		}
@@ -79,7 +76,7 @@ array(
 	}
 
 	/// Used internally.	Checking number of arguments for functionality
-	function getOverloadedSql($expected, $actual){
+	protected function getOverloadedSql($expected, $actual){
 		$overloaded = count($actual) - $expected;
 		if($overloaded > 0){
 			//$overloaded + 1 because the expected $sql is actually one of the overloading variables
@@ -96,7 +93,7 @@ array(
 	@warning "limit 1" is appended to the sql input
 	@return	a single row, or, if one column, return that columns value
 	*/
-	function row(){
+	protected function row(){
 		$sql = $this->getOverloadedSql(1,func_get_args());
 		#function implies only 1 retured row
 		if(!preg_match('@[\s]*show@i',$sql)){
@@ -114,7 +111,7 @@ array(
 	/**See class note for input
 	@return	a sequential array of rows
 	*/
-	function rows($sql){
+	protected function rows($sql){
 		$sql = $this->getOverloadedSql(1,func_get_args());
 		$res2 = array();
 		if($res = $this->query($sql)){
@@ -134,7 +131,7 @@ array(
 	See class note for input
 	@return	array where each element is the column value of each row.  If multiple columns are in the select, just uses the first column
 	*/
-	function column($sql){
+	protected function column($sql){
 		$sql = $this->getOverloadedSql(1,func_get_args());
 		$res = $this->query($sql);
 		while($row=$res->fetch(PDO::FETCH_NUM)){$res2[]=$row[0];}
@@ -149,7 +146,7 @@ array(
 	See class note for input
 	@return	array where each element is the column value of each row.  If multiple columns are in the select, just uses the first column
 	*/
-	function columns($sql){
+	protected function columns($sql){
 		$sql = $this->getOverloadedSql(1,func_get_args());
 		$res = $this->query($sql);
 		while($row=$res->fetch(PDO::FETCH_NUM)){$res2[]=$row;}
@@ -163,7 +160,7 @@ array(
 	/**See class note for input
 	@return	row as numerically indexed array for potential use by php list function
 	*/
-	function enumerate($sql){
+	protected function enumerate($sql){
 		$sql = $this->getOverloadedSql(1,func_get_args());
 		$sql .= "\nLIMIT 1";
 		return $this->query($sql)->fetch(PDO::FETCH_NUM);
@@ -176,7 +173,7 @@ array(
 	@return	array where one column serves as a key pointing to either another column or another set of columns
 	*/
 	
-	function columnKey($key,$sql){
+	protected function columnKey($key,$sql){
 		$arguments = func_get_args();
 		array_shift($arguments);
 		$rows = call_user_func_array(array($this,'rows'),$arguments);
@@ -200,7 +197,7 @@ array(
 		if value = null, set value to unescaped "null"
 	@param	type	1 = where, 2 = update
 	*/
-	function ktvf($kvA,$type=1){
+	protected function ktvf($kvA,$type=1){
 		foreach($kvA as $k=>$v){
 			if($k[0]=='"'){
 				$kvtA[] = $v;
@@ -255,7 +252,7 @@ array(
 	@return	where string
 	@note if the where clause does not exist, function will just return nothing; this generally leads to an error
 	*/
-	function where($where){
+	protected function where($where){
 		if(!$where){
 			return;
 		}elseif(is_array($where)){
@@ -270,7 +267,7 @@ array(
 		}
 		return "\nWHERE ".$where;
 	}
-	function intos($command,$table,$rows){
+	protected function intos($command,$table,$rows){
 		//use first row as template
 		list($keys) = self::kvp($rows[0]);
 		$insertRows = array();
@@ -282,7 +279,7 @@ array(
 	}
 	
 	/// Key value parser
-	function kvp($kvA){
+	protected function kvp($kvA){
 		foreach($kvA as $k=>$v){
 			if($k[0]==':'){
 				$k = substr($k,1);
@@ -307,7 +304,7 @@ array(
 		- if key starts with ":", value is not escaped
 		- if value = null (php null), set string to null
 	*/
-	function kvf($kvA){
+	protected function kvf($kvA){
 		list($keys,$values) = self::kvp($kvA);
 		return ' ('.implode(',',$keys).")\t\nVALUES (".implode(',',$values).') ';
 	}
@@ -318,7 +315,7 @@ array(
 	@param	table	table to insert on
 	@param	kva	see self::kvf() function
 	*/
-	function insert($table,$kvA){
+	protected function insert($table,$kvA){
 		return $this->into('INSERT',$table,$kvA);
 	}
 	/// Insert with a table and ignore if duplicate key found
@@ -327,7 +324,7 @@ array(
 	@param	kva	see self::kvf() function
 	@return	insert row id
 	*/
-	function insertIgnore($table,$kvA){
+	protected function insertIgnore($table,$kvA){
 		return $this->into('INSERT IGNORE',$table,$kvA);
 	}
 	/// insert into table; on duplicate key update
@@ -337,7 +334,7 @@ array(
 	@param	update	either plain sql or null; if null, defaults to updating all values to $kvA input
 	@return	see Db::into
 	*/
-	function insertUpdate($table,$kvA,$update=null){
+	protected function insertUpdate($table,$kvA,$update=null){
 		if(!$update){
 			$update .= implode(', ',$this->ktvf($kvA,2));
 		}elseif(is_array($update)){
@@ -352,7 +349,7 @@ array(
 	@param	kva	see self::kvf() function
 	@return	see Db::into
 	*/
-	function replace($table,$kvA){
+	protected function replace($table,$kvA){
 		return $this->into('REPLACE',$table,$kvA);
 	}
 
@@ -360,10 +357,10 @@ array(
 	/**
 	@return row id or row count.  In the case of an single insert update, will return the row id if the update actually changed something.  In the case of multiple affected rows, will be a row count.
 	*/
-	function into($type,$table,$kvA,$update=''){
+	protected function into($type,$table,$kvA,$update=''){
 		$res = $this->query($type.' INTO '.$this->quoteIdentity($table).$this->kvf($kvA).$update);
-		if($this->db->lastInsertId()){
-			return $this->db->lastInsertId();
+		if($this->under->lastInsertId()){
+			return $this->under->lastInsertId();
 		}elseif($kvA['id']){
 			return $kvA['id'];
 		}else{
@@ -378,7 +375,7 @@ array(
 	@param	where	see self::where() function
 	@return	row count
 	*/
-	function update($table,$update,$where){
+	protected function update($table,$update,$where){
 		if(!$where){
 			Debug::toss('Unqualified update is too risky.  Use 1=1 to verify');
 		}
@@ -394,7 +391,7 @@ array(
 	@return	row count
 	@note as a precaution, to delete all must use $where = '1 = 1'
 	*/
-	function delete($table,$where){
+	protected function delete($table,$where){
 		if(!$where){
 			Debug::toss('Unqualified delete is too risky.  Use 1=1 to verify');
 		}
@@ -414,7 +411,7 @@ array(
 	@return sql string
 	@note	this function is just designed for simple queries
 	*/
-	function select($from,$where=null,$columns='*',$order=null,$limit=null){
+	protected function select($from,$where=null,$columns='*',$order=null,$limit=null){
 		if(is_array($from)){
 			$from = '"'.implode('", "',$from).'"';
 		}elseif(strpos($from,' ') === false){//ensure no space; don't quote a from statement
@@ -449,7 +446,7 @@ array(
 	/**See class note for input
 	@return	true if match, else false
 	*/
-	function check($table,$where){
+	protected function check($table,$where){
 		$sql = $this->select($table,$where,'1');
 		return $this->row($sql) ? true : false;
 	}
@@ -458,7 +455,7 @@ array(
 	/**
 	@param	additional	additional fields to merge with where on insert
 	*/
-	function id($table,$where,$additional=null){
+	protected function id($table,$where,$additional=null){
 		$sql = $this->select($table,$where,'id');
 		$id = $this->row($sql);
 		if(!$id){
@@ -474,7 +471,7 @@ array(
 	/**
 		@param	dict	dictionary to update on query
 	*/
-	function namedId($table,$name,&$dict=null){
+	protected function namedId($table,$name,&$dict=null){
 		if(Tool::isInt($name)){
 			return $name;
 		}
@@ -491,7 +488,7 @@ array(
 	Must have "LIMIT" on separate line
 	@return	array($count,$results)
 	*/
-	function countAndRows($countLimit,$sql){
+	protected function countAndRows($countLimit,$sql){
 		$sql = $this->getOverloadedSql(2,func_get_args());
 		$countSql = $sql;
 		//get sql limit if exists from last part of sql
@@ -522,13 +519,13 @@ array(
 
 //+	db information {
 	//Get database tables
-	function tables(){
+	protected function tables(){
 		if($this->connectionInfo['driver'] == 'mysql'){
 			return $this->column('show tables');
 		}
 	}
 	//get database table column information
-	function columnsInfo($table){
+	protected function columnsInfo($table){
 		$columns = array();
 		if($this->connectionInfo['driver'] == 'mysql'){
 			$rows = $this->rows('describe '.$this->quoteIdentity($table));

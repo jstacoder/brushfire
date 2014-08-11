@@ -86,8 +86,12 @@ trait SingletonDefault{
 		return call_user_func(array(static::primary(),'__call'),$fnName,$args);
 	}
 }
-///instantiated a public version of the class (wherein the main version serves as a placeholder for use statically)
+
 /**
+Concept of public: Since with php, you can't make one method protected when called statically and public when called on an instance, for applying the singleton default pattern, you must apply 'protected' to all methods.  This, however, has the inefficiency of using a '__call' for methods that would otherwise go straight through (instance method calls).  To avoid this, make one class which handles the static calls, and another class which makes the instance and has public methods.
+
+instantiate a public version of the class, where the main version serves as a placeholder for use statically.
+	- needed because otherwise would need to set methods to 'protected' for static calls to work, which means a '__call' was needed, and that has overhead.
 @note	It is expected the public version will be named $class.'Public'
 */
 trait SingletonDefaultPublic{
@@ -96,7 +100,6 @@ trait SingletonDefaultPublic{
 	static function className($called){
 		return $called.'Public';
 	}
-	///underlying object is no longer child of current class, just call methods directly (and automated __call will take over if necessary)
 	static function __callStatic($fnName,$args){
 		return call_user_func_array(array(static::primary(),$fnName),$args);
 	}
@@ -131,48 +134,6 @@ trait SDLL{
 	abstract function load();
 }
 
-/**
-This is a little unsafe with referenced parameters, b/c if the instance is not loaded and first-instance-method call is a by-reference function, the parameters will be passed in as values.
-*/
-trait SDLLPublic{
-	use SDLL;
-	static $className;
-	static function className($called){
-		static::$className = $called.'Public';
-		return $called;
-	}
-	function loadClass(){
-		$class = new ReflectionClass(static::$className);
-		$instance = $class->newInstanceArgs($this->constructArgs);
-		foreach(get_object_vars($this) as $k=>$v){
-			$instance->$k = $v;
-		}
-		static::forceInstance($this->name,$instance);
-		call_user_func_array(array($instance,'load'),(array)$this->constructArgs);
-		$this->loaded = true;
-		return $instance;
-	}
-	function &__get($name){
-		//load if not loaded
-		if(!$this->loaded){
-			$instance = $this->loadClass();
-			return $instance->$name;
-		}
-	}
-	function __call($fnName,$args){
-		//load if not loaded
-		if(!$this->loaded){
-			$instance = $this->loadClass();
-			return call_user_func_array(array($instance,$fnName),$args);
-		}
-		return $this->__testCall($fnName,$args);
-	}
-	public function load(){}
-	///underlying object is no longer child of current class, just call methods directly (and automated __call will take over if necessary)
-	static function __callStatic($fnName,$args){
-		return call_user_func_array(array(static::primary(),$fnName),$args);
-	}
-}
 /**
 The pattern: Pass in type to over-class, and henceforth over-class uses instance of under-class mapped by type.  Used as an abstraction, used instead of factory (b/c more elegant), and b/c can't monkey patch.
 @note the under class should have a public $_success to indicate whether to try next preference (on case of $_success = false)
