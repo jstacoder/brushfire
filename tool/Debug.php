@@ -82,7 +82,7 @@ class Debug{
 	@param	title	title to use in addition to other context information
 	@param	logfile	the log file to write to.  Config::$x['logLocation'] can be changed in the script, but this parameter provides an alternative to changing it
 	*/
-	static function toLog($var,$title='',$logfile=null){
+	static function log($var,$title='',$logfile=null){
 		if($logfile){
 			$fh = fopen($logfile,'a+');
 		}else{

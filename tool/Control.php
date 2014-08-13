@@ -39,7 +39,7 @@ class ControlPublic{
 		//+	parse input{
 		if($in===false){//apply default
 			//+	Handle GET and POST variables{
-			$in['get'] = $_SERVER['QUERY_STRING'];
+			$in['get'] = $_SERVER['QUERY_STRING'];//we take it from here b/c php will replace characters like '.' and will ignore duplicate keys when forming $_GET
 			//can cause script to hang (if no stdin), so don't run if in script unless configured to
 			if(!Config::$x['inScript'] || Config::$x['scriptGetsStdin']){
 				//multipart forms can either result in 1. input being blank or 2. including the upload.  In case 1, post vars can be taken from $_POST.  In case 2, need to avoid putting entire file in memory by parsing input
