@@ -43,14 +43,18 @@ class ControlPublic{
 			//can cause script to hang (if no stdin), so don't run if in script unless configured to
 			if(!Config::$x['inScript'] || Config::$x['scriptGetsStdin']){
 				//multipart forms can either result in 1. input being blank or 2. including the upload.  In case 1, post vars can be taken from $_POST.  In case 2, need to avoid putting entire file in memory by parsing input
-				if(!preg_match('@multipart/form-data@',$_SERVER['CONTENT_TYPE'])){
+				if(substr($_SERVER['CONTENT_TYPE'],0,19) != 'multipart/form-data'){
 					$in['post'] = file_get_contents('php://input');
 					$in['post'] = $in['post'] ? $in['post'] : file_get_contents('php://stdin');
 				}elseif($_POST){
 					$in['post'] = http_build_query($_POST);
 				}
 			}
-			$in['post'] = Http::parseQuery($in['post'],Config::$x['pageInPHPStyle']);
+			if($_SERVER['CONTENT_TYPE'] == 'application/json'){
+				$in['post'] = ['json'=>json_decode($in['post'])];
+			}else{
+				$in['post'] = Http::parseQuery($in['post'],Config::$x['pageInPHPStyle']);
+			}
 			$in['get'] = Http::parseQuery($in['get'],Config::$x['pageInPHPStyle']);
 			$this->in = Arrays::merge($in['get'],$in['post']);
 			//+	}
