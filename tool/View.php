@@ -7,6 +7,7 @@ class View{
 			global $control;
 		}
 		$this->control = $control;
+		$this->baseUrl = Config::$x['protocol'].'://'.Config::$x['httpHost'].'/';
 	}
 	function load(){
 		foreach(Config::$x['aliasesFiles'] as $file){
@@ -527,5 +528,15 @@ array(
 			header('Content-Description: File Transfer');
 			header('Content-Disposition: attachment; filename="'.self::escapeFilename($filename).'"');
 		}
+	}
+	///create a url from a path
+	/**
+	@param	path	path and include parameters, but will be individually overwritten by passed $params arg
+	@param	params	params to append to the url
+	*/
+	protected function url($path,$params=null){
+		$path = Http::appendsUrl($params,$path);
+		$relativeTo = $this->baseUrl.substr($_SERVER['REQUEST_URI'],1);//request uri always starts with '/'
+		return Http::getAbsoluteUrl($path,$relativeTo);
 	}
 }

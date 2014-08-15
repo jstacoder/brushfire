@@ -194,7 +194,7 @@ class Arrays{
 		}
 		return $newA;
 	}
-	///mergers if two arrays, else returns the existing array.  $y overwrites $x on matching keys
+	///merges if two arrays, else returns the existing array.  $y overwrites $x on matching keys
 	static function merge($x,$y){
 		if(is_array($x)){
 			if(is_array($y)){

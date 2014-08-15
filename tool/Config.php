@@ -5,9 +5,10 @@ class Config{
 	static public $x;
 	
 	///gets the defaults and deals with special config variable syntax
-	static function get(){
+	static function init(){
 		self::$x['logLocation'] = self::userFileLocation(self::$x['logLocation']);
 		self::$x['aliasesFiles'] = (array)self::$x['aliasesFiles'];
+		self::$x['protocol'] = strtolower(explode('/',$_SERVER['SERVER_PROTOCOL'])[0]);
 		date_default_timezone_set(Config::$x['timezone']);
 	}
 	static function userFileLocation($file,$defaultLocation='.'){
@@ -33,5 +34,12 @@ class Config{
 		}elseif($files){
 			self::loadUserFile($files,$defaultLocation,$globalize,$vars);
 		}
+	}
+	///loads named config from config directory into self::$x.
+	///@note  @names are encloded with 'config.'name'.php'
+	static function load($name){
+		$file = self::$x['configFolder'].'config.'.$name.'.php';
+		$extracted = self::loadUserFile($file,'.',null,null,['config']);
+		Arrays::mergeInto(self::$x,$extracted['config']);
 	}
 }

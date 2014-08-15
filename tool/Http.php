@@ -79,6 +79,7 @@ class Http{
 	@param	url	url to be appended
 	*/
 	static function appendsUrl($kvA,$url=null,$replace=true){
+		if(!$kvA){ return $url; }
 		foreach($kvA as $k=>$v){
 			if(is_array($v)){
 				foreach($v as $subv){
@@ -144,24 +145,24 @@ class Http{
 		return $url;
 	}
 	//resolves relative url paths into absolute url paths
-	static  function getAbsoluteUrl($url,$relativePath=null){
-		$parts = explode('?',$url);
-		preg_match('@(^.*?://.*?)(/.*$|$)@',$parts[0],$match);
+	static  function getAbsoluteUrl($url,$relativeTo=null){
+		list($uPath,$query) = explode('?',$url);
+		preg_match('@(^.*?://.*?)(/.*$|$)@',$uPath,$match);
 		if(!$match){
-			//url is completely relative, use relativePath as base
-			$rParts = explode('?',$relativePath);
-			preg_match('@(^.*?://.*?)(/.*$|$)@',$rParts[0],$match);
+			//url is relative, use relativeTo as base
+			list($rPath) = explode('?',$relativeTo);
+			preg_match('@(^.*?://.*?)(/.*$|$)@',$rPath,$match);
 			$pathParts = explode('/',$match[2]);
 			
-			if($parts[0]){
-				if($parts[0][0] == '/'){
+			if($uPath){
+				if($uPath[0] == '/'){
 					//relative to base of site
 					$base = $pathParts[0];
-					$pathParts = explode('/',$base.$parts[0]);
+					$pathParts = explode('/',$base.$uPath);
 				}else{
 					//relative to directory, so clear page part.   ie url = "view.php?m=bob"
 					array_pop($pathParts);
-					$pathParts = implode('/',$pathParts).'/'.$parts[0];
+					$pathParts = implode('/',$pathParts).'/'.$uPath;
 					$pathParts = explode('/',$pathParts);
 				}
 			}
@@ -170,8 +171,8 @@ class Http{
 		}
 		$path = Tool::absolutePath($pathParts);
 		$url = $match[1].$path;
-		if($parts[1]){
-			$url .= '?'.$parts[1];
+		if($query){
+			$url .= '?'.$query;
 		}
 		return $url;
 	}

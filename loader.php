@@ -13,7 +13,7 @@ require_once $config['systemFolder'].'tool/CommonTraits.php';
 #Config setting
 require_once $config['systemFolder'].'tool/Config.php';
 Config::$x = $config;
-Config::get();
+Config::init();
 date_default_timezone_set(Config::$x['timezone']);
 
 #Autoloader
