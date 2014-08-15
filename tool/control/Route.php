@@ -60,7 +60,7 @@ class Route{
 			//++ load the control {
 			$path = \Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
 			//if named file, load, otherwise load generic control in directory
-			$file = !is_dir($path) ? $path.'.php' : $path.'/control.php';
+			$file = is_file($path.'.php') ? $path.'.php' : $path.'/control.php';
 			$loaded = \Files::inc($file,['control'],self::$regexMatch);
 			//++ }
 			

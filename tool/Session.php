@@ -1,9 +1,6 @@
 <?
 ///Used for simple database or file sessions with some allowed verification of authenticity built in
-/** This class can be remade for heavy traffic sites by caching the read and make the update session time action only happen occasionally
-
-*/
-class Session{
+class Session {
 	///indicates that if the session is not started it should be started.
 	static $start = true;
 	///internal use.  Indicates the session is started and can be used
@@ -24,12 +21,8 @@ class Session{
 	///internal use.  data object
 	static $data;
 	
-	static function __callStatic($name,$arguments){
-		if(self::$started){
-			return call_user_func_array(array(self,'_'.$name),$arguments);
-		}
-	}
-	///makes this class the session save handler, and tried to open a session
+	///makes this class the session save handler, and tries to open a session
+	///@note used b/c if handler set in loader, this class would be loaded on all requests
 	static function start(){
 		session_set_save_handler(
 				array(Session,"open"),
@@ -39,16 +32,16 @@ class Session{
 				array(Session,"destroy"),
 				array(Session,"gc")
 			);
-				
 		session_start();
 	}
 	private static function makeKey(){
 		return substr(sha1(Http::getIp().$_SERVER['HTTP_USER_AGENT'].$_COOKIE['sessionId']),0,10);
 	}
+	
+	///@note call start to register before using this method
 	static function open(){
 		self::$data = new SessionData;
 		if($_COOKIE['sessionId']){
-			
 			//ensure session is authentic
 			if($_COOKIE['sessionKey'] == self::makeKey()){
 				//check session actually exists
@@ -89,11 +82,15 @@ class Session{
 			self::$started = true;
 			self::$data->create();
 	}
-	private static function _close(){}
-	private static function _read(){
+	static function close(){}
+	static function read($id){
+		if(!self::$started){ return; }
+		
 		$_SESSION = self::$data->get();
 	}
-	private static function _write(){
+	static function write($id,$data){
+		if(!self::$started){ return; }
+		
 		$data = serialize($_SESSION);
 		//data wasn't changed
 		if(md5($data) == self::$data->hash){
@@ -106,13 +103,20 @@ class Session{
 			self::$data->write($data);
 		}
 	}
-	private static function _destroy(){
+	static function destroy($id){
+		if(!self::$started){ return; }
+		
 		self::$started = false;
-		session_unset();
+		session_unset();//frees the variables (like $_SESSION)
 		self::$data->delete();
 		self::$data = null;
+		
+		Cookie::remove('sessionId');
+		Cookie::remove('sessionKey');
 	}
-	private static function _gc(){
+	static function gc(){
+		if(!self::$started){ return; }
+		
 		if(Config::$x['sessionUseDb']){
 			Db::delete(Config::$x['sessionDbTable'],'updated__unix < '.strtotime(Config::$x['sessionExpiry']).' and permanent is null');
 		}else{

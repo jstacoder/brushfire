@@ -90,6 +90,11 @@ class ControlPublic{
 			}while(false);
 		}
 		//+	}
+		
+		//load db if configured
+		if(Config::$x['database']['default']){
+			$this->db = Db::init(null,Config::$x['database']['default']);
+		}
 
 	}
 	/**
@@ -109,9 +114,6 @@ class ControlPublic{
 			$this->lt->messages =& $this->messages;
 			if(!$this->lt->db){
 				$this->lt->db =& $this->db;
-				if(Config::$x['database']['default']){
-					$this->db = Db::init(null,Config::$x['database']['default']);
-				}
 			}
 		}
 	}
