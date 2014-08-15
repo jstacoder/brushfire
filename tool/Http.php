@@ -79,8 +79,7 @@ class Http{
 	@param	url	url to be appended
 	*/
 	static function appendsUrl($kvA,$url=null,$replace=true){
-		if(!$kvA){ return $url; }
-		foreach($kvA as $k=>$v){
+		foreach((array)$kvA as $k=>$v){
 			if(is_array($v)){
 				foreach($v as $subv){
 					$url = self::appendUrl($k,$subv,$url,$replace);
@@ -98,9 +97,7 @@ class Http{
 	@param	url	url to be appended
 	*/
 	static function appendUrl($name,$value,$url=null,$replace=true){
-		if(!isset($url)){
-			$url = $_SERVER['REQUEST_URI'];
-		}
+		$url = $url !== null ? $url : $_SERVER['REQUEST_URI'];
 		$add = urlencode($name).'='.urlencode($value);
 		if(preg_match('@\?@',$url)){
 			$urlParts = explode('?',$url,2);
@@ -123,9 +120,7 @@ class Http{
 	@param	regex	The regex to use for key matching.  If the regex does not contain the '@' for the regex delimiter, it is assumed the input is not a regex and instead just a string to be matched exactly against the key.  IE, '@bob@' will be considered regex while 'bob' will not
 	*/
 	static function removeFromQuery($regex,$url=null){
-		if(!isset($url)){
-			$url = urldecode($_SERVER['REQUEST_URI']);
-		}
+		$url = $url !== null ? $url : urldecode($_SERVER['REQUEST_URI']);
 		if(!preg_match('@\@@',$regex)){
 			$regex = '@^'.preg_quote($regex,'@').'$@';
 		}
