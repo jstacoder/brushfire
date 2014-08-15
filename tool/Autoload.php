@@ -43,7 +43,7 @@ class AutoloadPublic{
 
 	function req($className){
 		$result = $this->load($className);
-		$lastAutoloader = array_pop(spl_autoload_functions())[0];
+		$lastAutoloader = array_slice(spl_autoload_functions(),-1)[0];
 		//this is the last autoload and it has failed
 		if(!$result['found'] && is_a($lastAutoloader,'Autoload')){
 			$error = 'Attempt to autoload class "'.$className.'" has failed.  Tested folders: '."\n".implode("\n",array_keys($result['searched']));

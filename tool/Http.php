@@ -6,7 +6,7 @@ class Http{
 	@param	string	string that matches form of a url query string
 	@param	specialSyntax	whether to parse the string using php rules (where [] marks an array) in addition to "standard" rules
 	*/
-	function parseQuery($string,$specialSyntax = false){
+	static function parseQuery($string,$specialSyntax = false){
 		$parts = Tool::explode('&',$string);
 		$array = array();
 		foreach($parts as $part){
@@ -40,7 +40,7 @@ class Http{
 		}
 		return $array;
 	}
-	function buildQuery($array){
+	static function buildQuery($array){
 		$standard = array();
 		foreach($array as $k=>$v){
 			//exclude standard array handling from php array handling
@@ -57,7 +57,7 @@ class Http{
 		return Arrays::implode('&',array($phpquery,$standard));
 	}
 	///get all the keys invovled in a string that represents an array.  Ex: "bob[sue][joe]" yields array('bob','sue','joe')
-	function getSpecialSyntaxKeys($string){
+	static function getSpecialSyntaxKeys($string){
 		if(preg_match('@^([^\[]+)((\[[^\]]*\])+)$@',$string,$match)){
 			//match[1] = array name, match[2] = all keys
 			
@@ -144,7 +144,7 @@ class Http{
 		return $url;
 	}
 	//resolves relative url paths into absolute url paths
-	public function getAbsoluteUrl($url,$relativePath=null){
+	static  function getAbsoluteUrl($url,$relativePath=null){
 		$parts = explode('?',$url);
 		preg_match('@(^.*?://.*?)(/.*$|$)@',$parts[0],$match);
 		if(!$match){
