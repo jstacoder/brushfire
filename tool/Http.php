@@ -77,6 +77,19 @@ class Http{
 	/**
 	@param	kvA	array of keys to values array(key1=>value1,key2=>value2)
 	@param	url	url to be appended
+	
+	@example
+	
+	normal use
+		Http::appendsUrl(['bob'=>'rocks','sue'=>'rocks'],'bobery.com');
+			bobery.com?bob=rocks&sue=rocks
+	empty string url
+		Http::appendsUrl(['bob'=>'rocks','sue'=>'rocks'],'');
+			?bob=rocks&sue=rocks
+	
+	overwriting existing
+		Http::appendsUrl(['bob'=>'rocks','sue'=>'rocks'],'bobery.com/?bob=sucks&bill=rocks');
+			bobery.com/?bill=rocks&bob=rocks&sue=rocks
 	*/
 	static function appendsUrl($kvA,$url=null,$replace=true){
 		foreach((array)$kvA as $k=>$v){
