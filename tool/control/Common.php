@@ -3,12 +3,12 @@ namespace control;
 ///Standard control functions
 class Common{
 	use \SingletonDefault;
-	function __construct($page=null){
-		if(!$page){
-			global $page;
+	function __construct($control=null){
+		if(!$control){
+			global $control;
 		}
-		$this->control = $page;
-		$this->view = \View::init(null,$page);
+		$this->control = $control;
+		$this->view = \View::init(null,$control);
 	}
 	///Attempt to get id from user request
 	/**
@@ -27,25 +27,15 @@ class Common{
 			}
 		}
 		
-		$this->control->page->id = $id;
+		$this->control->id = $id;
 		return $id;
 	}
 	///setup .  Since this is a primaryId, error 
 	protected function primaryId($type=null){
-		$id = $this->getId($type);
+		$id = $this->getId();
 		if(!$id){
 			self::badId();
 		}
-		
-		$this->view->json['id'] = $id;
-		if(!$type){
-			$type = \Arrays::at(Route::$urlTokens,-2);
-			if(strtolower($type) == 'read'){
-				$type = \Arrays::at(Route::$urlTokens,-3);
-			}
-			$type = strtolower($type);
-		}
-		$this->view->json['id_type'] = $type;
 	}
 	protected function error($message){
 		$this->control->error($message);
@@ -53,8 +43,7 @@ class Common{
 		exit;
 	}
 	protected function badId(){
-		unset(\View::primary()->json['id'],\View::primary()->json['id_type']);
-		unset($this->control->page->id);
+		unset($this->control->id);
 		$this->error('Id not found');
 	}
 	protected function getOwner($item){

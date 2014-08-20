@@ -1,4 +1,4 @@
-tp.ui = {
+bf.ui = {
 //+	pageSorting {
 	///account for defaults, and split order and field
 	parseSort: function(sort){
@@ -15,8 +15,8 @@ tp.ui = {
 	///arrange the arrows according to sorts
 	headerArrows: function(){
 		//direct  the arrows according to the sorts
-		for(i in tp.sorts){
-			var [order,field] = tp.ui.parseSort(tp.sorts[i])
+		for(i in bf.sorts){
+			var [order,field] = bf.ui.parseSort(bf.sorts[i])
 			var column = $('.sortContainer *[data-field="'+field+'"]')
 			if(order == '+'){
 				column.addClass('sortAsc')
@@ -27,44 +27,44 @@ tp.ui = {
 	},
 	///shift clicks on sort header
 	appendSort: function(newField){
-		for(i in tp.sorts){
-			var [order,field] = tp.ui.parseSort(tp.sorts[i])
+		for(i in bf.sorts){
+			var [order,field] = bf.ui.parseSort(bf.sorts[i])
 			if(newField == field){
-				order = tp.toggle(order,['+','-'])
-				tp.sorts[i] = order+field
+				order = bf.toggle(order,['+','-'])
+				bf.sorts[i] = order+field
 				return
 			}
 		}
-		tp.sorts.push('+'+newField)
+		bf.sorts.push('+'+newField)
 	},
 	///non-shift clicks on sort header
 	changeSort: function(newField){
-		for(i in tp.sorts){
-			var [order,field] = tp.ui.parseSort(tp.sorts[i])
+		for(i in bf.sorts){
+			var [order,field] = bf.ui.parseSort(bf.sorts[i])
 			if(newField == field){
-				order = tp.toggle(order,['+','-'])
-				tp.sorts = [order+field]
+				order = bf.toggle(order,['+','-'])
+				bf.sorts = [order+field]
 				return
 			}
 		}
-		tp.sorts = ['+'+newField]
+		bf.sorts = ['+'+newField]
 	},
 	
 	///reloads page with new sort
 	sortPage: function(){
-		var url = tp.appendUrl('_sort',tp.sorts.join(','),null,true)
-		tp.relocate(url)
+		var url = bf.appendUrl('_sort',bf.sorts.join(','),null,true)
+		bf.relocate(url)
 	},
 	///reloads page with new page
 	goToPage: function(page){
-		var url = tp.appendUrl('_page',page,null,true)
-		tp.relocate(url)
+		var url = bf.appendUrl('_page',page,null,true)
+		bf.relocate(url)
 	},
 	///gets the paging data on the page
 	getPaging: function(){
 		var [total,page] = $('*[data-paging]').attr('data-paging').split(',')
-		if(tp.getRequestVar('_page')){
-			page = tp.getRequestVar('_page')
+		if(bf.getRequestVar('_page')){
+			page = bf.getRequestVar('_page')
 		}		
 		total = Number(total); page = Number(page);
 		return [total,page]
@@ -94,7 +94,7 @@ tp.ui = {
 		
 		var messageEle = $('<div class="message '+message.type+'"></div>').html(message.content)
 		messageEle.hide().appendTo('#'+message.context+'MsgBox').fadeIn({duration:'slow'})
-		tp.ui.closeButton(messageEle)
+		bf.ui.closeButton(messageEle)
 		if(message.expiry){
 			if(message.expiry < 86400){//less than a day, it's an offset, not unix time
 				var timeout = message.expiry * 1000
@@ -109,7 +109,7 @@ tp.ui = {
 	},
 	insertMessages: function(messages){
 		for(k in messages){
-			tp.ui.insertMessage(messages[k])
+			bf.ui.insertMessage(messages[k])
 		}
 	},
 	closeButton: function(ele,hide){
@@ -129,43 +129,43 @@ tp.ui = {
 
 
 $(function(){
-	if(tp.json){
+	if(bf.json){
 //+	handle system messages{
-		if(tp.json.messages){
-			tp.ui.insertMessages(tp.json.messages)
+		if(bf.json.messages){
+			bf.ui.insertMessages(bf.json.messages)
 		}
 //+	}
 //+	handle paging and sorting{
 //+		sorting{
 		if($('.sortContainer').size()){
-			tp.sorts = []
-			var sort = tp.getRequestVar('_sort');
+			bf.sorts = []
+			var sort = bf.getRequestVar('_sort');
 			if(sort){//use URL if sort passed, otherwise use html sort data
 				$('.sortContainer:not(.inlineSort)').attr('data-sort',sort);
 			}else{
 				sort = $('.sortContainer:not(.inlineSort)').attr('data-sort');
 			}
 			if(sort){
-				tp.sorts = sort.split(',')
-				tp.ui.headerArrows();//byproduct is to standardize the sorts
+				bf.sorts = sort.split(',')
+				bf.ui.headerArrows();//byproduct is to standardize the sorts
 			}
 			//add click event to sortable columns
 			$('.sortContainer:not(.inlineSort) *[data-field]').click(function(e){
 				var field = $(this).attr('data-field')
 				//if shift clicked, just append sort
 				if(e.shiftKey){
-					tp.ui.appendSort(field)
+					bf.ui.appendSort(field)
 				}else{
-					tp.ui.changeSort(field)
+					bf.ui.changeSort(field)
 				}
-				tp.ui.sortPage()
+				bf.ui.sortPage()
 			})
 		}
 //+		}
 //+		paging{
 		var pagingContainer = $('*[data-paging]')
 		if(pagingContainer.size()){
-			var [total,page] = tp.ui.getPaging()
+			var [total,page] = bf.ui.getPaging()
 			if(total > 1){
 				//+	make the html paginater skeleton {
 				if($('.paging')){
@@ -215,7 +215,7 @@ $(function(){
 				
 				//clicks
 				$('.clk:not(.disabled)',paginaterDiv).click(function(e){
-					var [total,page] = tp.ui.getPaging()
+					var [total,page] = bf.ui.getPaging()
 					//var target = $(e.target)
 					var target = $(this)
 					if(target.hasClass('pg')){
@@ -232,7 +232,7 @@ $(function(){
 						var parent = target.parents('.paginater')
 						page = Math.abs($('input',parent).val())
 					}
-					tp.ui.goToPage(page)
+					bf.ui.goToPage(page)
 				})
 				
 				//ensure enter on "go" field changes page, not some other form
@@ -293,12 +293,12 @@ $(function(){
 		if(toolTipData.substr(0,4) == 'url:'){
 			var url = toolTipData.substr(4)
 			tooltipMaker.click(function(){
-				tp.relocate(url,null,'tab')
+				bf.relocate(url,null,'tab')
 			})
 			
 		}else{	
 			var tooltip = $('<div/>',{html:toolTipData,class:'tooltip',id:'tooltip-'+markerId}).prependTo('body')
-			tp.ui.closeButton(tooltip,true)
+			bf.ui.closeButton(tooltip,true)
 			
 			tooltipMaker.click(function(e){
 				var tooltipMaker = $(this)
@@ -320,7 +320,7 @@ $(function(){
 	
 	//handle newTab anchor tabs
 	$('a.newTab').click(function(event){
-		tp.relocate($(event.target).attr('href'),null,'tab')
+		bf.relocate($(event.target).attr('href'),null,'tab')
 		return false
 	})
 	

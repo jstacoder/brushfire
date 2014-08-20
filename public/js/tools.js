@@ -38,12 +38,12 @@ if (!Function.prototype.bind) {
 
 
 
-tp.tool = function(){};
+bf.tool = function(){};
 
 /*when no control over parameters passed, add scope level and use it to define variables at parent level for use within fn. 
-	capture context, use tp.makeEnvironment.call(this,...)
+	capture context, use bf.makeEnvironment.call(this,...)
 	Used XXX to avoid name conflict*/
-tp.makeEnvironment = function (fnXXX,envXXX){ 
+bf.makeEnvironment = function (fnXXX,envXXX){ 
 	for(kXXX in envXXX){
 		eval('var '+kXXX+' = '+envXXX[kXXX].toSource())
 	}
@@ -54,18 +54,18 @@ tp.makeEnvironment = function (fnXXX,envXXX){
 
 /*handles multiple windows
 reconsider logic when windowName provided and no such window*/
-tp.windows = {};
-tp.relocate = function(loc,windowName,type){
+bf.windows = {};
+bf.relocate = function(loc,windowName,type){
 	//call window relocate function if window exists and unclosed
-	if(windowName && tp.windows[windowName] && !tp.windows[windowName].closed){
-		tp.windows[windowName].tp.relocate(loc)
+	if(windowName && bf.windows[windowName] && !bf.windows[windowName].closed){
+		bf.windows[windowName].bf.relocate(loc)
 		return false;
 	}
 	if(windowName){
 		if(type == 'window'){
-			tp.windows[windowName] =  window.open(loc,windowName,newWindow);
+			bf.windows[windowName] =  window.open(loc,windowName,newWindow);
 		}else{
-			tp.windows[windowName] =  window.open(loc,windowName);
+			bf.windows[windowName] =  window.open(loc,windowName);
 		}
 		return false;
 	}
@@ -91,7 +91,7 @@ tp.relocate = function(loc,windowName,type){
 }
 
 
-tp.setCookie = function(name, value, exp){
+bf.setCookie = function(name, value, exp){
 	var c = name + "=" +escape( value )+";path=/;";
 	if(exp){
 		var expire = new Date();
@@ -100,7 +100,7 @@ tp.setCookie = function(name, value, exp){
 	}
 	document.cookie = c;
 }
-tp.readCookie = function(name) {
+bf.readCookie = function(name) {
 	var name = name + "=";
 	var ca = document.cookie.split(';');
 	for(var i=0;i < ca.length;i++) {
@@ -112,16 +112,16 @@ tp.readCookie = function(name) {
 }
 
 //take event object and get position
-tp.eventPosition = function(e){;
+bf.eventPosition = function(e){;
 	if (!e.pageX){
-		var scroll = tp.scrollPosition()
+		var scroll = bf.scrollPosition()
 		return {left:e.clientX + scroll.left,top:e.clientY + scroll.top};
 	}
 	return {left:e.pageX,top:e.pageY};
 }
 
 //find top left corner of element
-tp.findPosition = function(ele){
+bf.findPosition = function(ele){
 	var curleft = curtop = 0;
 	if(ele.offsetParent){
 		do{
@@ -133,7 +133,7 @@ tp.findPosition = function(ele){
 }
 
 //get the current scroll position of the web page
-tp.scrollPosition = function(){
+bf.scrollPosition = function(){
 	if(!self.pageXOffset){
 		var left = (document.body.scrollLeft || document.documentElement.scrollLeft);
 		var top = (document.body.scrollTop || document.documentElement.scrollTop);
@@ -144,8 +144,8 @@ tp.scrollPosition = function(){
 
 
 //check if value is in an array
-tp.arr = function(){};
-tp.arr.vInA = function(v,a){
+bf.arr = function(){};
+bf.arr.vInA = function(v,a){
 	var i;
 	for(i in a){
 		if(a[i] == v){
@@ -155,7 +155,7 @@ tp.arr.vInA = function(v,a){
 	return false;
 }
 
-tp.arr.rmV = function(v,a){
+bf.arr.rmV = function(v,a){
 	var i
 	for(i in a){
 		if(a[i] == v){
@@ -165,13 +165,13 @@ tp.arr.rmV = function(v,a){
 }
 
 //only add if not pre-existing
-tp.arr.addUnique = function(v,a){
-	if(!tp.arr.vInA(v,a)){
+bf.arr.addUnique = function(v,a){
+	if(!bf.arr.vInA(v,a)){
 		a[a.length] = v;
 	}
 }
 //get the first available key in a sequential array
-tp.arr.firstAvailableKey = function(a){
+bf.arr.firstAvailableKey = function(a){
 	for(var i = 0; i < a.length; i++){
 		if(typeof(a[i]) == 'undefined'){
 			return i;
@@ -180,14 +180,14 @@ tp.arr.firstAvailableKey = function(a){
 	return a.length;
 }
 //insert on first available key in a sequential array.  Returns key.
-tp.arr.inOnAvailable = function(v,a){
-	var key = tp.arr.firstAvailableKey(a)
+bf.arr.inOnAvailable = function(v,a){
+	var key = bf.arr.firstAvailableKey(a)
 	a[key] = v;
 	return key;
 }
 
 //get key of first existing element
-tp.arr.firstTakenKey = function(a){
+bf.arr.firstTakenKey = function(a){
 	for(var i = 0; i < a.length; i++){
 		if(typeof(a[i]) != 'undefined'){
 			return i;
@@ -197,13 +197,13 @@ tp.arr.firstTakenKey = function(a){
 }
 
 //get first existing element
-tp.arr.getFirstTaken = function(a){
-	var key = tp.arr.firstTakenKey(a)
+bf.arr.getFirstTaken = function(a){
+	var key = bf.arr.firstTakenKey(a)
 	return a[key];
 }
 
 //When deleting array element, element still counts towards arrays length.  This function ignores those elements
-tp.arr.countedLength = function(a){
+bf.arr.countedLength = function(a){
 	count = 0;
 	for(var i in a){
 		count += 1;
@@ -211,22 +211,22 @@ tp.arr.countedLength = function(a){
 	return count;
 }
 
-tp.obj = {};
+bf.obj = {};
 //get first object element
-tp.obj.firstV = function(obj){
+bf.obj.firstV = function(obj){
 	for(var i in obj){
 		return obj[i];
 	}
 }
 //get first object key
-tp.obj.firstK = function(obj){
+bf.obj.firstK = function(obj){
 	for(var i in obj){
 		return i;
 	}
 }
 
 //set page focus to element
-tp.viewFocus = function(ele){
+bf.viewFocus = function(ele){
 	var offset = $(ele).offset();
 	console.log(offset);
 	if(offset){
@@ -238,9 +238,9 @@ tp.viewFocus = function(ele){
 
 //+	url related functions {
 	
-tp.url = {}//move functions into this
+bf.url = {}//move functions into this
 //get query string request variable
-tp.getRequestVar = function(name,decode){
+bf.getRequestVar = function(name,decode){
 	decode = decode != null ? decode : true;
 	url = window.location+'';
 	if(/\?/.test(url)){
@@ -258,16 +258,16 @@ tp.getRequestVar = function(name,decode){
 	return false;
 }
 
-tp.getUrl = function(url){
+bf.getUrl = function(url){
 	url = url != null ? url : window.location
 	url = url+'';//convert to string for vars like window.location
 	return url
 }
 
 ///take a url and break it up in to page and key value pairs
-tp.getUrlParts = function(url,decode){
+bf.getUrlParts = function(url,decode){
 	decode = decode != null ? decode : true;
-	url = tp.getUrl(url)
+	url = bf.getUrl(url)
 	var retPairs = []
 	var urlParts = url.split('?');
 	if(urlParts[1]){
@@ -287,7 +287,7 @@ tp.getUrlParts = function(url,decode){
 	return {page:urlParts[0],pairs:retPairs}
 }
 ///make a url from page and key value pairs
-tp.getUrlFromParts = function(parts,encode){
+bf.getUrlFromParts = function(parts,encode){
 	encode = encode != null ? encode : true;
 	url = parts.page
 	if(parts.pairs.length > 0){
@@ -311,8 +311,8 @@ RegExp.quote = function(str) {
 }
 
 ///for removing parts from the url
-tp.urlQueryFilter = function(regex,url,decode){
-	var parts = tp.getUrlParts(url,decode)
+bf.urlQueryFilter = function(regex,url,decode){
+	var parts = bf.getUrlParts(url,decode)
 	
 	if(regex.constructor != RegExp){
 		if(regex.constructor == String){
@@ -333,26 +333,26 @@ tp.urlQueryFilter = function(regex,url,decode){
 		}
 		parts.pairs = newPairs
 	}
-	return tp.getUrlFromParts(parts,decode)
+	return bf.getUrlFromParts(parts,decode)
 }
 
 
 //for adding variables to URL query string
-tp.appendUrl = function(name,value,url,replace){
+bf.appendUrl = function(name,value,url,replace){
 	replace = replace != null ? replace : false;
 	
 	if(replace){
-		url = tp.urlQueryFilter(name,url)
+		url = bf.urlQueryFilter(name,url)
 	}
-	var parts = tp.getUrlParts(url)
+	var parts = bf.getUrlParts(url)
 	parts.pairs.push([name,value])
-	return tp.getUrlFromParts(parts)
+	return bf.getUrlFromParts(parts)
 }
 
 /*
 	pairs	either in form [[key,val],[key,val]] or {key:val,key:val}
 */
-tp.appendsUrl = function(pairs,url,replace){
+bf.appendsUrl = function(pairs,url,replace){
 	for(i in pairs){
 		if(typeof(pairs[i]) == 'object'){
 			var key = pairs[i][0]
@@ -361,7 +361,7 @@ tp.appendsUrl = function(pairs,url,replace){
 			var key = i
 			var val = pairs[i]
 		}
-		url = tp.appendUrl(key,val,url,replace);
+		url = bf.appendUrl(key,val,url,replace);
 	}
 	return url;
 }
@@ -369,7 +369,7 @@ tp.appendsUrl = function(pairs,url,replace){
 
 
 //Count an objects properties
-tp.count = function(object){
+bf.count = function(object){
 	var count = 0;
 	for(var i in object){
 		count++;
@@ -378,7 +378,7 @@ tp.count = function(object){
 }
 
 //find id in array of objects
-tp.tool.findIdInObjArray = function(id,arr){
+bf.tool.findIdInObjArray = function(id,arr){
 	for(i in arr){
 		if(arr[i].id == id){
 			return arr[i];
@@ -387,7 +387,7 @@ tp.tool.findIdInObjArray = function(id,arr){
 }
 
 //Binary to decimal
-tp.tool.bindec = function(bin){
+bf.tool.bindec = function(bin){
 	bin = (bin+'').split('').reverse();
 	var dec = 0;
 	for(var i = 0; i < bin.length; i++){
@@ -400,7 +400,7 @@ tp.tool.bindec = function(bin){
 
 
 //Decimal to binary
-tp.tool.decbin = function(dec){
+bf.tool.decbin = function(dec){
 	var bits = '';
 	for(var into = dec; into >= 1; into = Math.floor(into / 2)){
 		bits += into % 2;
@@ -412,7 +412,7 @@ tp.tool.decbin = function(dec){
 	return bits.split('').reverse().join('');
 }
 //will render string according to php rules
-tp.str = function(str){
+bf.str = function(str){
 	if(typeof(str) == 'number'){
 		return str+'';
 	}
@@ -421,7 +421,7 @@ tp.str = function(str){
 	}
 	return str;
 }
-tp.toInt = function(s){
+bf.toInt = function(s){
 	if(typeof(s) == 'string'){	
 		s = s.replace(/[^0-9]+/g,' ');
 		s = s.replace(/^ +/g,'');
@@ -438,14 +438,14 @@ tp.toInt = function(s){
 }
 
 
-tp.math = {};
-tp.math.round = function(num, precision){
-	var divider = new Number(tp.str.pad(1,precision+1,'0','right'))
+bf.math = {};
+bf.math.round = function(num, precision){
+	var divider = new Number(bf.str.pad(1,precision+1,'0','right'))
 	return Math.round(num * divider) / divider;
 }
 
 
-tp.str.pad = function(str,len,padChar,type){
+bf.str.pad = function(str,len,padChar,type){
 	str = new String(str);
 	if(!padChar){
 		padChar = '0';
@@ -467,7 +467,7 @@ tp.str.pad = function(str,len,padChar,type){
 
 
 //set words to upper case
-tp.str.ucwords = function(string){
+bf.str.ucwords = function(string){
 	if(string){
 		string = string.split(' ');
 		var newString = Array();
@@ -480,10 +480,10 @@ tp.str.ucwords = function(string){
 }
 
 //capitalize the string
-tp.str.capitalize = function(string){
+bf.str.capitalize = function(string){
 	return string.charAt(0).toUpperCase() + string.slice(1);
 }
-tp.toggle = function(value,values){
+bf.toggle = function(value,values){
 	if(value == values[0]) return values[1]
 	return values[0]
 }

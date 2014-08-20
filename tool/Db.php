@@ -3,12 +3,8 @@
 	- @warning Class sets sql_mode to ansi sql if mysql db to allow interroperability with postgres.	As such, double quotes " become table and column indicators, ` become useless, and single quotes are used as the primary means to quote strings
 	- @note Most of the querying methods are overloaded; there are two forms of possible input:
 		- Form 1:	simple sql string; eg "select * from bob where bob = 'bob'"
-		- Form 2: 
-			@verbatim
-			@param	table	the table to be used
-			@param	select	a select array.	See the Db::select function
-			@endverbatim
-	
+		- Form 2: 	see self::select
+			
 	@note public $db, the underlying PDO instance, set on lazy load
 */
 Class Db{
@@ -314,6 +310,7 @@ array(
 	/**
 	@param	table	table to insert on
 	@param	kva	see self::kvf() function
+	@return	see self::into
 	*/
 	protected function insert($table,$kvA){
 		return $this->into('INSERT',$table,$kvA);
@@ -322,47 +319,53 @@ array(
 	/**
 	@param	table	table to insert on
 	@param	kva	see self::kvf() function
-	@return	insert row id
+	@return	see self::into
 	*/
-	protected function insertIgnore($table,$kvA){
-		return $this->into('INSERT IGNORE',$table,$kvA);
+	protected function insertIgnore($table,$kvA,$matchKeys=null){
+		return $this->into('INSERT IGNORE',$table,$kvA,'',$matchKeys);
 	}
 	/// insert into table; on duplicate key update
 	/**
 	@param	table	table to insert on
 	@param	kva	see self::kvf() function
 	@param	update	either plain sql or null; if null, defaults to updating all values to $kvA input
-	@return	see Db::into
+	@param	matchKeys	keys used to identify row to get the id
+	@return	see self::into
 	*/
-	protected function insertUpdate($table,$kvA,$update=null){
+	protected function insertUpdate($table,$kvA,$update=null,$matchKeys=null){
 		if(!$update){
 			$update .= implode(', ',$this->ktvf($kvA,2));
 		}elseif(is_array($update)){
 			$update = implode(', ',$this->ktvf($update,2));
 		}
-		return $this->into('INSERT',$table,$kvA,"\nON DUPLICATE KEY UPDATE\n".$update);
+		return $this->into('INSERT',$table,$kvA,"\nON DUPLICATE KEY UPDATE\n".$update,$matchKeys);
 	}
 
 	/// replace on a table
 	/**
 	@param	table	table to replace on
 	@param	kva	see self::kvf() function
+	@param	matchKeys	keys used to identify row to get the id
 	@return	see Db::into
 	*/
-	protected function replace($table,$kvA){
-		return $this->into('REPLACE',$table,$kvA);
+	protected function replace($table,$kvA,$matchKeys=null){
+		return $this->into('REPLACE',$table,$kvA,'',$matchKeys);
 	}
 
 	/// internal use; perform insert into [called from in(), inUp()]
 	/**
-	@return row id or row count.  In the case of an single insert update, will return the row id if the update actually changed something.  In the case of multiple affected rows, will be a row count.
+	@note	insert ignore and insert update do not return a row id, so, if the id is not provided and the matchKeys are not provided, may not return row id
+	@return will attempt to get row id, otherwise will return count of affected rows
 	*/
-	protected function into($type,$table,$kvA,$update=''){
+	protected function into($type,$table,$kvA,$update='',$matchKeys=null){
 		$res = $this->query($type.' INTO '.$this->quoteIdentity($table).$this->kvf($kvA).$update);
 		if($this->under->lastInsertId()){
 			return $this->under->lastInsertId();
 		}elseif($kvA['id']){
 			return $kvA['id'];
+		}elseif($matchKeys){
+			$matchKva = Arrays::extract($matchKeys,$kvA);
+			return $this->row($table,$matchKva,'id');
 		}else{
 			return $res->rowCount();
 		}

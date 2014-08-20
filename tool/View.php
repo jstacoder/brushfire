@@ -4,7 +4,7 @@ class View{
 	use SDLL;
 	function __construct($control=null){
 		if(!$control){
-			global $control;
+			$control = Control::primary();
 		}
 		$this->control = $control;
 		$this->baseUrl = Config::$x['protocol'].'://'.Config::$x['httpHost'].'/';
@@ -459,11 +459,20 @@ array(
 	
 //+	}
 	
-	///Accumulated page json
-	public $json = null;
+	///standard js object that gets turned into json for pages, ajax, or api.  Various information loaded into it on calling this
+	public $stdJson = null;
 	///prints the self::$json into the tp.json object.  Requires the previous declaration of tp js object on the page
-	protected function getJson(){
-		echo '<script type="text/javascript">tp.json = '.json_encode($this->json).';</script>';
+	protected function getStdJson(){
+		$this->standardJson['messages'] = $this->control->messages;
+		$this->standardJson['in'] = $this->control->in;
+		$this->standardJson['id'] = $this->control->id;
+		$this->standardJson['route']['parsed'] = \control\Route::$parsedUrlTokens;
+		Hook::run('stdJson',$this);
+		return json_encode($this->standardJson);
+	}
+	///end the script with stdJson
+	protected function endStdJson(){
+		self::endJson($this->getStdJson(),false);
 	}
 	///end script with xml
 	static function endXml($content){

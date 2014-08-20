@@ -60,8 +60,11 @@ class Route{
 			//++ load the control {
 			$path = \Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
 			//if named file, load, otherwise load generic control in directory
-			$file = is_file($path.'.php') ? $path.'.php' : $path.'/control.php';
-			$loaded = \Files::inc($file,['control'],self::$regexMatch);
+			if(is_file($path.'.php')){
+				$loaded = \Files::inc($path.'.php',['control'],self::$regexMatch);
+			}elseif(is_file($path.'/control.php')){
+				$loaded = \Files::inc($path.'/control.php',['control'],self::$regexMatch);
+			}
 			//++ }
 			
 			//not loaded and was last token, page not found

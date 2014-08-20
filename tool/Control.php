@@ -105,7 +105,7 @@ class ControlPublic{
 		Add Page data-interface to Control
 	*/
 	function __get($name){
-		return $this->page->$name;
+		return $this->lt->$name;
 	}
 	function addLocalTool($tokens){
 		Files::incOnce(\Config::$x['projectFolder'].'tool/section/'.implode('/',$tokens).'.php');

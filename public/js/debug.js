@@ -1,9 +1,9 @@
-tp.debug = function(){};
-tp.debug.handleError = function(msg,file,line){
+bf.debug = function(){};
+bf.debug.handleError = function(msg,file,line){
 	alert('MSG: '+msg+"\nFILE: "+file+"\nLINE: "+line);
 }
 
-tp.backtrace = function(fn){
+bf.backtrace = function(fn){
 		if(!fn){
 			fn = arguments.callee.caller
 		}else{
@@ -13,25 +13,25 @@ tp.backtrace = function(fn){
 			return "";
 		}
 
-		var trace = tp.functionName(fn);
+		var trace = bf.functionName(fn);
 
 		trace="(";
 		var args = [];
 		for(var arg in fn.arguments){
-			tp.arr.add(fn.arguments.toString(),args);
+			bf.arr.add(fn.arguments.toString(),args);
 		}
 		trace += '('+args.join(',')+")\n";
-		return trace + tp.backtrace(fn);
+		return trace + bf.backtrace(fn);
 }
 
-tp.functionName = function(fn){
+bf.functionName = function(fn){
 	var name=/\W*function\s+([\w\$]+)\(/.exec(fn);
 	if(!name){
 		return 'No name';
 	}
 	return name[1];
 }
-tp.alertAll = function(obj){
+bf.alertAll = function(obj){
 	for(i in obj){
 		alert(i+' : '+obj);
 	}
@@ -52,7 +52,7 @@ tp.alertAll = function(obj){
  * Docs: http://www.openjs.com/scripts/others/dump_function_php_print_r.php
  */
 
-tp.dump = function(arr,level) {
+bf.dump = function(arr,level) {
 	var dumped_text = "";
 	if(!level) level = 0;
 	
@@ -65,7 +65,7 @@ tp.dump = function(arr,level) {
 			var value = arr[key]
 			if(typeof(value) == 'object') { //If it is an array,
 				dumped_text += level_padding + "'" + key + "' ...\n";
-				dumped_text += tp.dump(value,level+1);
+				dumped_text += bf.dump(value,level+1);
 			} else {
 				dumped_text += level_padding + "'" + key + "' => \"" + value + "\"\n";
 			}
@@ -77,7 +77,7 @@ tp.dump = function(arr,level) {
 }
 
 //useful for quickly printing out non string or string variable
-tp.alert = function(x){
-	alert(tp.dump(x));
+bf.alert = function(x){
+	alert(bf.dump(x));
 }
 

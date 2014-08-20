@@ -1,6 +1,6 @@
-tp.date = function(){}
+bf.date = function(){}
 /*3rd party code*/
-tp.date.format = function( format, timestamp ) {
+bf.date.format = function( format, timestamp ) {
     if(typeof(timestamp) == 'string'){
 			timestamp = parseInt(timestamp);
 		}
@@ -318,7 +318,7 @@ tp.date.format = function( format, timestamp ) {
     });
 }
 /*3rd party code*/
-tp.date.strtotime = function (str, now) {
+bf.date.strtotime = function (str, now) {
 	if(typeof(str) == 'number'){
 		return str;
 	}
@@ -517,10 +517,10 @@ tp.date.strtotime = function (str, now) {
 }
 
 
-tp.date.dateTime = function(time){
-	return tp.date.format('Y-m-d H:i:s',time);
+bf.date.dateTime = function(time){
+	return bf.date.format('Y-m-d H:i:s',time);
 }
-tp.date.unix = function(milli){
+bf.date.unix = function(milli){
 	var date = new Date();
 	if(milli){
 		return date.getTime();
@@ -529,18 +529,18 @@ tp.date.unix = function(milli){
 	}
 }
 
-tp.date.formatClock = function(format,clock){
-	if(!tp.date.zeroHour){
-		tp.date.zeroHour = tp.date.strtotime('2000-01-01 00:00:00');
+bf.date.formatClock = function(format,clock){
+	if(!bf.date.zeroHour){
+		bf.date.zeroHour = bf.date.strtotime('2000-01-01 00:00:00');
 	}
-	return tp.date.format(format,tp.date.zeroHour + parseInt(clock));
+	return bf.date.format(format,bf.date.zeroHour + parseInt(clock));
 }
 //make better format handling
-tp.date.daySeconds = function(clock){
+bf.date.daySeconds = function(clock){
 	var match = clock.match(/^([0-9]{1,2}):([0-9]{1,2}) ?([a-z]{2})/i);
 	if(match){
-		match[1] = tp.toInt(match[1]);
-		match[2] = tp.toInt(match[2]);
+		match[1] = bf.toInt(match[1]);
+		match[2] = bf.toInt(match[2]);
 		if(match[3].toLowerCase() == 'pm'){
 			if(match[1] != 12){
 				match[1] += 12;
@@ -554,8 +554,8 @@ tp.date.daySeconds = function(clock){
 	}
 }
 
-tp.date.timeAgo = function(unix,round){
-	var current = tp.date.unix();
+bf.date.timeAgo = function(unix,round){
+	var current = bf.date.unix();
 	var diff = current - unix;
 	var amount, type;
 	if(diff >= 31536000){
@@ -577,7 +577,7 @@ tp.date.timeAgo = function(unix,round){
 		amount = diff
 		type = 'second'
 	}
-	amount = tp.math.round(amount,round)
+	amount = bf.math.round(amount,round)
 	type = amount == 1 ? type : type+'s'
 	return amount+' '+type
 }
