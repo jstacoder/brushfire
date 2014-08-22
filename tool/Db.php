@@ -38,6 +38,7 @@ array(
 		$this->under = new PDO($dsn,$this->connectionInfo['user'],$this->connectionInfo['password']);
 		if($this->under->getAttribute(PDO::ATTR_DRIVER_NAME)=='mysql'){
 			$this->query('SET SESSION sql_mode=\'ANSI\'');
+			$this->query('SET SESSION time_zone=\'+00:00\'');
 			#$this->under->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
 		}
 	}
