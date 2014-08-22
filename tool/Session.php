@@ -49,8 +49,9 @@ class Session {
 					//refresh cookie with new expiry time
 					if(Config::$x['sessionCookieExpiryRefresh']){
 						if(rand(1,Config::$x['sessionCookieExpiryRefresh']) === 1){
-							Cookie::set('sessionId',$_COOKIE['sessionId'],array('expire'=>Config::$x['sessionCookieExpiry']));
-							Cookie::set('sessionKey',$_COOKIE['sessionKey'],array('expire'=>Config::$x['sessionCookieExpiry']));
+							$expiry = Config::$x['sessionCookieExpiry'] ? (new Time(Config::$x['sessionCookieExpiry']))->unix : 0;
+							Cookie::set('sessionId',$_COOKIE['sessionId'],array('expire'=>$expiry));
+							Cookie::set('sessionKey',$_COOKIE['sessionKey'],array('expire'=>$expiry));
 						}
 					}
 					
