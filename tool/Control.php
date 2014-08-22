@@ -34,7 +34,7 @@ class ControlPublic{
 	public $in;///<the potentially tool-changed input, made available to templates, controls and tools
 	public $originalIn;///<an unmodified version of $in
 	public $messages;///<system messages to display to the user
-	public $inputRuleAliases = [];///<when an input rule has no prefix, consider it an alias for other rules found in this->inputRuleAliases[rule].  Defaults to Field::$ruleAliases
+	public $inputRuleAliases = null;///<when an input rule has no prefix, consider it an alias for other rules found in this->inputRuleAliases[rule].  Defaults to Field::$ruleAliases
 	function __construct($in=false,$cookieMessagesName=false){
 		//+	parse input{
 		if($in===false){//apply default
@@ -64,6 +64,10 @@ class ControlPublic{
 			$this->in = Http::parseQuery($in,Config::$x['pageInPHPStyle']);
 		}
 		$this->originalIn = $this->in;
+		
+		if(Config::$x['stripInputContexts']){
+			$this->in = self::removeInputContexts($this->in);
+		}
 		//+	}
 		
 		//+	Handle COOKIE system messages{
@@ -107,6 +111,15 @@ class ControlPublic{
 	function __get($name){
 		return $this->lt->$name;
 	}
+	
+	///To account for multiple same-named inputs directing to different targets on the same page, contexts prefix input names, and are stripped out here
+	///@note see Config::$x['stripInputContexts']
+	static function removeInputContexts($in){
+		foreach((array)$in as $k => $v){
+			$newIn[array_slice(explode('-',$k,2),-1)[0]] = $v;
+		}
+		return $newIn;
+	}
 	function addLocalTool($tokens){
 		Files::incOnce(\Config::$x['projectFolder'].'tool/section/'.implode('/',$tokens).'.php');
 		$class = '\\local\\'.implode('\\',$tokens);
@@ -138,7 +151,7 @@ class ControlPublic{
 		$this->message($message,$name,'warning',$options);
 	}
 	function message($message,$name,$type,$options=null){
-		$context = $context ? $context : 'default';
+		$context = $options['context'] ? $options['context'] : 'default';
 		$message = array('type'=>$type,'context'=>$context,'name'=>$name,'content'=>$message);
 		if($options){
 			$message = Arrays::merge($message,$options);
@@ -219,7 +232,7 @@ class ControlPublic{
 				"v:name|param1;param2" indicates InputValidate function
 				"g:name|param1;param2" indicates global scoped function
 				"class:name|param1,param2,param3" indicates static method "name: of class "class" 
-				"p:name|param1,param2,param3" Page function
+				"l:name|param1,param2,param3" Local tool method
 				"name" replaced by Field fieldType of the same name
 		As an array, the rule function part (type:method) is the first element, and the parameters to the function part are the following elements.  Useful if function arguments contain commas or semicolons.  Ex:
 			array('type:method','arg1','arg2','arg3')
@@ -289,19 +302,19 @@ class ControlPublic{
 					case 'v':
 						call_user_func_array(array('InputValidate',$method),$params);
 					break;
-					case 'p':
-						call_user_func_array(array($this->page,$method),$params);
+					case 'l':
+						call_user_func_array(array($this->lt,$method),$params);
 					break;
 					case 'g':
 						call_user_func_array($method,$params);
 					break;
 					case '':
-						if(!isset($this->inputRuleAliases)){
+						if($this->inputRuleAliases === null){
 							$this->inputRuleAliases = \control\Field::$ruleAliases;
 						}
 						//get new named rules and parse
 						if(!$this->inputRuleAliases[$method]){
-							Debug::toss(['Unknown input rule alias on field '.$field,'Rule:',$rule]);
+							Debug::toss('Unknown input rule alias on field '.$field.' Rule:'.$rule);
 						}
 						$newRules = Arrays::stringArray($this->inputRuleAliases[$method]);
 						if($i + 1 < count($rules)){///there are rules after this alias, so combine alias with those existing after

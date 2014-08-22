@@ -271,8 +271,9 @@ class Debug{
 	static function out(){
 		self::$out['i']++;
 		$trace = debug_backtrace();
+		
 		foreach($trace as $part){
-			if($part['file'] && __FILE__ != $part['file']){
+			if($part['class'] == __CLASS__ && $part['line']){
 				$trace = $part;
 				break;
 			}

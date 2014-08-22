@@ -188,8 +188,8 @@ array(
 			ex: ['"':'1=1']
 		if "?" is in the key, the part after the "?" will serve as the "equator", ("bob?<>"=>'sue') -> "bob <> 'sue'"
 		if key starts with ":", value is not escaped
-			if value is "null", on where prefix with "is".	
-			if value = null (php null), set string to null
+			if value = null (php null), set string to "null"
+			if value is "null", on where is prefixed with "is".	
 		if value = null, set value to unescaped "null"
 	@param	type	1 = where, 2 = update
 	*/

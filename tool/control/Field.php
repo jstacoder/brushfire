@@ -1,10 +1,11 @@
 <?
+namespace control;
 class Field{
 	static $ruleAliases = array(
 		'phone' => 'f:toDigits,!v:filled,v:phone',
 		'zip' => '!v:filled,v:zip',
 		'name' => 'f:toName,f:trim,!v:filled',
-		'email' => '!v:filled,v:isEmail',
+		'email' => '!v:filled,v:email',
 		'password' => '!v:filled,v:lengthRange|3;50',
 		'userBirthdate' => '!v:filled,v:date,v:age|18;130',
 		'ip4' => array('f:trim','!v:filled',array('!v:matchRegex','@[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}@','ip4 format')),

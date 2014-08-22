@@ -17,7 +17,7 @@ bf.ui = {
 		//direct  the arrows according to the sorts
 		for(i in bf.sorts){
 			var [order,field] = bf.ui.parseSort(bf.sorts[i])
-			var column = $('.sortContainer *[data-field="'+field+'"]')
+			var column = $('.sortContainer [data-field="'+field+'"]')
 			if(order == '+'){
 				column.addClass('sortAsc')
 			}else{
@@ -71,30 +71,69 @@ bf.ui = {
 	},
 //+	}
 //+	System Messages {
-	insertMessage: function(message){
+	///replaces {_FIELD_} in the message with the found title
+	/**
+	supports 4 types of field name to title translation:
+		. passed object with matching attribute
+		. text of element with data-field matching field name and with data-title
+		. data-title attribute value of element with 'name' attribute = field, if data-title attribute present
+		. label text with for of field
+		. placeholder of input with 'name' attribute = field
+	*/
+	parseMessage: function(message,map){
 		if(message.name){
-			var fieldDisplayElement = $('*[data-fieldDisplay='+message.name+']')
-			
-			if(fieldDisplayElement.length > 0){
-				var fieldDisplay = $('*[data-fieldDisplay='+message.name+']').text()
-			}else{
-				var fieldDisplay = message.name
-			}
-			
-			message.content = message.content.replace(/\{_FIELD_\}/g,'"'+fieldDisplay+'"');
-			
-			var container = $('*[data-fieldContainer='+message.name+']');
-			if(container.size() > 0){
-				container.addClass(message.type+'Highlight');
-				if(!container.attr('title')){
-					container.attr('title',message.content)
+			var title = message.name			
+			while(true){//to avoid large nesting
+				if(map){
+					if(map[message.name]){
+						title = map[message.name]
+						break
+					}
 				}
+				var holder = $('[data-field="'+message.name+'"][data-title]')
+				if(holder.size()){
+					title = holder.text()
+					break
+				}
+				holder = $('[name='+message.name+'][data-title]')
+				if(holder.size()){
+					title = holder.attr('data-title')
+					break
+				}
+				holder = $('[for='+message.name+']')
+				if(holder.size()){
+					title = holder.text()
+					break
+				}
+				title = $('[name='+message.name+'][placeholder]').attr('placeholder')
+				break
 			}
+			message.content = message.content.replace(/\{_FIELD_\}/g,'"'+title+'"');
+		}
+		return message
+	},
+	/**
+	supports 2 types of error containers
+		. 'data-field'=fieldName, class has 'messageContainer'
+		. 'data-'context'MessageContainer'
+	*/
+	applyMessage: function(message){
+		bf.ui.highlightField(message)
+		
+		//++ add message text{
+		//Unfortunately, no browser standard yet
+		var messageEle = $('<div data-field="'+message.name+'" data-'+message.type+'Message class="message '+message.type+'"></div>').html(message.content)
+		
+		var messageContainer =  $('.messageContainer[data-field='+message.name+']');
+		if(!messageContainer.size()){
+			messageContainer = $('#'+message.context+'MessageContainer')
 		}
 		
-		var messageEle = $('<div class="message '+message.type+'"></div>').html(message.content)
-		messageEle.hide().appendTo('#'+message.context+'MsgBox').fadeIn({duration:'slow'})
-		bf.ui.closeButton(messageEle)
+		messageEle.hide().appendTo(messageContainer).fadeIn({duration:'slow'})
+		//++ }
+		if(message.expiry || message.closeable){
+			bf.ui.closeButton(messageEle)
+		}
 		if(message.expiry){
 			if(message.expiry < 86400){//less than a day, it's an offset, not unix time
 				var timeout = message.expiry * 1000
@@ -106,11 +145,77 @@ bf.ui = {
 					element.fadeOut(options)
 				}).bind(null,messageEle,{duration:'slow',complete:function(){$(this).remove()}}),timeout)
 		}
+		
 	},
+	///highlight input container
+	highlightField: function(message){
+		var container = $('[data-field="'+message.name+'"][data-container]');
+		if(!container.size()){
+			var container = $('[name="'+message.name+'"]');
+		}
+		if(container.size()){
+			container.addClass(message.type+'Highlight');
+		}
+	},
+	unhighlightFields: function(){
+		var types = ['error','success','notice','warning']
+		for(i in types){
+			var eleClass = types[i]+'Highlight'
+			$('.'+eleClass).removeClass(eleClass)
+		}
+	},
+	
+	///on inserting messages, these variables will be set
+	hasError:false,
+	hasContextError:{},
+	/**
+		messages attributes
+			context : prefixed before message name, with '-'.  Used for message container
+			name : field name message applies to
+			content : message html content
+			expiry : when to remove the message.  Unix time or time offset
+			closeable : whether message   is closable (adds close button)
+			type : what type of message  it is (error,success,notice,warning)
+	*/
+	insertMessage: function(message){
+		//set error status if applicable
+		if(message.type == 'error'){
+			bf.ui.hasError = true
+			bf.ui.hasContextError[message.context] = true
+		}
+		
+		//message context prefixes field name
+		if(message.context !='default'){
+			message.name = message.context+'-'+message.name
+		}
+		
+		if(bf.ui.customeMessageParser){
+			message = bf.ui.customMessageParser(message)
+		}else{
+			message = bf.ui.parseMessage(message)
+		}
+		if(bf.ui.customMessageApplier){
+			bf.ui.customMessageApplier(message)
+		}else{
+			bf.ui.applyMessage(message)
+		}
+	},
+	///it is assumed that, if this function is used for ajax, the poster pre-removes existing messages
 	insertMessages: function(messages){
 		for(k in messages){
 			bf.ui.insertMessage(messages[k])
 		}
+	},
+	///attempts to remove all evidence of inserted messages
+	uninsertMessages: function(){
+		bf.ui.hasError = false
+		for(context in bf.ui.hasContextError){
+			bf.ui.hasContextError[context] = false
+		}
+		
+		bf.ui.unhighlightFields()
+		
+		$('.messageContainer').empty();
 	},
 	closeButton: function(ele,hide){
 		var closeEle = $('<div class="closeButton"></div>')

@@ -170,9 +170,8 @@ class Route{
 			
 			if($matched){
 				self::$matchedRules[] = $rule;
-				
 				//++ apply replacement logic {
-				if($rule['regex']){
+				if($rule['flags']['regex']){
 					$replacement = preg_replace($rule['match'],$rule[1],self::$urlBase);
 				}else{
 					$replacement = $rule[1];

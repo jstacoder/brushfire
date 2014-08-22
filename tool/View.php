@@ -369,6 +369,11 @@ array(
 		array_unshift($args,'bottomJs');
 		call_user_func_array(array($this,'addTag'),$args);
 	}
+	///see addBottomJs
+	protected function addJs(){
+		return call_user_func_array(array($this,'addBottomJs'),func_get_args());
+	}
+	
 	///Adds js that will come after the regularly added js
 	protected function addLastJs(){
 		$args =	func_get_args();
