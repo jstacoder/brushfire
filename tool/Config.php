@@ -5,7 +5,13 @@ class Config{
 	static public $x;
 	
 	///gets the defaults and deals with special config variable syntax
-	static function init(){
+	static function init(&$config=null){
+		foreach($_ENV as $k=>$v){
+			$config[$k] = $v;
+		}
+		Config::$x = &$config;
+		$_ENV = &Config::$x;
+		
 		self::$x['logLocation'] = self::userFileLocation(self::$x['logLocation']);
 		self::$x['aliasesFiles'] = (array)self::$x['aliasesFiles'];
 		self::$x['protocol'] = strtolower(explode('/',$_SERVER['SERVER_PROTOCOL'])[0]);

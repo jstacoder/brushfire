@@ -388,11 +388,15 @@ class Arrays{
 	}
 	///takes an array and maps its values to the keys of another array
 	/**
-		@param	map	array	array(to key => from key) 
-			(new array key, in a sense, points to the old array key)
-		@param	$numberDefault	wherein the key is a number, assume the value is both the key and the value
+		@param	map	array	[newKey => oldKey]
+		@param	$numberDefault	wherein if the newKey is a number, assume the oldKey is both the oldKey and the newKey
+		
+		ex
+		$bob = ['sue'=>'a','bill'=>'b'];
+		Arrays::map(['test'=>'sue','bill'],$bob,$x=null,true);
+			[[test] => a [bill] => b]
 	*/
-	static function &map($map,$extractee,&$extractTo=null,$numberDefault=false){
+	static function &map($map,$extractee,$numberDefault=false,&$extractTo=null){
 		if(!is_array($extractTo)){
 			$extractTo = array();
 		}

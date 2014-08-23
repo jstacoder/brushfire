@@ -106,9 +106,14 @@ class ControlPublic{
 
 	}
 	/**
-		Add Page data-interface to Control
+		Load view when accessed
+		Use local tool attributes if not found
 	*/
 	function __get($name){
+		if($name == 'view'){
+			$this->view = View::primary();
+			return $this->view;
+		}
 		return $this->lt->$name;
 	}
 	
