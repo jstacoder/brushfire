@@ -20,7 +20,9 @@ require_once $config['systemFolder'].'tool/Autoload.php';
 $autoload = Autoload::init(null,Config::$x['autoloadIncludes']);
 spl_autoload_register(array($autoload,'auto'));
 #composer autload
-require_once $config['composerFolder'].'autoload.php';
+if(is_file($config['composerFolder'].'autoload.php')){
+	require_once $config['composerFolder'].'autoload.php';
+}
 
 set_error_handler(Config::$x['errorHandler'],Config::$x['errorsHandled']);
 set_exception_handler(Config::$x['exceptionHandler']);
