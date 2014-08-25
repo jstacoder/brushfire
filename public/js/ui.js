@@ -9,16 +9,16 @@ bf.ui = {
 		}else{
 			field = sort.substring(1)
 		}
-		return [order,field]
+		return {order:order,field:field}
 		
 	},
 	///arrange the arrows according to sorts
 	headerArrows: function(){
 		//direct  the arrows according to the sorts
 		for(i in bf.sorts){
-			var [order,field] = bf.ui.parseSort(bf.sorts[i])
-			var column = $('.sortContainer [data-field="'+field+'"]')
-			if(order == '+'){
+			var sort = bf.ui.parseSort(bf.sorts[i])
+			var column = $('.sortContainer [data-field="'+sort.field+'"]')
+			if(sort.order == '+'){
 				column.addClass('sortAsc')
 			}else{
 				column.addClass('sortDesc')
@@ -28,10 +28,10 @@ bf.ui = {
 	///shift clicks on sort header
 	appendSort: function(newField){
 		for(i in bf.sorts){
-			var [order,field] = bf.ui.parseSort(bf.sorts[i])
-			if(newField == field){
-				order = bf.toggle(order,['+','-'])
-				bf.sorts[i] = order+field
+			var sort = bf.ui.parseSort(bf.sorts[i])
+			if(newField == sort.field){
+				sort.order = bf.toggle(sort.order,['+','-'])
+				bf.sorts[i] = sort.order + sort.field
 				return
 			}
 		}
@@ -40,10 +40,10 @@ bf.ui = {
 	///non-shift clicks on sort header
 	changeSort: function(newField){
 		for(i in bf.sorts){
-			var [order,field] = bf.ui.parseSort(bf.sorts[i])
-			if(newField == field){
-				order = bf.toggle(order,['+','-'])
-				bf.sorts = [order+field]
+			var sort = bf.ui.parseSort(bf.sorts[i])
+			if(newField == sort.field){
+				sort.order = bf.toggle(sort.order,['+','-'])
+				bf.sorts = [sort.order + sort.field]
 				return
 			}
 		}
@@ -62,12 +62,14 @@ bf.ui = {
 	},
 	///gets the paging data on the page
 	getPaging: function(){
-		var [total,page] = $('*[data-paging]').attr('data-paging').split(',')
+		var paging = $('*[data-paging]').attr('data-paging').split(',')
+		var total = paging[0]
+		var page = paging[1]
 		if(bf.getRequestVar('_page')){
-			page = bf.getRequestVar('_page')
+			paging[1] = bf.getRequestVar('_page')
 		}		
 		total = Number(total); page = Number(page);
-		return [total,page]
+		return {total:total,page:page}
 	},
 //+	}
 //+	System Messages {
@@ -270,7 +272,7 @@ $(function(){
 //+		paging{
 		var pagingContainer = $('*[data-paging]')
 		if(pagingContainer.size()){
-			var [total,page] = bf.ui.getPaging()
+			var paging = bf.ui.getPaging(); var page = paging.page; var total = paging.total
 			if(total > 1){
 				//+	make the html paginater skeleton {
 				if($('.paging')){
@@ -320,7 +322,7 @@ $(function(){
 				
 				//clicks
 				$('.clk:not(.disabled)',paginaterDiv).click(function(e){
-					var [total,page] = bf.ui.getPaging()
+					var paging = bf.ui.getPaging(); var page = paging.page; var total = paging.total
 					//var target = $(e.target)
 					var target = $(this)
 					if(target.hasClass('pg')){
