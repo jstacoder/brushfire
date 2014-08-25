@@ -80,19 +80,19 @@ class Debug{
 	/** Sometimes printing out the value of a variable to the screen isn't an option.  As such, this function can be useful.
 	@param	var	variable to print out to file
 	@param	title	title to use in addition to other context information
-	@param	logfile	the log file to write to.  Config::$x['logLocation'] can be changed in the script, but this parameter provides an alternative to changing it
+	@param	logfile	the log file to write to.  $_ENV['logLocation'] can be changed in the script, but this parameter provides an alternative to changing it
 	*/
 	static function log($var,$title='',$logfile=null){
 		if($logfile){
 			$fh = fopen($logfile,'a+');
 		}else{
-			$fh = fopen(Config::$x['logLocation'],'a+');
+			$fh = fopen($_ENV['logLocation'],'a+');
 		}
 		
 		$bTrace = debug_backtrace();
 		$file = self::abbreviateFilePath($bTrace[0]['file']);
 		$line = $bTrace[0]['line'];
-		fwrite($fh,"+=+=+=+ ".date("Y-m-d H:i:s").' | '.Config::$x['projectName']." | TO FILE | ".$file.':'.$line.' | '.$title." +=+=+=+\n".self::toString($var)."\n");
+		fwrite($fh,"+=+=+=+ ".date("Y-m-d H:i:s").' | '.$_ENV['projectName']." | TO FILE | ".$file.':'.$line.' | '.$title." +=+=+=+\n".self::toString($var)."\n");
 		fclose($fh);
 	}
 	///get a line from a file
@@ -125,10 +125,10 @@ class Debug{
 		$code = self::getLine($eFile,$eLine);
 		$eFile = self::abbreviateFilePath($eFile);
 		$eFile = preg_replace('@'.PR.'@','',$eFile);
-		$header = "+=+=+=+ ".date("Y-m-d H:i:s").' | '.Config::$x['projectName']." | $type | ".self::abbreviateFilePath($eFile).":$eLine +=+=+=+\n$eStr\n";
+		$header = "+=+=+=+ ".date("Y-m-d H:i:s").' | '.$_ENV['projectName']." | $type | ".self::abbreviateFilePath($eFile).":$eLine +=+=+=+\n$eStr\n";
 		
 		$err= '';
-		if(Config::$x['errorDetail'] > 0){
+		if($_ENV['errorDetail'] > 0){
 			if(!$bTrace){
 				$bTrace = debug_backtrace();
 			}
@@ -141,7 +141,7 @@ class Debug{
 			//remove undesired stack points, and non-named points stemming from
 			foreach($bTrace as $k=>&$v){
 				$v['shortName'] = self::abbreviateFilePath($v['file']);
-				foreach(Config::$x['errorStackExclude'] as $exclusionPattern){
+				foreach($_ENV['errorStackExclude'] as $exclusionPattern){
 					if(!$v['file']){
 						$unnamed++;
 					}else{
@@ -163,7 +163,7 @@ class Debug{
 				if($code){
 					$err .= "\t".'Line: '.$code."\n";
 				}
-				if($v['args'] && Config::$x['errorDetail'] > 1){
+				if($v['args'] && $_ENV['errorDetail'] > 1){
 					$err .= "\t".'Arguments: '."\n";
 					$args = self::toString($v['args']);
 					$err .= substr($args,2,-2)."\n";
@@ -174,7 +174,7 @@ class Debug{
 							$args)."\n";*/
 				}
 			}
-			if(Config::$x['errorDetail'] > 2){
+			if($_ENV['errorDetail'] > 2){
 				$err.= "\nServer Var:\n:".self::toString($_SERVER);
 				$err.= "\nRequest-----\nUri:".$_SERVER['REQUEST_URI']."\nVar:".self::toString($_REQUEST);
 				$err.= "\n\nFile includes:\n".self::toString(Files::getIncluded());
@@ -186,8 +186,8 @@ class Debug{
 		$header = 'Error Id: '.$errorHash."\n".$header;
 		$err = $header.$err;
 		
-		$file = Config::$x['logLocation'];
-		if(!file_exists($file) || filesize($file)>Tool::byteSize(Config::$x['maxLogSize'])){
+		$file = $_ENV['logLocation'];
+		if(!file_exists($file) || filesize($file)>Tool::byteSize($_ENV['maxLogSize'])){
 			$mode = 'w';
 		}else{
 			$mode = 'a+';
@@ -195,22 +195,22 @@ class Debug{
 		$fh = fopen($file,$mode);
 		fwrite($fh,$err);
 		
-		if(!Config::$x['inScript']){
-			if(Config::$x['errorPage']){
-				Config::loadUserFiles(Config::$x['errorPage'],'.',null,['error'=>$err,'errorId'=>$errorHash]);
+		if(!$_ENV['inScript']){
+			if($_ENV['errorPage']){
+				Config::loadUserFiles($_ENV['errorPage'],'.',null,['error'=>$err,'errorId'=>$errorHash]);
 				exit;
 			}
-			if(Config::$x['errorMessage']){
-				if(is_array(Config::$x['errorMessage'])){
-					$message = Config::$x['errorMessage'][rand(0,count(Config::$x['errorMessage'])-1)];
+			if($_ENV['errorMessage']){
+				if(is_array($_ENV['errorMessage'])){
+					$message = $_ENV['errorMessage'][rand(0,count($_ENV['errorMessage'])-1)];
 				}else{
-					$message = Config::$x['errorMessage'];
+					$message = $_ENV['errorMessage'];
 				}
 				preg_replace('@\$errorId@',$errorHash,$message);
 				echo $message;
 			}
 		}
-		if(Config::$x['displayErrors']){
+		if($_ENV['displayErrors']){
 			self::sendout($err);
 		}
 		exit;
@@ -249,7 +249,7 @@ class Debug{
 		}
 	}
 	static function abbreviateFilePath($path){
-		return preg_replace(array('@'.Config::$x['projectFolder'].'@','@'.Config::$x['systemFolder'].'@'),array('project:','system:'),$path);
+		return preg_replace(array('@'.$_ENV['projectFolder'].'@','@'.$_ENV['systemFolder'].'@'),array('project:','system:'),$path);
 	}
 	///print a variable and kill the script
 	/** first cleans the output buffer in case there was one.  Echo in <pre> tag
@@ -296,7 +296,7 @@ class Debug{
 	}
 	///Encapsulates in <pre> if determined script not being run on console (ie, is being run on web)
 	static function sendout($output){
-		if(Config::$x['inScript']){
+		if($_ENV['inScript']){
 			echo $output;
 		}else{
 			echo '<pre>'.$output.'</pre>';

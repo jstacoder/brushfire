@@ -16,11 +16,11 @@ class Cron{
 	static $lastParsedTime;
 	static $args;///<args used by child cron scripts, from self::$list
 	static function start(){
-		if(!Lock::isOn('cron-running-'.Config::$x['projectName'])){
-			if(Lock::on('cron-running-'.Config::$x['projectName'])){
+		if(!Lock::isOn('cron-running-'.$_ENV['projectName'])){
+			if(Lock::on('cron-running-'.$_ENV['projectName'])){
 				Debug::out('Starting');
 				Control::req('scripts/crons/config');
-				while(!Lock::isOn('cron-off-'.Config::$x['projectName'])){
+				while(!Lock::isOn('cron-off-'.$_ENV['projectName'])){
 					$time = new Time;
 //+	ensure running only every minute {
 					$parseTime = $time->format('YmdHi');
@@ -61,7 +61,7 @@ class Cron{
 					}
 //+	}
 				}
-				Lock::off('cron-running-'.Config::$x['projectName']);
+				Lock::off('cron-running-'.$_ENV['projectName']);
 			}else{
 				Debug::quit('Failed to lock "cron-running"');
 			}
@@ -80,19 +80,19 @@ class Cron{
 	static function stop(){
 		Debug::out('Stopping');
 		//set lock to tell existing cron to turn off
-		if(!Lock::on('cron-off-'.Config::$x['projectName'])){
+		if(!Lock::on('cron-off-'.$_ENV['projectName'])){
 			Debug::quit('Lock off failed');
 		}
 		echo "\n";
 		
 		//wait for exist cron to turn off
-		while(Lock::isOn('cron-running-'.Config::$x['projectName'])){
+		while(Lock::isOn('cron-running-'.$_ENV['projectName'])){
 			echo '.';
 			sleep(1);
 		}
 		
 		//remove lock off
-		Lock::off('cron-off-'.Config::$x['projectName']);
+		Lock::off('cron-off-'.$_ENV['projectName']);
 		Debug::out('Stopped');
 	}
 	static function checkConfig(){

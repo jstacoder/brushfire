@@ -3,17 +3,17 @@
 class Storage{
 	static function get($name,$delete=false){
 		clearstatcache();
-		if(is_file(Config::$x['storageFolder'].$name.'._.info')){
-			$options = unserialize(file_get_contents(Config::$x['storageFolder'].$name.'._.info'));
+		if(is_file($_ENV['storageFolder'].$name.'._.info')){
+			$options = unserialize(file_get_contents($_ENV['storageFolder'].$name.'._.info'));
 		}
 		//perhaps throw exception on fail
-		$contents = file_get_contents(Config::$x['storageFolder'].$name);
+		$contents = file_get_contents($_ENV['storageFolder'].$name);
 		if($options['serialize']){
 			$contents = unserialize($contents);
 		}
 		if($delete){
-			@unlink(Config::$x['storageFolder'].$name.'._.info');
-			@unlink(Config::$x['storageFolder'].$name);
+			@unlink($_ENV['storageFolder'].$name.'._.info');
+			@unlink($_ENV['storageFolder'].$name);
 		}
 		return $contents;
 	}
@@ -27,9 +27,9 @@ class Storage{
 				$options['serialize'] = true;
 			}
 		}
-		file_put_contents(Config::$x['storageFolder'].$name,$contents);
+		file_put_contents($_ENV['storageFolder'].$name,$contents);
 		if($options){
-			file_put_contents(Config::$x['storageFolder'].$name.'._.info',serialize($options));
+			file_put_contents($_ENV['storageFolder'].$name.'._.info',serialize($options));
 		}
 	}
 }

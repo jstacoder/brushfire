@@ -24,9 +24,9 @@ class CrudModel{
 		foreach($usedColumns as $column){
 			//special columns
 			if($column == 'created'){
-				$this->control->in[$column] = new Time('now',Config::$x['timezone']);
+				$this->control->in[$column] = new Time('now',$_ENV['timezone']);
 			}elseif($column == 'updated'){
-				$this->control->in[$column] = new Time('now',Config::$x['timezone']);
+				$this->control->in[$column] = new Time('now',$_ENV['timezone']);
 			}elseif($column == 'id'){
 				$validaters[$column][] = 'f:toString';
 				$validaters[$column][] = '?!v:filled';
@@ -116,8 +116,8 @@ class CrudModel{
 		if($this->page->item = Db::row($this->page->model['table'],$this->page->id)){
 			return true;
 		}
-		if(Config::$x['CrudbadIdCallback']){
-			call_user_func(Config::$x['CrudbadIdCallback']);
+		if($_ENV['CrudbadIdCallback']){
+			call_user_func($_ENV['CrudbadIdCallback']);
 		}
 		
 	}

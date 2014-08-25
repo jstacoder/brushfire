@@ -7,10 +7,10 @@ class View{
 			$control = Control::primary();
 		}
 		$this->control = $control;
-		$this->baseUrl = Config::$x['protocol'].'://'.Config::$x['httpHost'].'/';
+		$this->baseUrl = $_ENV['protocol'].'://'.$_ENV['httpHost'].'/';
 	}
 	function load(){
-		foreach(Config::$x['aliasesFiles'] as $file){
+		foreach($_ENV['aliasesFiles'] as $file){
 			$extract = Files::inc($file,null,null,array('aliases'));
 			$this->aliases = Arrays::merge($this->aliases,$extract['aliases']);
 		}
@@ -31,7 +31,7 @@ class View{
 		if(substr($template,-4) != '.php'){
 			$template = $template.'.php';
 		}
-		Files::req(Config::$x['templateFolder'].$template,null,$vars);
+		Files::req($_ENV['templateFolder'].$template,null,$vars);
 		$output = ob_get_contents();
 		ob_end_clean();
 		return $output;
@@ -320,7 +320,7 @@ array(
 				//user is adding it, so assume css is at instance unless it starts with http or /
 				else{
 					if(substr($file,0,1) != '/' && !preg_match('@^http(s)?:@',$file)){
-						$file = '/'.Config::$x['urlProjectFileToken'].'/'.$folder.'/'.$file;
+						$file = '/'.$_ENV['urlProjectFileToken'].'/'.$folder.'/'.$file;
 					}
 					foreach($uniqueIn as $unique){
 						Arrays::remove($this->$unique,$file);
@@ -455,10 +455,10 @@ array(
 		#general system js
 		$js = array('http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js');
 		foreach(array('tools.js','date.js','debug.js','ui.js') as $v){
-			$js[] = '/'.Config::$x['urlSystemFileToken'].'/js/'.$v;
+			$js[] = '/'.$_ENV['urlSystemFileToken'].'/js/'.$v;
 		}
 		call_user_func_array(array($this,'addTopJs'),$js);
-		$this->addCss('/'.Config::$x['urlSystemFileToken'].'/css/base.css');
+		$this->addCss('/'.$_ENV['urlSystemFileToken'].'/css/base.css');
 		$this->tagAddOrder = $tagAddOrder;
 	}
 	
@@ -521,8 +521,8 @@ array(
 			}
 			
 			echo file_get_contents($path);
-		}elseif(Config::$x['resourceNotFound']){
-			Config::loadUserFiles(Config::$x['resourceNotFound'],'control');
+		}elseif($_ENV['resourceNotFound']){
+			Config::loadUserFiles($_ENV['resourceNotFound'],'control');
 		}else{
 			Debug::toss('Request handler encountered unresolvable file.  Searched at '.$path);
 		}

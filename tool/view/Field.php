@@ -11,16 +11,16 @@ class Field{
 	}
 	static function date(&$value){
 		if($value && InputValidate::check('date',$value)){
-			return (new \Time($value,Config::$x['timezone']))->setZone(Config::$x['inOutTimezone'])->date();
+			return (new \Time($value,$_ENV['timezone']))->setZone($_ENV['inOutTimezone'])->date();
 		}
 	}
 	static function datetime($value){
 		if($value && InputValidate::check('date',$value)){
-			return (new \Time($value,Config::$x['timezone']))->setZone(Config::$x['inOutTimezone'])->datetime();
+			return (new \Time($value,$_ENV['timezone']))->setZone($_ENV['inOutTimezone'])->datetime();
 		}
 	}
 	static function usaDate($value){
-		return (new \Time($time,Config::$x['timezone']))->format('F j, Y, g:i a',$timezone);
+		return (new \Time($time,$_ENV['timezone']))->format('F j, Y, g:i a',$timezone);
 	}
 	}
 	static function conditionalBr2Nl($value){

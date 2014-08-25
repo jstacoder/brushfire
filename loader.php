@@ -3,32 +3,31 @@
 /** @file */
 
 #Tool, used by config
-require_once $config['systemFolder'].'tool/Tool.php';
+require_once $_ENV['systemFolder'].'tool/Tool.php';
 
 #used by autoloader
-require_once $config['systemFolder'].'tool/Arrays.php';
-require_once $config['systemFolder'].'tool/Hook.php';
-require_once $config['systemFolder'].'tool/CommonTraits.php';
+require_once $_ENV['systemFolder'].'tool/Arrays.php';
+require_once $_ENV['systemFolder'].'tool/Hook.php';
+require_once $_ENV['systemFolder'].'tool/CommonTraits.php';
 
 #Config setting
-require_once $config['systemFolder'].'tool/Config.php';
-Config::init($config);
-date_default_timezone_set(Config::$x['timezone']);
+require_once $_ENV['systemFolder'].'tool/Config.php';
+Config::init();
 
 #Autoloader
-require_once $config['systemFolder'].'tool/Autoload.php';
-$autoload = Autoload::init(null,Config::$x['autoloadIncludes']);
+require_once $_ENV['systemFolder'].'tool/Autoload.php';
+$autoload = Autoload::init(null,$_ENV['autoloadIncludes']);
 spl_autoload_register(array($autoload,'auto'));
 #composer autload
-if(is_file($config['composerFolder'].'autoload.php')){
-	require_once $config['composerFolder'].'autoload.php';
+if(is_file($_ENV['composerFolder'].'autoload.php')){
+	require_once $_ENV['composerFolder'].'autoload.php';
 }
 
-set_error_handler(Config::$x['errorHandler'],Config::$x['errorsHandled']);
-set_exception_handler(Config::$x['exceptionHandler']);
+set_error_handler($_ENV['errorHandler'],$_ENV['errorsHandled']);
+set_exception_handler($_ENV['exceptionHandler']);
 
-Config::loadUserFiles(Config::$x['preRoute']);
+Config::loadUserFiles($_ENV['preRoute']);
 
 #pre session request handling; for file serving and such.
-require_once $config['systemFolder'].'tool/control/Route.php';
+require_once $_ENV['systemFolder'].'tool/control/Route.php';
 \control\Route::handle($_SERVER['REQUEST_URI']);

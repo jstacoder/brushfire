@@ -39,7 +39,7 @@ class Common{
 	}
 	protected function error($message){
 		$this->control->error($message);
-		\Config::loadUserFiles(Config::$x['errorPage'],null,null,array('error'=>$message));
+		\Config::loadUserFiles($_ENV['errorPage'],null,null,array('error'=>$message));
 		exit;
 	}
 	protected function badId(){

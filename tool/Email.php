@@ -60,13 +60,13 @@ class Email{
 			$this->text = self::applyLineLengthMax(utf8_encode($this->text));
 		}
 		if($this->attached){
-			$boundary = Config::$x['emailUniqueId'].'-A-'.microtime(true);
+			$boundary = $_ENV['emailUniqueId'].'-A-'.microtime(true);
 			$this->header['Content-Type'] = 'multipart/mixed; boundary="'.$boundary.'"';
 			$boundary = "\n\n--".$boundary."\n";
 			
 			if($this->html && $this->text){
 				$message .= $boundary;
-				$alterBoundary = Config::$x['emailUniqueId'].'-B-'.microtime(true);
+				$alterBoundary = $_ENV['emailUniqueId'].'-B-'.microtime(true);
 				$message .= 'Content-Type: multipart/alternative; boundary="'.$alterBoundary.'"';
 				$alterBoundary = "\n\n--".$alterBoundary."\n";
 				
@@ -112,7 +112,7 @@ class Email{
 				}
 			}
 		}elseif($this->html && $this->text){
-			$boundary = Config::$x['emailUniqueId'].'-A-'.microtime(true);
+			$boundary = $_ENV['emailUniqueId'].'-A-'.microtime(true);
 			$this->header['Content-Type'] = 'multipart/alternative; boundary="'.$boundary.'"';
 			$boundary = "\n\n--".$boundary."\n";
 			
@@ -148,7 +148,7 @@ class Email{
 			}
 		}
 		
-		$this->header['Message-Id'] = '<'.Config::$x['emailUniqueId'].'-'.sha1(uniqid(microtime()).rand(1,100)).'@'.gethostname().'>';
+		$this->header['Message-Id'] = '<'.$_ENV['emailUniqueId'].'-'.sha1(uniqid(microtime()).rand(1,100)).'@'.gethostname().'>';
 		foreach($this->header as $k=>$v){
 			#not separating with \r\n because this seems to cause DKIM hash to fail
 			$headers .= $k.': '.$v."\n";

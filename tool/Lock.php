@@ -73,7 +73,7 @@ class FileLock{
 	public $_success = true;
 	function construct($storageFolder=null){
 		if(!$storageFolder){
-			$storageFolder = class_exists('Config',false) ? Config::$x['storageFolder'] : '/tmp/';
+			$storageFolder = class_exists('Config',false) ? $_ENV['storageFolder'] : '/tmp/';
 		}
 		$this->storageFolder = $storageFolder;
 	}

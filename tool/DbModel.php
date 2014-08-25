@@ -34,7 +34,7 @@ class DbModel{
 		if(!$this->savePath){
 			$connectionInfo = $this->db->connectionInfo;
 			$subName = $connectionInfo['database'] ? $connectionInfo['database'] : md5($connectionInfo['dsn']);
-			$this->savePath = Config::$x['storageFolder'].'models/'.$this->db->name.'.'.$subName;
+			$this->savePath = $_ENV['storageFolder'].'models/'.$this->db->name.'.'.$subName;
 		}
 		$this->___construct($db,$savePath);
 	}

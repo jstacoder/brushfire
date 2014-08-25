@@ -41,7 +41,7 @@ class ControlPublic{
 			//+	Handle GET and POST variables{
 			$in['get'] = $_SERVER['QUERY_STRING'];//we take it from here b/c php will replace characters like '.' and will ignore duplicate keys when forming $_GET
 			//can cause script to hang (if no stdin), so don't run if in script unless configured to
-			if(!Config::$x['inScript'] || Config::$x['scriptGetsStdin']){
+			if(!$_ENV['inScript'] || $_ENV['scriptGetsStdin']){
 				//multipart forms can either result in 1. input being blank or 2. including the upload.  In case 1, post vars can be taken from $_POST.  In case 2, need to avoid putting entire file in memory by parsing input
 				if(substr($_SERVER['CONTENT_TYPE'],0,19) != 'multipart/form-data'){
 					$in['post'] = file_get_contents('php://input');
@@ -53,19 +53,19 @@ class ControlPublic{
 			if($_SERVER['CONTENT_TYPE'] == 'application/json'){
 				$in['post'] = ['json'=>json_decode($in['post'])];
 			}else{
-				$in['post'] = Http::parseQuery($in['post'],Config::$x['pageInPHPStyle']);
+				$in['post'] = Http::parseQuery($in['post'],$_ENV['pageInPHPStyle']);
 			}
-			$in['get'] = Http::parseQuery($in['get'],Config::$x['pageInPHPStyle']);
+			$in['get'] = Http::parseQuery($in['get'],$_ENV['pageInPHPStyle']);
 			$this->in = Arrays::merge($in['get'],$in['post']);
 			//+	}
 		}elseif(is_array($in)){
 			$this->in = $in;
 		}else{
-			$this->in = Http::parseQuery($in,Config::$x['pageInPHPStyle']);
+			$this->in = Http::parseQuery($in,$_ENV['pageInPHPStyle']);
 		}
 		$this->originalIn = $this->in;
 		
-		if(Config::$x['stripInputContexts']){
+		if($_ENV['stripInputContexts']){
 			$this->in = self::removeInputContexts($this->in);
 		}
 		//+	}
@@ -100,8 +100,8 @@ class ControlPublic{
 		//+	}
 		
 		//load db if configured
-		if(Config::$x['database']['default']){
-			$this->db = Db::init(null,Config::$x['database']['default']);
+		if($_ENV['database']['default']){
+			$this->db = Db::init(null,$_ENV['database']['default']);
 		}
 
 	}
@@ -118,7 +118,7 @@ class ControlPublic{
 	}
 	
 	///To account for multiple same-named inputs directing to different targets on the same page, contexts prefix input names, and are stripped out here
-	///@note see Config::$x['stripInputContexts']
+	///@note see $_ENV['stripInputContexts']
 	static function removeInputContexts($in){
 		foreach((array)$in as $k => $v){
 			$newIn[array_slice(explode('-',$k,2),-1)[0]] = $v;
@@ -126,7 +126,7 @@ class ControlPublic{
 		return $newIn;
 	}
 	function addLocalTool($tokens){
-		Files::incOnce(\Config::$x['projectFolder'].'tool/section/'.implode('/',$tokens).'.php');
+		Files::incOnce($_ENV['projectFolder'].'tool/section/'.implode('/',$tokens).'.php');
 		$class = '\\local\\'.implode('\\',$tokens);
 		
 		if(!$this->lt){
@@ -352,7 +352,7 @@ class ControlPublic{
 	}
 	///to prevent fabrication of system messages.  No spurious success messages!
 	static function saveMessagesCode($data){
-		return substr(sha1($_SERVER['HTTP_USER_AGENT'].$data.Config::$x['cryptKey']),0,10);
+		return substr(sha1($_SERVER['HTTP_USER_AGENT'].$data.$_ENV['cryptKey']),0,10);
 	}
 	///puts messages in cookie for next pageload
 	function saveMessages($targetPage=null){

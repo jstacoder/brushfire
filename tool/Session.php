@@ -47,9 +47,9 @@ class Session {
 				//check session actually exists
 				if(self::$data->exists()){
 					//refresh cookie with new expiry time
-					if(Config::$x['sessionCookieExpiryRefresh']){
-						if(rand(1,Config::$x['sessionCookieExpiryRefresh']) === 1){
-							$expiry = Config::$x['sessionCookieExpiry'] ? (new Time(Config::$x['sessionCookieExpiry']))->unix : 0;
+					if($_ENV['sessionCookieExpiryRefresh']){
+						if(rand(1,$_ENV['sessionCookieExpiryRefresh']) === 1){
+							$expiry = $_ENV['sessionCookieExpiry'] ? (new Time($_ENV['sessionCookieExpiry']))->unix : 0;
 							Cookie::set('sessionId',$_COOKIE['sessionId'],array('expire'=>$expiry));
 							Cookie::set('sessionKey',$_COOKIE['sessionKey'],array('expire'=>$expiry));
 						}
@@ -73,7 +73,7 @@ class Session {
 	static function create(){
 			$id = md5(Http::getIp().$_SERVER['HTTP_USER_AGENT'].microtime().rand(1,20));
 			
-			$expiry = Config::$x['sessionCookieExpiry'] ? (new Time(Config::$x['sessionCookieExpiry']))->unix : 0;
+			$expiry = $_ENV['sessionCookieExpiry'] ? (new Time($_ENV['sessionCookieExpiry']))->unix : 0;
 			
 			Cookie::set('sessionId',$id,array('expire'=>$expiry));
 			
@@ -118,15 +118,15 @@ class Session {
 	static function gc(){
 		if(!self::$started){ return; }
 		
-		if(Config::$x['sessionUseDb']){
-			Db::delete(Config::$x['sessionDbTable'],'updated__unix < '.strtotime(Config::$x['sessionExpiry']).' and permanent is null');
+		if($_ENV['sessionUseDb']){
+			Db::delete($_ENV['sessionDbTable'],'updated__unix < '.strtotime($_ENV['sessionExpiry']).' and permanent is null');
 		}else{
-			foreach(scandir(Config::$x['sessionFolder']) as $file){
+			foreach(scandir($_ENV['sessionFolder']) as $file){
 				//file is not folder and is not permanent session
-				if(!is_dir(Config::$x['sessionFolder'].$file) && !preg_match('@\.permanent$@',$file)){
+				if(!is_dir($_ENV['sessionFolder'].$file) && !preg_match('@\.permanent$@',$file)){
 					//file is older than expiry time
-					if(filectime(Config::$x['sessionFolder'].$file) < strtotime(Config::$x['sessionExpiry'])){
-						unlink(Config::$x['sessionFolder'].$file);
+					if(filectime($_ENV['sessionFolder'].$file) < strtotime($_ENV['sessionExpiry'])){
+						unlink($_ENV['sessionFolder'].$file);
 					}
 				}
 			}
@@ -134,8 +134,8 @@ class Session {
 	}
 	///used to make a session unpermanent
 	static function makeUnpermanent(){
-		if(Config::$x['sessionUseDb']){
-			Db::update(Config::$x['sessionDbTable'],array('permanent'=>'null'),array('id'=>$_COOKIE['sessionId']));
+		if($_ENV['sessionUseDb']){
+			Db::update($_ENV['sessionDbTable'],array('permanent'=>'null'),array('id'=>$_COOKIE['sessionId']));
 		}else{
 			if(preg_match('@\.permanent$@',self::$data->file)){
 				$newFile = preg_replace('@.permanent$@','',self::$data->file);
@@ -146,8 +146,8 @@ class Session {
 	}
 	///used to make a session permanent; aka, garbase collector will not remove regardless of how long the inactivity was
 	static function makePermanent(){
-		if(Config::$x['sessionUseDb']){
-			Db::update(Config::$x['sessionDbTable'],array('permanent'=>'1'),array('id'=>$_COOKIE['sessionId']));
+		if($_ENV['sessionUseDb']){
+			Db::update($_ENV['sessionDbTable'],array('permanent'=>'1'),array('id'=>$_COOKIE['sessionId']));
 		}else{
 			if(!preg_match('@\.permanent$@',self::$data->file)){
 				$newFile = self::$data->file.'.permanent';
@@ -163,15 +163,15 @@ class SessionData{
 	public $hash;
 	
 	function exists(){
-		if(Config::$x['sessionUseDb']){
-			return Db::row(Config::$x['sessionDbTable'],array('id'=>$_COOKIE['sessionId']),'1');
+		if($_ENV['sessionUseDb']){
+			return Db::row($_ENV['sessionDbTable'],array('id'=>$_COOKIE['sessionId']),'1');
 		}else{
 			//see if permanent session file exists
-			if(is_file(Config::$x['sessionFolder'].$_COOKIE['sessionId'].'.permanent')){
-				$this->file = Config::$x['sessionFolder'].$_COOKIE['sessionId'].'.permanent';
+			if(is_file($_ENV['sessionFolder'].$_COOKIE['sessionId'].'.permanent')){
+				$this->file = $_ENV['sessionFolder'].$_COOKIE['sessionId'].'.permanent';
 				return true;
-			}elseif(is_file(Config::$x['sessionFolder'].$_COOKIE['sessionId'])){
-				$this->file = Config::$x['sessionFolder'].$_COOKIE['sessionId'];
+			}elseif(is_file($_ENV['sessionFolder'].$_COOKIE['sessionId'])){
+				$this->file = $_ENV['sessionFolder'].$_COOKIE['sessionId'];
 				return true;
 			}
 			return false;
@@ -179,15 +179,15 @@ class SessionData{
 		
 	}
 	function delete(){
-		if(Config::$x['sessionUseDb']){
-			$data = Db::delete(Config::$x['sessionDbTable'],array('id'=>$_COOKIE['sessionId']));
+		if($_ENV['sessionUseDb']){
+			$data = Db::delete($_ENV['sessionDbTable'],array('id'=>$_COOKIE['sessionId']));
 		}else{
 			$data = unlink($this->file);
 		}
 	}
 	function get(){
-		if(Config::$x['sessionUseDb']){
-			$data = Db::row(Config::$x['sessionDbTable'],array('id'=>$_COOKIE['sessionId']),'data');
+		if($_ENV['sessionUseDb']){
+			$data = Db::row($_ENV['sessionDbTable'],array('id'=>$_COOKIE['sessionId']),'data');
 		}else{
 			$data = file_get_contents($this->file);
 		}
@@ -196,39 +196,39 @@ class SessionData{
 		return $data;
 	}
 	function create(){
-		if(Config::$x['sessionUseDb']){
+		if($_ENV['sessionUseDb']){
 			$insert = Session::$other;
 			$insert['id'] = $_COOKIE['sessionId'];
 			$insert['updated__unix'] = time();
-			Db::insert(Config::$x['sessionDbTable'],$insert);
+			Db::insert($_ENV['sessionDbTable'],$insert);
 		}else{
-			$this->file = Config::$x['sessionFolder'].$_COOKIE['sessionId'];
+			$this->file = $_ENV['sessionFolder'].$_COOKIE['sessionId'];
 			touch($this->file);
 		}
 	}
 	///Update the other columns (besides data)
 	function writeOther(){
-		if(Config::$x['sessionUseDb']){
+		if($_ENV['sessionUseDb']){
 			$update = Session::$other;
 			$update['updated__unix'] = time();
-			Db::update(Config::$x['sessionDbTable'],$update,array('id'=>$_COOKIE['sessionId']));
+			Db::update($_ENV['sessionDbTable'],$update,array('id'=>$_COOKIE['sessionId']));
 		}else{
 			//other corresponds to nothing on file based sessions
 		}
 	}
 	function write($data){
-		if(Config::$x['sessionUseDb']){
+		if($_ENV['sessionUseDb']){
 			$update = Session::$other;
 			$update['updated__unix'] = time();
 			$update['data'] = $data;
-			Db::update(Config::$x['sessionDbTable'],$update,array('id'=>$_COOKIE['sessionId']));
+			Db::update($_ENV['sessionDbTable'],$update,array('id'=>$_COOKIE['sessionId']));
 		}else{
 			file_put_contents($this->file,$data);
 		}
 	}
 	function updateTime(){
-		if(Config::$x['sessionUseDb']){
-			Db::update(Config::$x['sessionDbTable'],array('updated__unix'=>time()),array('id'=>$_COOKIE['sessionId']));
+		if($_ENV['sessionUseDb']){
+			Db::update($_ENV['sessionDbTable'],array('updated__unix'=>time()),array('id'=>$_COOKIE['sessionId']));
 		}else{
 			touch($this->file);
 		}

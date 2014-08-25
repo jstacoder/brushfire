@@ -32,10 +32,10 @@ class Route{
 		self::parseRequest($uri);
 		
 		//url corresponds to public file directory, provide file
-		if(self::$urlTokens[0] == \Config::$x['urlProjectFileToken']){
-			self::sendFile(\Config::$x['instancePublicFolder']);
-		}elseif(self::$urlTokens[0] == \Config::$x['urlSystemFileToken']){
-			self::sendFile(\Config::$x['systemPublicFolder']);
+		if(self::$urlTokens[0] == $_ENV['urlProjectFileToken']){
+			self::sendFile($_ENV['instancePublicFolder']);
+		}elseif(self::$urlTokens[0] == $_ENV['urlSystemFileToken']){
+			self::sendFile($_ENV['systemPublicFolder']);
 		}
 		
 		self::routeRequest();
@@ -48,7 +48,7 @@ class Route{
 		//after this following line, self::$urlTokens has no more influence on routing.  Modify self::$unparsedUrlTokens if you want modify control flow
 		self::$unparsedUrlTokens = array_merge([''],self::$urlTokens);
 		
-		self::addLocalTool(\Config::$x['projectFolder'].'tool/local/');
+		self::addLocalTool($_ENV['projectFolder'].'tool/local/');
 		
 		//get the section and page control
 		while(self::$unparsedUrlTokens){
@@ -58,7 +58,7 @@ class Route{
 			}
 			
 			//++ load the control {
-			$path = \Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
+			$path = $_ENV['controlFolder'].implode('/',self::$parsedUrlTokens);
 			//if named file, load, otherwise load generic control in directory
 			if(is_file($path.'.php')){
 				$loaded = \Files::inc($path.'.php',['control'],self::$regexMatch);
@@ -69,8 +69,8 @@ class Route{
 			
 			//not loaded and was last token, page not found
 			if($loaded === false && !self::$unparsedUrlTokens){
-				if(\Config::$x['pageNotFound']){
-					\Config::loadUserFiles(\Config::$x['pageNotFound'],'control',array('control'));
+				if($_ENV['pageNotFound']){
+					\Config::loadUserFiles($_ENV['pageNotFound'],'control',array('control'));
 					exit;
 				}else{
 					Debug::toss('Request handler encountered unresolvable token at control level.'."\nCurrent token: ".self::$currentToken."\nTokens parsed".print_r(self::$parsedUrlTokens,true));
@@ -212,7 +212,7 @@ class Route{
 				self::$parsedUrlTokens[] = self::$currentToken;
 			}
 			
-			$path = \Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
+			$path = $_ENV['controlFolder'].implode('/',self::$parsedUrlTokens);
 			if(!isset(self::$ruleSets[$path])){
 				self::$ruleSets[$path] = (array)\Files::inc($path.'/routes.php',null,null,['rules'])['rules'];
 			}
@@ -227,7 +227,7 @@ class Route{
 	}
 	///internal use. Gets a file based on next token in the unparsedUrlTokens variable
 	private static function getTokenFile($defaultName,$globalize=null,$extract=null){
-		$path = \Config::$x['controlFolder'].implode('/',self::$parsedUrlTokens);
+		$path = $_ENV['controlFolder'].implode('/',self::$parsedUrlTokens);
 		//if path not directory, possibly is file
 		if(!is_dir($path)){
 			$file = $path.'.php';
@@ -241,11 +241,11 @@ class Route{
 		array_shift(self::$urlTokens);
 		$filePath = escapeshellcmd(implode('/',self::$urlTokens));
 		if($filePath == 'index.php'){
-			\Config::loadUserFiles(\Config::$x['pageNotFound'],'control',array('page'));
+			\Config::loadUserFiles($_ENV['pageNotFound'],'control',array('page'));
 		}
 		$path = $base.$filePath;
-		if(\Config::$x['downloadParamIndicator']){
-			$saveAs = $_GET[\Config::$x['downloadParamIndicator']] ? $_GET[\Config::$x['downloadParamIndicator']] : $_POST[\Config::$x['downloadParamIndicator']];
+		if($_ENV['downloadParamIndicator']){
+			$saveAs = $_GET[$_ENV['downloadParamIndicator']] ? $_GET[$_ENV['downloadParamIndicator']] : $_POST[$_ENV['downloadParamIndicator']];
 		}
 		\View::sendFile($path,$saveAs);
 	}

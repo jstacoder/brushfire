@@ -3,7 +3,7 @@
 class StringFile extends FileObject{
 	///will clear string to save resources
 	function __construct(&$string){
-		$this->file = tempnam(Config::$x['storageFolder'],'stringFile.');
+		$this->file = tempnam($_ENV['storageFolder'],'stringFile.');
 		file_put_contents($this->file,$string);
 		parent::__construct($this->file);
 	}

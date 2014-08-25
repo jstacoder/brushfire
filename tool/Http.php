@@ -222,8 +222,8 @@ class Http{
 				#get first ip (should be client's ip)
 				#X-Forwarded-For: clientIPAddress, previousLoadBalancerIPAddress-1, previousLoadBalancerIPAddress-2
 				$ips = preg_split('@\s*,\s*@',$_SERVER['HTTP_X_FORWARDED_FOR']);
-				if(class_exists('Config',false) && Config::$x['loadBalancerIps']){
-					$ips = array_diff($ips,Config::$x['loadBalancerIps']);
+				if(class_exists('Config',false) && $_ENV['loadBalancerIps']){
+					$ips = array_diff($ips,$_ENV['loadBalancerIps']);
 				}
 				
 				self::$ip = array_pop(array_slice($ips,$slicePoint,1));

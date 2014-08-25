@@ -13,7 +13,7 @@ class Cookie{
 	@note	this function will also set the corresponding $_COOKIE variable
 	*/
 	static function set($key,$value,$options=null){
-		foreach(Config::$x['cookieDefaultOptions'] as $k=>$v){
+		foreach($_ENV['cookieDefaultOptions'] as $k=>$v){
 			if(!isset($options[$k])){
 				$options[$k] = $v;
 			}
@@ -28,7 +28,7 @@ class Cookie{
 	@note	this function will also unset the corresponding $_COOKIE variable
 	*/
 	static function remove($key,$options=null){
-		foreach(Config::$x['cookieDefaultOptions'] as $k=>$v){
+		foreach($_ENV['cookieDefaultOptions'] as $k=>$v){
 			if(!isset($options[$k])){
 				$options[$k] = $v;
 			}

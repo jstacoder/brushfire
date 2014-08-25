@@ -55,12 +55,12 @@ class InputFilter{
 		return $value = trim($value);
 	}
 	static function toDate(&$value,$inOutTz=null){
-		$inOutTz = $inOutTz ? $inOutTz : Config::$x['inOutTimezone'];
-		return $value = (new Time($value,$inOutTz))->setZone(Config::$x['timezone'])->date();
+		$inOutTz = $inOutTz ? $inOutTz : $_ENV['inOutTimezone'];
+		return $value = (new Time($value,$inOutTz))->setZone($_ENV['timezone'])->date();
 	}
 	static function toDatetime(&$value,$inOutTz=null){
-		$inOutTz = $inOutTz ? $inOutTz : Config::$x['inOutTimezone'];
-		return $value = (new Time($value,$inOutTz))->setZone(Config::$x['timezone'])->datetime();
+		$inOutTz = $inOutTz ? $inOutTz : $_ENV['inOutTimezone'];
+		return $value = (new Time($value,$inOutTz))->setZone($_ENV['timezone'])->datetime();
 	}
 	static function toDefault(&$value,$default){
 		if($value === null || $value === ''){

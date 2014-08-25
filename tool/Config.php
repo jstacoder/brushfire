@@ -1,25 +1,16 @@
 <?
 /// used for dealing with framework instance configurations
 class Config{
-	///array of configuration options including defaults
-	static public $x;
-	
-	///gets the defaults and deals with special config variable syntax
-	static function init(&$config=null){
-		foreach($_ENV as $k=>$v){
-			$config[$k] = $v;
-		}
-		Config::$x = &$config;
-		$_ENV = &Config::$x;
-		
-		self::$x['logLocation'] = self::userFileLocation(self::$x['logLocation']);
-		self::$x['aliasesFiles'] = (array)self::$x['aliasesFiles'];
-		self::$x['protocol'] = strtolower(explode('/',$_SERVER['SERVER_PROTOCOL'])[0]);
-		date_default_timezone_set(Config::$x['timezone']);
+	///sets some defaults
+	static function init(){
+		$_ENV['logLocation'] = self::userFileLocation($_ENV['logLocation']);
+		$_ENV['aliasesFiles'] = (array)$_ENV['aliasesFiles'];
+		$_ENV['protocol'] = strtolower(explode('/',$_SERVER['SERVER_PROTOCOL'])[0]);
+		date_default_timezone_set($_ENV['timezone']);
 	}
 	static function userFileLocation($file,$defaultLocation='.'){
 		if(substr($file,0,1) != '/'){
-			$file = Config::$x['projectFolder'].$defaultLocation.'/'.$file;
+			$file = $_ENV['projectFolder'].$defaultLocation.'/'.$file;
 		}
 		//since file base ensured (not purely relative), can run through absolutePath function
 		return Tool::absolutePath($file);
@@ -41,11 +32,10 @@ class Config{
 			self::loadUserFile($files,$defaultLocation,$globalize,$vars);
 		}
 	}
-	///loads named config from config directory into self::$x.
+	///loads named config from config directory into $_ENV.
 	///@note  @names are encloded with 'config.'name'.php'
 	static function load($name){
-		$file = self::$x['configFolder'].'config.'.$name.'.php';
-		$extracted = self::loadUserFile($file,'.',null,null,['config']);
-		Arrays::mergeInto(self::$x,$extracted['config']);
+		$file = $_ENV['configFolder'].'config.'.$name.'.php';
+		self::loadUserFile($file,'.');
 	}
 }
