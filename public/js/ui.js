@@ -126,8 +126,10 @@ bf.ui = {
 		//Unfortunately, no browser standard yet
 		var messageEle = $('<div data-field="'+message.name+'" data-'+message.type+'Message class="message '+message.type+'"></div>').html(message.content)
 		
-		var messageContainer =  $('.messageContainer[data-field='+message.name+']');
-		if(!messageContainer.size()){
+		if(message.name){
+			var messageContainer =  $('.messageContainer[data-field='+message.name+']');
+		}
+		if(!message.name || !messageContainer.size()){
 			messageContainer = $('#'+message.context+'MessageContainer')
 		}
 		
@@ -151,12 +153,14 @@ bf.ui = {
 	},
 	///highlight input container
 	highlightField: function(message){
-		var container = $('[data-field="'+message.name+'"][data-container]');
-		if(!container.size()){
-			var container = $('[name="'+message.name+'"]');
-		}
-		if(container.size()){
-			container.addClass(message.type+'Highlight');
+		if(message.name){
+			var container = $('[data-field="'+message.name+'"][data-container]');
+			if(!container.size()){
+				var container = $('[name="'+message.name+'"]');
+			}
+			if(container.size()){
+				container.addClass(message.type+'Highlight');
+			}
 		}
 	},
 	unhighlightFields: function(){
