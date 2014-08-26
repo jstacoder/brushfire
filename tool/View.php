@@ -1,5 +1,11 @@
 <?
 ///For handling output and templates, generally assuming use of http
+/**
+On the nature of templates
+	. they should contain minimal logic, leaving most to control and tools
+	. 
+	
+*/
 class View{
 	use SDLL;
 	function __construct($control=null){
@@ -32,8 +38,7 @@ class View{
 			$template = $template.'.php';
 		}
 		Files::req($_ENV['templateFolder'].$template,null,$vars);
-		$output = ob_get_contents();
-		ob_end_clean();
+		$output = ob_get_clean();
 		return $output;
 	}
 	
@@ -448,6 +453,43 @@ array(
 		}
 		return $js;
 	}
+	
+	/*public $openSection = '';
+	protected function section($name='',$application='replace',$options=null){
+		if($this->openSection){
+			$content = ob_get_clean();
+			$section = &$this->sections[$this->openSection];
+			if($section){
+				if($section['application'] != 'replace'){
+					if($section['application'] == 'append'){
+						$section['content'] = $content.$section['content'];
+					}elseif($section['application'] == 'prepend'){
+						$section['content'] .= $content;
+					}
+					$section['application'] = $ap
+				}
+			}else{
+				
+			}
+			$this->sections[$this->openSection] = []
+			['name'=>$name,'application'=>$application]
+			$output = ob_get_clean();
+		}else{
+			$openSection = ['name'=>$name,'application'=>$application]
+		}
+		$vars['thisTemplate'] = $template;
+		$vars['control'] = $this->control;
+		$vars['view'] = $this;//$this is reserved, can not use outside of object context
+		
+		ob_start();
+		if(substr($template,-4) != '.php'){
+			$template = $template.'.php';
+		}
+		Files::req($_ENV['templateFolder'].$template,null,$vars);
+		$output = ob_get_clean();
+		return $output;
+	}
+	*/
 	
 	protected function loadSystemResources(){
 		$tagAddOrder = $this->tagAddOrder;

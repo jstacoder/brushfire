@@ -123,11 +123,12 @@ class Tool{
 	/**
 	@param	string	string to camelCase
 	*/
-	static function toCamel($string,$upperCamel=false){
+	static function toCamel($string,$upperCamel=false,$separaters=' _-'){
+		$separaters = preg_quote($separaters);
 		$string = strtolower($string);
-		preg_match('@[ _]*[^ _]*@',$string,$match);
+		preg_match('@['.$separaters.']*[^'.$separaters.']*@',$string,$match);
 		$cString = $upperCamel ? ucfirst($match[0]) : $match[0];//first word
-		preg_match_all('@[ _]+([^ _]+)@',$string,$match);
+		preg_match_all('@['.$separaters.']+([^'.$separaters.']+)@',$string,$match);
 		if($match[1]){
 			foreach($match[1] as $word){
 				$cString .= ucfirst($word);
@@ -136,7 +137,7 @@ class Tool{
 		return $cString;
 	}
 	///take string and return the accronym
-	static function acronym($string,$separaterPattern='@[_ ]+@',$seperater=''){
+	static function acronym($string,$separaterPattern='@[_ \-]+@',$seperater=''){
 		$parts = preg_split($separaterPattern,$string);
 		foreach($parts as $part){
 			$acronym[] = $part[0];

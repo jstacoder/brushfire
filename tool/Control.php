@@ -126,8 +126,11 @@ class ControlPublic{
 		return $newIn;
 	}
 	function addLocalTool($tokens){
-		Files::incOnce($_ENV['projectFolder'].'tool/section/'.implode('/',$tokens).'.php');
+		Files::incOnce($_ENV['projectFolder'].'tool/local/'.implode('/',$tokens).'.php');
 		$class = '\\local\\'.implode('\\',$tokens);
+		if(strpos($class,'-') !== false){
+			$class = Tool::toCamel($class,false,'-');
+		}
 		
 		if(!$this->lt){
 			$this->lt = new $class;

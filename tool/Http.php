@@ -184,17 +184,36 @@ class Http{
 		}
 		return $url;
 	}
+/*#from Dylan at WeDefy dot com
+	// 301 Moved Permanently
+header("Location: /foo.php",TRUE,301);
+
+// 302 Found
+header("Location: /foo.php",TRUE,302);
+header("Location: /foo.php");
+
+// 303 See Other
+header("Location: /foo.php",TRUE,303);
+
+// 307 Temporary Redirect
+header("Location: /foo.php",TRUE,307);
+?>
+
+The HTTP status code changes the way browsers and robots handle redirects, so if you are using header(Location:) it's a good idea to set the status code at the same time.  Browsers typically re-request a 307 page every time, cache a 302 page for the session, and cache a 301 page for longer, or even indefinitely.  Search engines typically transfer "page rank" to the new location for 301 redirects, but not for 302, 303 or 307. If the status code is not specified, header('Location:') defaults to 302.
+	*/
 	///relocate browser
 	/**
 	@param	location	location to relocate to
 	@param	type	type of relocation; head for header relocation, js for javascript relocation
 	*/
-	static function redirect($location=null,$type='head'){
+	static function redirect($location=null,$type='head',$code=null){
 		if($type == 'head'){
 			if(!$location){
 				$location = $_SERVER['REQUEST_URI'];
+				$code = $code ? $code : 307;
 			}
-			header('Location: '.$location);
+			$code = $code ? $code : 302;
+			header('Location: '.$location,true,$code);
 		}elseif($type=='js'){
 			echo '<script type="text/javascript">';
 			if(Tool::isInt($location)){

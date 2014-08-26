@@ -2,21 +2,34 @@
 namespace control;
 ///Used to handle requests by determining path, then determining controls
 /**
+Ssee routes.sample.php for route rule information
+
 Route Rules Logic
-	Route will look with increasing specificity down the tokenised file path in the "control" folder for "routes.php" files
-	if a matching rule is found, the Route rules loop starts over with the new path
+	All routes are optional
+	Routes are discovered one level at a time, and previous routing rules affect the discovery of new routes
+	if a matching rule is found, the Route rules loop starts over with the new path (unless option set to not do this)
+	
+	http://bobery.com/bob/bill/sue:
+		control/routes.php
+		control/bob/routes.php
+		control/bob/bill/routes.php
+		control/bob/bill/sue/routes.php
+		
 
 Controls Calling Logic:
-	Route will look with increasing specificity down the tokenised file path in the "control" folder for either $previousPath.$currentToken.'.php', or $previousPath.'control.php'
-		bob/bill/sue bob:
-			include: control/bob.php or control/control.php
-			include: control/bob/bill.php or control/bob/control.php
-			include: control/bill/sue.php or control/bill/sue/control.php
+	All controls are optional.  However, if the Route is still looping tokens (stop it by exiting or emptying $unparsedUrlTokens) and the last token does not match a control, page not found returned
+	
+	http://bobery.com/bob/bill/sue:
+		control/control.php
+		control/bob.php || control/bob/control.php
+		control/bob/bill.php || control/bob/bill/control.php
+		control/bob/bill/sue.php || control/bob/bill/sue/control.php
 
 File Routing
 	If, for some reason, Route is given a request that has a urlProjectFileToken or a systemPublicFolder prefix, Route will send that file after determining the path through the Route Rules Logic
 
 @note	if you get confused about what is going on with the rules, you can print out both self::$matchedRules and self::$ruleSets at just about any time
+@note	dashes in paths will not work with namespacing.  Dashes in the last token will be handled by turning the name of the corresponding local tool into a lower camel cased name.
 */
 class Route{
 	static $stopRouting;///<stops more rules from being called; use within rule file
@@ -80,8 +93,7 @@ class Route{
 		
 //+	}
 	}
-	///find the most specific to tool
-	/**@return tokens at which tool was found*/
+	///find the most specific tool
 	private static function addLocalTool($base){
 		$tokens = self::$urlTokens;
 		while($tokens){
@@ -175,6 +187,14 @@ class Route{
 					$replacement = preg_replace($rule['match'],$rule[1],self::$urlBase);
 				}else{
 					$replacement = $rule[1];
+				}
+				
+				//handle redirects
+				if($rule['flags']['302']){
+					\Http::redirect($replacement);
+				}
+				if($rule['flags']['303']){
+					\Http::redirect($replacement,'head',303);
 				}
 			
 				//remake url with replacement

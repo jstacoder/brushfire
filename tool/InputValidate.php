@@ -5,6 +5,7 @@ class InputValidate{
 			'exists' => 'Missing field {_FIELD_}',
 			'filled' => 'Missing field {_FIELD_}',
 			'existsInTable' => 'No record of {_FIELD_} found',
+			'notExistsInTable' => 'A record of {_FIELD_} already present',
 			'isInteger' => '{_FIELD_} must be an integer',
 			'isFloat' => '{_FIELD_} must be a decimal',
 			'matchRegex' => '{_FIELD_} must match %s',
@@ -62,6 +63,11 @@ class InputValidate{
 	static function existsInTable(&$value,$table,$field='id'){
 		if(!Db::check($table,array($field=>$value))){
 			Debug::toss(self::$errorMessages['existsInTable'],'InputException');
+		}
+	}
+	static function notExistsInTable(&$value,$table,$field='id'){
+		if(Db::check($table,array($field=>$value))){
+			Debug::toss(self::$errorMessages['notExistsInTable'],'InputException');
 		}
 	}
 	static function isInteger(&$value){
