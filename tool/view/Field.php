@@ -22,7 +22,6 @@ class Field{
 	static function usaDate($value){
 		return (new \Time($time,$_ENV['timezone']))->format('F j, Y, g:i a',$timezone);
 	}
-	}
 	static function conditionalBr2Nl($value){
 		if(!preg_match('@<div|<p|<table@',$value)){
 			$value = preg_replace('@<br ?/>@',"\n",$value);
