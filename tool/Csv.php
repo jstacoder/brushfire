@@ -97,6 +97,8 @@ class Csv{
 	@param	string	the string representing the line in the csv
 	@param	delimiterCharacters those which delimit
 	@return	array(position => value)
+	
+	@note doesn't handle  quoted double quotes.   CSV quotes '"' by replacing with '"""'
 	*/
 	static function parseLineColumns($string,$delimiterCharacters=",\t"){
 		$charCount = strlen($string);

@@ -246,33 +246,19 @@ body input[name="directPg"]{
 }
 
 h1{
-	font-size:22px;
+	font-size:170%;
 }
 h2{
-	font-size:20px;
+	font-size:150%;
 }
 h3{
-	font-size:18px;
+	font-size:130%;
 }
 h4{
-	font-size:16px;
+	font-size:120%;
 }
 h5,h6,h7{
-	font-weight:bold;
-}
-
-section > main {
-	clear:both;
-	padding-left:5px;
-}
-main{
-	font-size:13px;
-}
-section section {
-	padding-left:30px;
-}
-section section section{
-	padding-left:60px;
+	font-size:105%;
 }
 
 /*+	form looks {*/

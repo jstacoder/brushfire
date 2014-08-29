@@ -281,10 +281,13 @@ array(
 	///page js put at the end after self::$bottomJs
 	public $lastJs = array();
 	///determines whether addTag prepends or appends.  Note, mutli file addTag calls will be reverse sorted.
+	/**
+	'-' will prepend.  Additionally, if multiple files are present on one call, it will reverse the order of those items
+	*/
 	public $tagAddOrder = '+';
 	///used internally.
 	/**
-	@param	type	indicates whether tag is css, lastCss, js, or lastJs.  Prefix with "-" or "+" to temporarilty change the tag addition order
+	@param	type	indicates whether tag is css, lastCss, js, or lastJs.  Optional prefix with "-" or "+" to temporarilty change the tagAddOrder
 	@param args	additional args taken as files.  Each file in the passed parameters has the following special syntax:
 		-starts with http(s): no modding done
 		-starts with "/": no modding done
@@ -454,42 +457,29 @@ array(
 		return $js;
 	}
 	
-	/*public $openSection = '';
-	protected function section($name='',$application='replace',$options=null){
-		if($this->openSection){
-			$content = ob_get_clean();
-			$section = &$this->sections[$this->openSection];
-			if($section){
-				if($section['application'] != 'replace'){
-					if($section['application'] == 'append'){
-						$section['content'] = $content.$section['content'];
-					}elseif($section['application'] == 'prepend'){
-						$section['content'] .= $content;
-					}
-					$section['application'] = $ap
-				}
-			}else{
-				
-			}
-			$this->sections[$this->openSection] = []
-			['name'=>$name,'application'=>$application]
-			$output = ob_get_clean();
-		}else{
-			$openSection = ['name'=>$name,'application'=>$application]
-		}
-		$vars['thisTemplate'] = $template;
-		$vars['control'] = $this->control;
-		$vars['view'] = $this;//$this is reserved, can not use outside of object context
-		
-		ob_start();
-		if(substr($template,-4) != '.php'){
-			$template = $template.'.php';
-		}
-		Files::req($_ENV['templateFolder'].$template,null,$vars);
-		$output = ob_get_clean();
-		return $output;
-	}
+	public $openSection = '';
+	public $sections = [];
+	//buffers following output and places it into keyed array.  Use getSection to get output
+	/**
+	if called with name:
+		if no section open, open section
+		if section open, place output into keyed array, close section, and then open new section
+	if called without name
+		if section open, put output into keyed array, close section
 	*/
+	protected function section($name=''){
+		if($this->openSection){
+			$this->sections[$this->openSection] = ob_get_clean();
+			$this->openSection = '';
+		}
+		if($name){
+			$this->openSection = $name;
+			ob_start();
+		}
+	}
+	protected function getSection($name){
+		return $this->sections[$name];
+	}
 	
 	protected function loadSystemResources(){
 		$tagAddOrder = $this->tagAddOrder;
