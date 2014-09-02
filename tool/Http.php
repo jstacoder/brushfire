@@ -210,7 +210,6 @@ The HTTP status code changes the way browsers and robots handle redirects, so if
 		if($type == 'head'){
 			if(!$location){
 				$location = $_SERVER['REQUEST_URI'];
-				$code = $code ? $code : 307;
 			}
 			$code = $code ? $code : 302;
 			header('Location: '.$location,true,$code);

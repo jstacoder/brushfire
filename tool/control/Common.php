@@ -1,14 +1,11 @@
 <?
-namespace control;
+namespace control; use \Control; use \Tool;
 ///Standard control functions
 class Common{
 	use \SingletonDefault;
 	function __construct($control=null){
-		if(!$control){
-			global $control;
-		}
-		$this->control = $control;
-		$this->view = \View::init(null,$control);
+		$this->control = $control ? $control : Control::primary();
+		$this->view = $this->control->view;
 	}
 	///Attempt to get id from user request
 	/**
@@ -66,5 +63,29 @@ class Common{
 	static function req($path){
 		$file = \Config::userFileLocation($path,'control').'.php';
 		return \Files::req($file,array('control'));
+	}
+	public $csrfToken = null;
+	protected function getCsrfToken(){
+		if(!$this->csrfToken){
+			$this->csrfToken = Tool::randomString(20);
+			$_SESSION['csrfToken'] = $this->csrfToken;
+		}
+		return $this->csrfToken;
+	}
+	protected function validateCsrfToken(){
+		$csrfToken = $_SESSION['csrfToken'];
+		unset($_SESSION['csrfToken']);
+		if(!$this->control->in['csrfToken']){
+			\Debug::toss('Missing CSRF token','InputException');
+		}elseif($this->control->in['csrfToken'] != $csrfToken){
+			\Debug::toss('CSRF token mismatch','InputException');
+		}
+	}
+	protected function forceCsrfToken(){
+		$csrfToken = $_SESSION['csrfToken'];
+		unset($_SESSION['csrfToken']);
+		if(!$this->control->in['csrfToken'] || $this->control->in['csrfToken'] != $csrfToken){
+			die('csrf failure');
+		}
 	}
 }

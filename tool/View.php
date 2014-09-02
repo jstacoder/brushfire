@@ -138,7 +138,7 @@ class View{
 				name is alphanumeric
 		
 			special form !current
-				loads template at current route path
+				loads template at current route path based on \control\Route::$parsedUrlTokens
 			special form !children
 				applies all following templates as subtemplates to previous template
 			special form prefix @
@@ -580,7 +580,7 @@ array(
 	@param	path	path and include parameters, but will be individually overwritten by passed $params arg
 	@param	params	params to append to the url
 	*/
-	protected function url($path,$params=null){
+	protected function url($path='',$params=null){
 		$path = Http::appendsUrl($params,$path);
 		$relativeTo = $this->baseUrl.substr($_SERVER['REQUEST_URI'],1);//request uri always starts with '/'
 		return Http::getAbsoluteUrl($path,$relativeTo);

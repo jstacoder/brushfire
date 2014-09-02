@@ -15,6 +15,9 @@ Format:
 		'302' will sent http redirect of code 302
 		'303' will sent http redirect of code 303
 		
+		'@'finalControlFile in the case the last url token is not loaded, will attempt to load the file specified here
+			ex: '@defaultViewLoader' \loads '/control/defaultViewLoader.php'
+		
 		'caseless': ignore capitalisation
 		'regex': applies regex pattern matching
 			last-matched-rule regex-match-groups are saved to Route::$regexMatch

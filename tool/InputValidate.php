@@ -93,12 +93,12 @@ class InputValidate{
 			Debug::toss(sprintf(self::$errorMessages['matchRegex'],'"'.$matchModel.'"'),'InputException');
 		}
 	}
-	static function existsAsKey(&$value,$array){
+	static function isKey(&$value,$array){
 		if(!isset($array[$value])){
 			Debug::toss(self::$errorMessages['existsAsKey'],'InputException');
 		}
 	}
-	static function existsAsValue(&$value){
+	static function in(&$value){
 		$args = func_get_args();
 		array_shift($args);
 		if(is_array($args[0])){

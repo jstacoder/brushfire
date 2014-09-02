@@ -107,7 +107,11 @@ bf.ui = {
 					title = holder.text()
 					break
 				}
-				title = $('[name='+message.name+'][placeholder]').attr('placeholder')
+				if($('[name='+message.name+'][placeholder]').size()){
+					title = $('[name='+message.name+'][placeholder]').attr('placeholder')
+					break
+				}
+				title = message.name
 				break
 			}
 			message.content = message.content.replace(/\{_FIELD_\}/g,'"'+title+'"');
@@ -428,6 +432,10 @@ $(function(){
 		$('.tooltip').hide()
 	})
 //+	}
+	$('[data-redirect]').click(function(event){
+			event.preventDefault()
+			window.location = $(this).attr('data-redirect')
+		})
 	
 	//handle newTab anchor tabs
 	$('a.newTab').click(function(event){

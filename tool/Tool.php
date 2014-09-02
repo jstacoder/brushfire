@@ -35,11 +35,15 @@ class Tool{
 	///generate a random string
 	/**
 	@note this function is overloaded and can take either two or three params.
-	@param	1	length, min length
-	@param	2	length max, regex pattern
-	@param	3	regex pattern
+	case 1
+		@param	1	length
+		@param	2	regex pattern
+	case 2
+		@param	1	min length
+		@param	2	max length max
+		@param	3	regex pattern
 	
-	Regex pattern:  Can evaluate to false (which defaults to alphanumeric).  Shoudl be with delimeter: Ex "#[a-z]#i"
+	Regex pattern:  Can evaluate to false (which defaults to alphanumeric).  Should be delimeted.  Defaults to '@[a-z0-9]@i'
 	
 	@return	random string matching the regex pattern
 	*/

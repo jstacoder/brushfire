@@ -174,6 +174,9 @@ class Arrays{
 		}
 		return implode("\n",$ele);
 	}
+	static function mirrorValues($array){
+		return self::setEqualKeysValues($array,'value');
+	}
 	///Set the keys equal to the values or vice versa
 	/**
 	@param array the array to be used

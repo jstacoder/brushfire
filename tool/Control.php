@@ -160,7 +160,7 @@ class ControlPublic{
 	}
 	function message($message,$name,$type,$options=null){
 		$context = $options['context'] ? $options['context'] : 'default';
-		$message = array('type'=>$type,'context'=>$context,'name'=>$name,'content'=>$message);
+		$message = array('type'=>$type,'context'=>$context,'name'=>$name,'content'=>(string)$message);
 		if($options){
 			$message = Arrays::merge($message,$options);
 		}
@@ -202,6 +202,15 @@ class ControlPublic{
 		return $messages;
 	}
 	
+	public $fieldValidaters = [];
+	//alias for filterAndValidate that applies non-conflicting $fieldValidaters
+	function validate($fields,$options=null){
+		if($this->fieldValidaters){
+			$fields = Arrays::merge($this->fieldValidaters,$fields);
+		}
+		return $this->filterAndValidate($fields,$options);
+		
+	}
 	/**
 	@param	fields	array	array with keys being fields and values being rules to apply to fields.  See appyFilterValidateRules for rule syntax
 		self::filterAndValidate(
@@ -213,7 +222,7 @@ class ControlPublic{
 		
 	@return	false if error in any context, else true
 	*/
-	function filterAndValidate($fields,$options=true){
+	function filterAndValidate($fields,$options=null){
 		if($options['filterArrays'] || !isset($options['filterArrays'])){
 			foreach($fields as $field=>$rules){
 				if(is_array($this->in[$field])){
@@ -292,7 +301,7 @@ class ControlPublic{
 				$break = true;
 			}
 			
-			list($type,$method) = explode(':',$callback);
+			list($type,$method) = explode(':',$callback,2);
 			if(!$method){
 				$method = $type;
 				$type = '';
@@ -366,5 +375,10 @@ class ControlPublic{
 		}
 		
 		Cookie::set('_PageMessages',serialize($cookie));
+	}
+	//saves messages before redirect
+	function redirect($path=null){
+		$this->saveMessages();
+		Http::redirect($path);
 	}
 }

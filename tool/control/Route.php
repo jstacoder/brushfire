@@ -1,5 +1,5 @@
 <?
-namespace control;
+namespace control; use \Debug;
 ///Used to handle requests by determining path, then determining controls
 /**
 Ssee routes.sample.php for route rule information
@@ -59,14 +59,15 @@ class Route{
 		$control = \Control::init();//we are now in the realm of dynamic pages
 		
 		//after this following line, self::$urlTokens has no more influence on routing.  Modify self::$unparsedUrlTokens if you want modify control flow
-		self::$unparsedUrlTokens = array_merge([''],self::$urlTokens);
+		self::$unparsedUrlTokens = array_merge([''],self::$urlTokens);//blank token loads in control
 		
 		self::addLocalTool($_ENV['projectFolder'].'tool/local/');
 		
 		//get the section and page control
 		while(self::$unparsedUrlTokens){
+			$loaded = false;
 			self::$currentToken = array_shift(self::$unparsedUrlTokens);
-			if(self::$currentToken){
+			if(self::$currentToken){//ignore blank tokens
 				self::$parsedUrlTokens[] = self::$currentToken;
 			}
 			
@@ -90,7 +91,6 @@ class Route{
 				}
 			}
 		}
-		
 //+	}
 	}
 	///find the most specific tool
@@ -191,7 +191,7 @@ class Route{
 				
 				//handle redirects
 				if($rule['flags']['302']){
-					\Http::redirect($replacement);
+					\Http::redirect($replacemen,'head',302);
 				}
 				if($rule['flags']['303']){
 					\Http::redirect($replacement,'head',303);

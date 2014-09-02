@@ -7,19 +7,20 @@ class Form{
 /** All values are escaped*/
 class FormPublic{
 	function __construct($data=null,$options=null){
-		global $page;
-		$this->in = $page->in;
+		$this->control = \Control::primary();
+		$this->in = $this->control->in;
 		
 		///an array of keys to values used in conjuction with TO_ARRAY to serve as override values for form fields
 		if(!is_array($data)){
-			if($page->in){
-				$this->data = $page->in;
+			if($this->in){
+				$this->data = $this->in;
 			}else{
-				$this->data = $page->item;
+				$this->data = $this->control->item;
 			}
 		}else{
 			$this->data = $data;
 		}
+		
 		///the the of behavior for determining what the actual value of a form field should be
 		$this->valueBehavior = $options['valueBehavior'] ? $options['valueBehavior'] : 'to_input';
 		///attribute parsers to apply when handling options on form method
