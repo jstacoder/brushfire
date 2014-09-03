@@ -101,7 +101,7 @@ class AutoloadPublic{
 				$poppedParts[] = array_pop($parts);
 			}
 			if($found){
-				$affix = $poppedParts ? implode('/',$poppedParts).'/' : '';
+				$affix = $poppedParts ? implode('/',array_reverse($poppedParts)).'/' : '';
 			}else{
 				$affix = implode('/',$partsCopy).'/';
 			}

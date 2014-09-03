@@ -133,13 +133,16 @@ class ControlPublic{
 		}
 		
 		if(!$this->lt){
-			$this->lt = new $class;
-			$this->lt->control = $this;
-			$this->lt->in =& $this->in;
-			$this->lt->messages =& $this->messages;
-			if(!$this->lt->db){
-				$this->lt->db =& $this->db;
-			}
+			$this->addLocalClass($class);
+		}
+	}
+	function addLocalClass($class){
+		$this->lt = new $class;
+		$this->lt->control = $this;
+		$this->lt->in =& $this->in;
+		$this->lt->messages =& $this->messages;
+		if(!$this->lt->db){
+			$this->lt->db =& $this->db;
 		}
 	}
 	
