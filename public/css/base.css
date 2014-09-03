@@ -132,7 +132,6 @@ table.standard > tbody > tr:nth-child(2n){
 	padding-left:10px;
 	padding-right:10px;
 	vertical-align:middle;
-	min-width:800px;
 }
 
 .paginater .first, .paginater .prev, .paginater .pg, .paginater .next, .paginater .last, .paginater .range{

@@ -4,12 +4,16 @@
 	Will default to use all table columns, and select from the input that which is avaible (set), but can be modified to use only certain columns.  
 */
 class CrudModel{
-	function __construct($page){
-		$this->page = $page;
-		$this->control = $this->page->control;
-		$this->db = $page->db;
+	function __construct(){
+		if(!$control){
+			$control = Control::primary();
+		}
+		$this->control = $control;
+		$this->lt = $control->lt;
+		$this->db = $this->control->db;
 	}
-	function columns($table){
+	function columns($table=null){
+		$table = $table ? $table : $this->lt->model['table'];
 		if(!$this->columns[$table]){
 			$this->columns[$table] = Db::columnsInfo($table);
 		}
@@ -17,8 +21,8 @@ class CrudModel{
 	}
 	//determine various filters and validators based on database columns
 	function handleColumns(){
-		$columns = self::columns($this->page->model['table']);
-		$usedColumns = $this->page->model['columns'] ? $this->page->model['columns'] : array_keys($columns);
+		$columns = self::columns($this->lt->model['table']);
+		$usedColumns = $this->lt->model['columns'] ? $this->lt->model['columns'] : array_keys($columns);
 		
 		//create validation and deal with special columns
 		foreach($usedColumns as $column){
@@ -30,7 +34,7 @@ class CrudModel{
 			}elseif($column == 'id'){
 				$validaters[$column][] = 'f:toString';
 				$validaters[$column][] = '?!v:filled';
-				$validaters[$column][] = '!v:existsInTable|'.$this->page->model['table'];
+				$validaters[$column][] = '!v:existsInTable|'.$this->lt->model['table'];
 			}else{
 				$validaters[$column][] = 'f:toString';
 				if(!$columns[$column]['nullable']){
@@ -75,8 +79,8 @@ class CrudModel{
 	
 	function validate(){
 		$this->handleColumns();
-		if(method_exists($this->page,'validate')){
-			$this->page->validate();
+		if(method_exists($this->lt,'validate')){
+			$this->lt->validate();
 		}
 		//Crud standard validaters come after due to them being just the requisite validaters for entering db; input might be changed to fit requisite by Page validaters.
 		if($this->validaters){
@@ -85,15 +89,15 @@ class CrudModel{
 		return !$this->control->errors();
 	}
 	
-	//only run db changer functions if $this->page->model['table'] available
+	//only run db changer functions if $this->lt->model['table'] available
 	function create(){
 		if($this->validate()){
 			//since used keys can be dynamically generated, if the input does not contain a matching key, do not set it on the insert or update.  
 			// However, if the key exists but the value is null, the update and insert should include this key with value null
 			$this->insert = Arrays::extract($this->usedColumns,$this->control->in,$x=null,false);
 			unset($this->insert['id']);
-			$this->page->insert = $this->insert;
-			$this->page->id = $id = Db::insert($this->page->model['table'],$this->insert);
+			$this->lt->insert = $this->insert;
+			$this->control->id = $id = Db::insert($this->lt->model['table'],$this->insert);
 			return $id;
 		}
 	}
@@ -101,19 +105,19 @@ class CrudModel{
 		if($this->validate()){
 			$this->update = Arrays::extract($this->usedColumns,$this->control->in,$x=null,false);
 			unset($this->update['id']);
-			$this->page->update = $this->update;
-			Db::update($this->page->model['table'],$this->update,$this->page->id);
+			$this->lt->update = $this->update;
+			Db::update($this->lt->model['table'],$this->update,$this->control->id);
 			return true;
 		}
 	}
 	///standardized to return id
 	function delete(){
-		if(Db::delete($this->page->model['table'],$this->page->id)){
-			return $this->page->id;
+		if(Db::delete($this->lt->model['table'],$this->control->id)){
+			return $this->control->id;
 		}
 	}
 	function read(){
-		if($this->page->item = Db::row($this->page->model['table'],$this->page->id)){
+		if($this->lt->item = Db::row($this->lt->model['table'],$this->control->id)){
 			return true;
 		}
 		if($_ENV['CrudbadIdCallback']){

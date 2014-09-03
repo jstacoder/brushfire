@@ -11,12 +11,12 @@ class Field{
 	}
 	
 	static function date(&$value){
-		if($value && InputValidate::check('date',$value)){
+		if($value && \InputValidate::check('date',$value)){
 			return (new \Time($value,$_ENV['timezone']))->setZone($_ENV['inOutTimezone'])->date();
 		}
 	}
 	static function datetime($value){
-		if($value && InputValidate::check('date',$value)){
+		if($value && \InputValidate::check('date',$value)){
 			return (new \Time($value,$_ENV['timezone']))->setZone($_ENV['inOutTimezone'])->datetime();
 		}
 	}

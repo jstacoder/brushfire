@@ -61,13 +61,18 @@ bf.ui = {
 		bf.relocate(url)
 	},
 	///gets the paging data on the page
+	/**Excepts element with 'data-page="'total"page'"'*/
 	getPaging: function(){
 		var paging = $('*[data-paging]').attr('data-paging').split(',')
 		var total = paging[0]
 		var page = paging[1]
 		if(bf.getRequestVar('_page')){
-			paging[1] = bf.getRequestVar('_page')
-		}		
+			page = bf.getRequestVar('_page')
+		}
+		if(!page){
+			page = 1
+		}
+		
 		total = Number(total); page = Number(page);
 		return {total:total,page:page}
 	},
@@ -283,7 +288,7 @@ $(function(){
 			var paging = bf.ui.getPaging(); var page = paging.page; var total = paging.total
 			if(total > 1){
 				//+	make the html paginater skeleton {
-				if($('.paging')){
+				if($('.paging').size()){
 					var pagingEle = $('.paging')
 				}else{
 					var pagingEle = $('<div class="paging"></div>')

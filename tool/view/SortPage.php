@@ -44,11 +44,12 @@ class SortPage{
 				'sort' => ($usedSorts ? implode(',',$usedSorts) : [])
 			);
 	}
+	static $lastPaging = null;
 	static function page($sql,$pageNumber=null,$pageBy=50,$max=null){
 		$pageBy = $pageBy ? $pageBy : 50;
 		if($pageNumber === null){
-			global $page;
-			$pageNumber = (int)$page->in['_page'] - 1;
+			$control = \Control::primary();
+			$pageNumber = (int)$control->in['_page'] - 1;
 		}
 		$pageNumber = $pageNumber > 0 ? $pageNumber : 0;
 		
@@ -60,7 +61,7 @@ class SortPage{
 			$top = $max;
 		}
 		$pages = ceil($top/$pageBy);
-		return array(
+		self::$lastPaging = array(
 				'rows' => $rows,
 				'info' => array(
 					'count' => $count,
@@ -69,5 +70,12 @@ class SortPage{
 					'page' => ($pageNumber + 1)
 				)
 			);
+		return self::$lastPaging;
+	}
+	static function pagingAttribute($paging=null){
+		if(!$paging){
+			$paging = self::$lastPaging;
+		}
+		return ' data-paging="'.$paging['info']['pages'].'" ';
 	}
 }
