@@ -33,6 +33,7 @@ class Common{
 		if(!$id){
 			self::badId();
 		}
+		return $id;
 	}
 	protected function error($message){
 		$this->control->error($message);

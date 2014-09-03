@@ -8,8 +8,8 @@ class SortPage{
 	*/
 	static function sort($allowed,$sort=null,$default=null,$quoteColumns=true){
 		if(!$sort){
-			global $page;
-			$sort = $page->in['_sort'];
+			$control = \Control::primary();
+			$sort = $control->in['_sort'];
 		}
 		$sorts = explode(',',$sort);
 		foreach($sorts as $sort){
@@ -39,9 +39,9 @@ class SortPage{
 			}
 		}
 		return array(
-				'sql' => ' ORDER BY '.implode(', ',$orders).' ',
+				'sql' => ($orders ? ' ORDER BY '.implode(', ',$orders).' ' : ' '),
 				'orders' => $orders,
-				'sort' => implode(',',$usedSorts)
+				'sort' => ($usedSorts ? implode(',',$usedSorts) : [])
 			);
 	}
 	static function page($sql,$pageNumber=null,$pageBy=50,$max=null){

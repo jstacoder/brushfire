@@ -159,7 +159,7 @@ class Tool{
 		if(is_int($var)){
 			return true;
 		}
-		if((string)(int)$x == $x && $x !== true & $x !== false && $x !== null){
+		if((string)(int)$x === (string)$x && $x !== true & $x !== false && $x !== null){
 			return true;
 		}
 	}

@@ -107,7 +107,7 @@ table.standard > tbody > tr:nth-child(2n){
 
 
 .sortContainer *[data-field]{
-	background-image: url("/clr/img/style/sortBoth.png");
+	background-image: url("/brushfire/img/style/sortBoth.png");
 	background-position: right center;
 	background-repeat: no-repeat;
 	cursor: pointer;
@@ -115,10 +115,12 @@ table.standard > tbody > tr:nth-child(2n){
 
 
 .sortContainer .sortAsc {
-    background-image: url("/clr/img/style/sortAsc.png");
+    opacity:.9;
+    background-image: url("/brushfire/img/style/sortAsc.png");
 }
 .sortContainer .sortDesc{
-    background-image: url("/clr/img/style/sortDesc.png");
+    opacity:.9;
+    background-image: url("/brushfire/img/style/sortDesc.png");
 }
 /*+	}*/
 
@@ -229,7 +231,7 @@ table.standard > tbody > tr:nth-child(2n){
 	float:right;
 	padding-left:10px;
 	cursor:pointer;
-	background-image: url("/clr/img/closeButton.png");
+	background-image: url("/brushfire/img/closeButton.png");
 	background-position: right center;
 	background-repeat: no-repeat;
 	background-size: 16px 16px;

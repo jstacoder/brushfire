@@ -9,6 +9,7 @@ class Field{
 			return '('.$areacode.') '.$part1.'-'.$part2;
 		}
 	}
+	
 	static function date(&$value){
 		if($value && InputValidate::check('date',$value)){
 			return (new \Time($value,$_ENV['timezone']))->setZone($_ENV['inOutTimezone'])->date();
@@ -20,7 +21,10 @@ class Field{
 		}
 	}
 	static function usaDate($value){
-		return (new \Time($time,$_ENV['timezone']))->format('F j, Y, g:i a',$timezone);
+		return (new \Time($value,$_ENV['timezone']))->format('n/j/Y',$timezone);
+	}
+	static function usaDatetime($value){
+		return (new \Time($value,$_ENV['timezone']))->format('F j, Y, g:i a',$timezone);
 	}
 	static function conditionalBr2Nl($value){
 		if(!preg_match('@<div|<p|<table@',$value)){
