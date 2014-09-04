@@ -32,6 +32,7 @@ class Field{
 		}
 		return $value;
 	}
+	///escapes and limits text
 	static function limit($text,$wordSize=35,$totalText=null){
 		while(preg_match('@((?>[^\s]{'.$wordSize.'}))([^\s])@',$text)){
 			$text = preg_replace('@((?>[^\s]{'.$wordSize.'}))([^\s])@','$1 $2',$text,1);

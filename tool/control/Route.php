@@ -191,7 +191,7 @@ class Route{
 				
 				//handle redirects
 				if($rule['flags']['302']){
-					\Http::redirect($replacemen,'head',302);
+					\Http::redirect($replacement,'head',302);
 				}
 				if($rule['flags']['303']){
 					\Http::redirect($replacement,'head',303);

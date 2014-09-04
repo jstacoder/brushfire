@@ -74,7 +74,13 @@ array(
 
 	/// Used internally.	Checking number of arguments for functionality
 	protected function getOverloadedSql($expected, $actual){
-		$overloaded = count($actual) - $expected;
+		$count = count($actual);
+		if($count == 1 && strpos($actual[0],' ') === false){//single word string, this is a no-where table
+			$actual[] = '1=1';
+			$overloaded = 1;
+		}else{
+			$overloaded = $count - $expected;
+		}
 		if($overloaded > 0){
 			//$overloaded + 1 because the expected $sql is actually one of the overloading variables
 			$overloaderArgs = array_slice($actual,-($overloaded + 1));
