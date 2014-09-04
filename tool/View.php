@@ -13,7 +13,8 @@ class View{
 			$control = Control::primary();
 		}
 		$this->control = $control;
-		$this->baseUrl = $_ENV['protocol'].'://'.$_ENV['httpHost'].'/';
+		$this->protocol = $_ENV['protocol'] ? $_ENV['protocol'] : 'http';
+		$this->baseUrl = $this->protocol.'://'.$_ENV['httpHost'].'/';
 	}
 	function load(){
 		foreach($_ENV['aliasesFiles'] as $file){
