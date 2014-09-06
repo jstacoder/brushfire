@@ -84,10 +84,10 @@ class Curl{
 	*/
 	public function requestFix($method, $url, $post_vars = array(), $files = null){
 		//fixed post to handle relative url paths with 
-		$url = Http::getAbsoluteUrl($url);
+		$url = Http::absoluteUrl($url);
 		$response = $this->request($method, $url, $post_vars, $files);
 		if($this->follow_redirects && $response->headers['Location']){
-			$response = $this->get(Http::getAbsoluteUrl($response->headers['Location'],$url));
+			$response = $this->get(Http::absoluteUrl($response->headers['Location'],$url));
 		}
 		return $response;
 	}

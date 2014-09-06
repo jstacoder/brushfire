@@ -2,15 +2,15 @@
 namespace control;
 class Field{
 	static $ruleAliases = array(
-		'phone' => 'f:toDigits,!v:filled,v:phone',
-		'zip' => '!v:filled,v:zip',
-		'name' => 'f:toName,f:trim,!v:filled',
-		'email' => '!v:filled,v:email',
-		'password' => '!v:filled,v:lengthRange|3;50',
-		'userBirthdate' => '!v:filled,v:date,v:age|18;130',
-		'ip4' => array('f:trim','!v:filled',array('!v:matchRegex','@[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}@','ip4 format')),
-		'title' => array('f:trim',array('f:regexReplace','@[^a-z0-9_\- \']@i'),'!v:filled'),
-		'basicText' => array('f:trim','f:conditionalNl2Br',array('f:stripTags','br,a,b,i,u,ul,li,ol,p','href'),'f:trim','v:filled','v:htmlTagContextIntegrity'),
+		'phone' => 'f.toDigits,!v.filled,v.phone',
+		'zip' => '!v.filled,v.zip',
+		'name' => 'f.name,f.trim,!v.filled',
+		'email' => '!v.filled,v.email',
+		'password' => '!v.filled,v.lengthRange|3;50',
+		'userBirthdate' => '!v.filled,v.date,v.age|18;130',
+		'ip4' => array('f.trim','!v.filled',array('!v.regex','@[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}@','ip4 format')),
+		'title' => array('f.trim',array('f.regex','@[^a-z0-9_\- \']@i'),'!v.filled'),
+		'basicText' => array('f.trim','f.conditionalNl2Br',array('f.stripTags','br,a,b,i,u,ul,li,ol,p','href'),'f.trim','v.filled','v.htmlTagContextIntegrity'),
 		
 	);
 	function __invoke($type,$prepend=null,$append=null){

@@ -377,7 +377,7 @@ class CrudPage{
 				$types = array('c'=>self::CREATE,'r'=>self::READ,'u'=>self::UPDATE,'m'=>self::MANAGE,'d'=>self::DELETE);
 				$crudType = $types[$crudType[0]];
 			}else{
-				$page = strtolower(end(Route::$parsedUrlTokens));
+				$page = strtolower(end(Route::$parsedTokens));
 				$types = array('create'=>self::CREATE,'read'=>self::READ,'update'=>self::UPDATE,'manage'=>self::MANAGE,'delete'=>self::DELETE);
 				$crudType = $types[$page];
 			}

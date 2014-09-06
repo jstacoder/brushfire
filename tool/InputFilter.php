@@ -1,4 +1,5 @@
 <?
+///@note  naming convention: prefix language conflicting names with "to"
 class InputFilter{
 	static function apply($value){
 		$args = func_get_args();
@@ -15,21 +16,21 @@ class InputFilter{
 		return $value = (int)$value;
 	}
 	///filter to absolute integer
-	static function toAbsoluteInt(&$value){
+	static function abs(&$value){
 		return $value = abs($value);
 	}
 	///filter to float
-	static function toDecimal(&$value){
+	static function decimal(&$value){
 		return $value = (float)$value;
 	}
 	///filter all but digits
-	static function toDigits(&$value){
+	static function digits(&$value){
 		return $value = preg_replace('@[^0-9]@','',$value);
 	}
-	static function regexReplace(&$value,$regex,$newValue=''){
+	static function regex(&$value,$regex,$newValue=''){
 		return $value = preg_replace($regex,$newValue,$value);
 	}
-	static function toUrl(&$value){
+	static function url(&$value){
 		$value = trim($value);
 		if(substr($value,0,4) != 'http'){
 			$value = 'http://'.$value;
@@ -42,23 +43,23 @@ class InputFilter{
 		}
 		return $value;
 	}
-	static function toName(&$value){
+	static function name(&$value){
 		InputFilter::trim($value);
-		InputFilter::regexReplace($value,'@ +@',' ');
+		InputFilter::regex($value,'@ +@',' ');
 		$value = preg_split('@, *@', $value);
 		array_reverse($value);
 		$value = implode(' ',$value);
-		InputFilter::regexReplace($value,'@[^a-z \']@i');
+		InputFilter::regex($value,'@[^a-z \']@i');
 		return $value;
 	}
 	static function trim(&$value){
 		return $value = trim($value);
 	}
-	static function toDate(&$value,$inOutTz=null){
+	static function date(&$value,$inOutTz=null){
 		$inOutTz = $inOutTz ? $inOutTz : $_ENV['inOutTimezone'];
 		return $value = (new Time($value,$inOutTz))->setZone($_ENV['timezone'])->date();
 	}
-	static function toDatetime(&$value,$inOutTz=null){
+	static function datetime(&$value,$inOutTz=null){
 		$inOutTz = $inOutTz ? $inOutTz : $_ENV['inOutTimezone'];
 		return $value = (new Time($value,$inOutTz))->setZone($_ENV['timezone'])->datetime();
 	}
@@ -68,7 +69,7 @@ class InputFilter{
 		}
 		return $value;
 	}
-	static function toEmail(&$value){
+	static function email(&$value){
 		preg_match('@<([^>]+)>@',$value,$match);
 		if(!$match){
 			return $value;

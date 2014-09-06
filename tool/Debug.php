@@ -80,13 +80,13 @@ class Debug{
 	/** Sometimes printing out the value of a variable to the screen isn't an option.  As such, this function can be useful.
 	@param	var	variable to print out to file
 	@param	title	title to use in addition to other context information
-	@param	logfile	the log file to write to.  $_ENV['logLocation'] can be changed in the script, but this parameter provides an alternative to changing it
+	@param	logfile	the log file to write to
 	*/
 	static function log($var,$title='',$logfile=null){
 		if($logfile){
 			$fh = fopen($logfile,'a+');
 		}else{
-			$fh = fopen($_ENV['logLocation'],'a+');
+			$fh = self::open(false);
 		}
 		
 		$bTrace = debug_backtrace();
@@ -186,13 +186,7 @@ class Debug{
 		$header = 'Error Id: '.$errorHash."\n".$header;
 		$err = $header.$err;
 		
-		$file = $_ENV['logLocation'];
-		if(!file_exists($file) || filesize($file)>Tool::byteSize($_ENV['maxLogSize'])){
-			$mode = 'w';
-		}else{
-			$mode = 'a+';
-		}
-		$fh = fopen($file,$mode);
+		$fh = self::open();
 		fwrite($fh,$err);
 		
 		if(!$_ENV['inScript']){
@@ -301,5 +295,19 @@ class Debug{
 		}else{
 			echo '<pre>'.$output.'</pre>';
 		}
+	}
+	static function open($limitSize=true){
+		$file = $_ENV['logFolder'].date('Ymd').'.log';
+		if(!is_file($file)){
+			touch($file);
+			clearstatcache();
+		}
+		$mode = 'a+';
+		if($limitSize){
+			if(!file_exists($file) || filesize($file)>Tool::byteSize($_ENV['maxLogSize'])){
+				$mode = 'w';
+			}
+		}
+		return fopen($file,$mode);
 	}
 }

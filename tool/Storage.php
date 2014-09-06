@@ -1,5 +1,5 @@
 <?
-///Used to put things in and take things out of instance storage
+///Used to put structured data in and take things out of project storage
 class Storage{
 	static function get($name,$delete=false){
 		clearstatcache();

@@ -139,7 +139,7 @@ class View{
 				name is alphanumeric
 		
 			special form !current
-				loads template at current route path based on \control\Route::$parsedUrlTokens
+				loads template at current route path based on \control\Route::$parsedTokens
 			special form !children
 				applies all following templates as subtemplates to previous template
 			special form prefix @
@@ -180,7 +180,7 @@ array(
 		$array = self::generateTemplatesArray($templates);
 		
 		#replace !current with current control to template location
-		$array = Arrays::replaceAll('!current',implode('/',\control\Route::$parsedUrlTokens),$array);
+		$array = Arrays::replaceAll('!current',implode('/',\control\Route::$parsedTokens),$array);
 		
 		#set !children to work with parseAliases
 		#$array = Arrays::replaceAllParents('!children','!children',$array,2);
@@ -303,6 +303,9 @@ array(
 			$this->tagAddOrder = substr($type,0,1);
 			$type = substr($type,1);
 		}
+		$files = func_get_args();
+		array_shift($files);
+		
 		if(in_array($type,array('css','lastCss'))){
 			$uniqueIn = array('css','lastCss');
 			$folder = 'css';
@@ -310,38 +313,38 @@ array(
 			$uniqueIn = array('topJs','bottomJs','lastJs');
 			$folder = 'js';
 		}
-		$files = func_get_args();
-		array_shift($files);
+		
 		if($files){
 			if($this->tagAddOrder == '-'){
 				krsort($files);
 			}
-			$typeArray =& $this->$type;
+			$typeTags =& $this->$type;
 			foreach($files as $file){
+				//keyed (array) tags
 				if(is_array($file)){
 					$key = $file[0];
 					$file = $file[1];
 				}
 				
-				if(preg_match('@^inline:@',$file)){
-					$typeArray[] = $file;
-				}
-				//user is adding it, so assume css is at instance unless it starts with http or /
-				else{
+				if(substr($file,0,7) == ('inline:')){
+					$typeTags[] = $file;
+				}else{
+					//user is adding it, so assume css is at instance unless it starts with http or /
 					if(substr($file,0,1) != '/' && !preg_match('@^http(s)?:@',$file)){
 						$file = '/'.$_ENV['urlProjectFileToken'].'/'.$folder.'/'.$file;
 					}
-					foreach($uniqueIn as $unique){
-						Arrays::remove($this->$unique,$file);
-					}
 					if(!$key){
+						//only load resource once, clear previous entry
+						foreach($uniqueIn as $unique){
+							Arrays::remove($this->$unique,$file);
+						}
 						if($this->tagAddOrder == '-'){
-							array_unshift($typeArray,$file);
+							array_unshift($typeTags,$file);
 						}else{
-							$typeArray[] = $file;
+							$typeTags[] = $file;
 						}
 					}else{
-						$typeArray[$key] = $file;
+						$typeTags[$key] = $file;
 						unset($key);
 					}
 				}
@@ -457,7 +460,8 @@ array(
 		}
 		return $js;
 	}
-	
+//+	}
+//+	section handling {
 	public $openSection = '';
 	public $sections = [];
 	//buffers following output and places it into keyed array.  Use getSection to get output
@@ -481,22 +485,7 @@ array(
 	protected function getSection($name){
 		return $this->sections[$name];
 	}
-	
-	protected function loadSystemResources(){
-		$tagAddOrder = $this->tagAddOrder;
-		$this->tagAddOrder = '-';
-		#general system js
-		$js = array('http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js');
-		foreach(array('tools.js','date.js','debug.js','ui.js') as $v){
-			$js[] = '/'.$_ENV['urlSystemFileToken'].'/js/'.$v;
-		}
-		call_user_func_array(array($this,'addTopJs'),$js);
-		$this->addCss('/'.$_ENV['urlSystemFileToken'].'/css/base.css');
-		$this->tagAddOrder = $tagAddOrder;
-	}
-	
-//+	}
-	
+//+	}	
 	///standard js object that gets turned into json for pages, ajax, or api.  Various information loaded into it on calling this
 	public $stdJson = null;
 	///prints the self::$json into the tp.json object.  Requires the previous declaration of tp js object on the page
@@ -504,7 +493,7 @@ array(
 		$this->stdJson['messages'] = $this->control->messages;
 		$this->stdJson['in'] = $this->control->in;
 		$this->stdJson['id'] = $this->control->id;
-		$this->stdJson['route']['parsed'] = \control\Route::$parsedUrlTokens;
+		$this->stdJson['route']['parsed'] = \control\Route::$parsedTokens;
 		Hook::run('stdJson',$this);
 		return json_encode($this->stdJson);
 	}
@@ -565,7 +554,7 @@ array(
 	}
 	//simple standard logic to generate page title
 	static function pageTitle(){
-		return Tool::capitalize(Tool::camelToSeparater(implode(' ',\control\Route::$parsedUrlTokens),' '));
+		return Tool::capitalize(Tool::camelToSeparater(implode(' ',\control\Route::$parsedTokens),' '));
 	}
 	static function contentHeaders($mime=null,$filename=null){
 		if($mime){
@@ -584,6 +573,6 @@ array(
 	protected function url($path='',$params=null){
 		$path = Http::appendsUrl($params,$path);
 		$relativeTo = $this->baseUrl.substr($_SERVER['REQUEST_URI'],1);//request uri always starts with '/'
-		return Http::getAbsoluteUrl($path,$relativeTo);
+		return Http::absoluteUrl($path,$relativeTo);
 	}
 }

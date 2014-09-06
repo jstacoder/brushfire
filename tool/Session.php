@@ -35,7 +35,7 @@ class Session {
 		session_start();
 	}
 	private static function makeKey(){
-		return substr(sha1(Http::getIp().$_SERVER['HTTP_USER_AGENT'].$_COOKIE['sessionId']),0,10);
+		return substr(sha1(Http::ip().$_SERVER['HTTP_USER_AGENT'].$_COOKIE['sessionId']),0,10);
 	}
 	
 	///@note call start to register before using this method
@@ -71,7 +71,7 @@ class Session {
 		}
 	}
 	static function create(){
-			$id = md5(Http::getIp().$_SERVER['HTTP_USER_AGENT'].microtime().rand(1,20));
+			$id = md5(Http::ip().$_SERVER['HTTP_USER_AGENT'].microtime().rand(1,20));
 			
 			$expiry = $_ENV['sessionCookieExpiry'] ? (new Time($_ENV['sessionCookieExpiry']))->unix : 0;
 			

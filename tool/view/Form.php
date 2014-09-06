@@ -52,7 +52,7 @@ class FormPublic{
 		if (isset($this->in[$name])){
 			return $this->in[$name];
 		}else{
-			$matches = \Http::getSpecialSyntaxKeys($name);
+			$matches = \Http::specialSyntaxKeys($name);
 			if($matches && \Arrays::isElement($matches,$this->in)){
 				return \Arrays::getElementReference($matches,$this->in);
 			}else{

@@ -83,7 +83,7 @@ class ControlPublic{
 					$code = self::saveMessagesCode($cookie['data']);
 					if($cookie['code'] == $code){
 						if(is_array($cookie['target'])){
-							if(!array_diff($cookie['target'],Route::$urlTokens)){
+							if(!array_diff($cookie['target'],Route::$tokens)){
 								$this->messages = @unserialize($cookie['data']);
 							}else{
 								//not on right page, so break
@@ -161,8 +161,9 @@ class ControlPublic{
 	function warning($message,$name=null,$options=null){
 		$this->message($message,$name,'warning',$options);
 	}
+	public $defaultContext = 'default';
 	function message($message,$name,$type,$options=null){
-		$context = $options['context'] ? $options['context'] : 'default';
+		$context = $options['context'] ? $options['context'] : $this->defaultContext;
 		$message = array('type'=>$type,'context'=>$context,'name'=>$name,'content'=>(string)$message);
 		if($options){
 			$message = Arrays::merge($message,$options);
@@ -205,14 +206,20 @@ class ControlPublic{
 		return $messages;
 	}
 	
-	public $fieldValidaters = [];
-	//alias for filterAndValidate that applies non-conflicting $fieldValidaters
-	function validate($fields,$options=null){
-		if($this->fieldValidaters){
-			$fields = Arrays::merge($this->fieldValidaters,$fields);
-		}
-		return $this->filterAndValidate($fields,$options);
+	public $addRules = [];//used with ::validate() as predefined rules to be added to those passed in
+	public $fields;//array of [field=>value,..], where value is after filtering
+	//alias for filterAndValidate that applies non-conflicting $fieldValidaters and saves filtered fields to $this->fields
+	function validate($rules,$options=null){
+		$fields = Arrays::remove(array_keys($rules));
 		
+		if($this->addRules){
+			$rules = Arrays::merge($this->addRules,$rules);
+		}
+		$result = $this->filterAndValidate($rules,$options);
+		foreach($fields as $field){
+			$this->fields[$field] = $this->in[$field];
+		}
+		return $result;
 	}
 	/**
 	@param	fields	array	array with keys being fields and values being rules to apply to fields.  See appyFilterValidateRules for rule syntax
@@ -225,17 +232,17 @@ class ControlPublic{
 		
 	@return	false if error in any context, else true
 	*/
-	function filterAndValidate($fields,$options=null){
+	function filterAndValidate($rules,$options=null){
 		if($options['filterArrays'] || !isset($options['filterArrays'])){
-			foreach($fields as $field=>$rules){
+			foreach($rules as $field=>$ruleSet){
 				if(is_array($this->in[$field])){
 					\control\Field::makeString($this->in[$field]);
 				}
 			}
 		}
 		
-		foreach($fields as $field=>$rules){
-			$continue = $this->applyFilterValidateRules($field, $rules,$options['errorOptions']);
+		foreach($rules as $field=>$ruleSet){
+			$continue = $this->applyFilterValidateRules($field, $ruleSet, $options['errorOptions']);
 			if(!$continue){
 				break;
 			}
@@ -248,11 +255,11 @@ class ControlPublic{
 		Rules can be an array of rules, or a string separated by "," for each rule.  
 		Each rule can be a string or an array.  
 		As a string, the rule should be in one of the following forms:
-				"f:name|param1;param2" indicates InputFilter method
-				"v:name|param1;param2" indicates InputValidate function
-				"g:name|param1;param2" indicates global scoped function
-				"class:name|param1,param2,param3" indicates static method "name: of class "class" 
-				"l:name|param1,param2,param3" Local tool method
+				"f.name|param1;param2" indicates InputFilter method
+				"v.name|param1;param2" indicates InputValidate function
+				"g.name|param1;param2" indicates global scoped function
+				"class.name|param1,param2,param3" indicates static method "name: of class "class" 
+				"l.name|param1,param2,param3" Local tool method
 				"name" replaced by Field fieldType of the same name
 		As an array, the rule function part (type:method) is the first element, and the parameters to the function part are the following elements.  Useful if function arguments contain commas or semicolons.  Ex:
 			array('type:method','arg1','arg2','arg3')
@@ -304,7 +311,7 @@ class ControlPublic{
 				$break = true;
 			}
 			
-			list($type,$method) = explode(':',$callback,2);
+			list($type,$method) = explode('.',$callback,2);
 			if(!$method){
 				$method = $type;
 				$type = '';

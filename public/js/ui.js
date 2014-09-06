@@ -80,12 +80,13 @@ bf.ui = {
 //+	System Messages {
 	///replaces {_FIELD_} in the message with the found title
 	/**
-	supports 4 types of field name to title translation:
+	supports following types of field name to title translation:
 		. passed object with matching attribute
 		. text of element with data-field matching field name and with data-title
 		. data-title attribute value of element with 'name' attribute = field, if data-title attribute present
 		. label text with for of field
 		. placeholder of input with 'name' attribute = field
+		. defaults to name of field
 	*/
 	parseMessage: function(message,map){
 		if(message.name){

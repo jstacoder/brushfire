@@ -34,7 +34,7 @@ class CrudModel{
 			}elseif($column == 'id'){
 				$validaters[$column][] = 'f:toString';
 				$validaters[$column][] = '?!v:filled';
-				$validaters[$column][] = '!v:existsInTable|'.$this->lt->model['table'];
+				$validaters[$column][] = '!v:inTable|'.$this->lt->model['table'];
 			}else{
 				$validaters[$column][] = 'f:toString';
 				if(!$columns[$column]['nullable']){
@@ -42,7 +42,7 @@ class CrudModel{
 					$validaters[$column][] = '!v:exists';
 				}else{
 					//for nullable columns, empty inputs (0 character strings) are null
-					$validaters[$column][] = array('f:toDefault',null);
+					$validaters[$column][] = array('f:default',null);
 					
 					//column may not be present.  Only validate if present
 					$validaters[$column][] = '?!v:filled';
@@ -50,11 +50,11 @@ class CrudModel{
 				switch($columns[$column]['type']){
 					case 'datetime':
 						$validaters[$column][] = '!v:date';
-						$validaters[$column][] = 'f:toDatetime';
+						$validaters[$column][] = 'f:datetime';
 					break;
 					case 'date':
 						$validaters[$column][] = '!v:date';
-						$validaters[$column][] = 'f:toDatetime';
+						$validaters[$column][] = 'f:datetime';
 					break;
 					case 'text':
 						if($columns[$column]['limit']){

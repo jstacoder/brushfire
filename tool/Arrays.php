@@ -174,16 +174,13 @@ class Arrays{
 		}
 		return implode("\n",$ele);
 	}
-	static function mirrorValues($array){
-		return self::setEqualKeysValues($array,'value');
-	}
 	///Set the keys equal to the values or vice versa
 	/**
 	@param array the array to be used
 	@param	type	"key" or "value".  Key sets all the values = keys, value sets all the keys = values
 	@return array
 	*/
-	static function setEqualKeysValues($array,$type='key'){
+	static function homogenise($array,$type='key'){
 		if($type == 'key'){
 			$array = array_keys($array);
 			foreach($array as $v){
@@ -240,22 +237,6 @@ class Arrays{
 			$key++;
 		}
 		return $key;
-	}
-	///remove non numbers from an array
-	/**
-	@param	list	either a flat array or a comma separated values
-	*/
-	static function filterNumberList($list){
-		if(!is_array($list)){
-			$list = Arrays::explode(',',$list);
-		}
-		$filteredList = array();
-		foreach($list as $v){
-			if(Tool::isInt($v)){
-				$filteredList[] = $v;
-			}
-		}
-		return $filteredList ? $filteredList : array();
 	}
 	///if false or null key, append.  Otherwise, add at key.  Optionally, append to key=>array().
 	/**
@@ -368,15 +349,6 @@ class Arrays{
 		Arrays::remove($array);
 		return implode($separator,$array);
 	}
-	///since you can't do something like bob()[1] (where bob() return array), instead do Arrays::at(bob(),1)
-	///handles negative numbers as offset
-	static function at($array,$index){
-		if(Tool::isInt($index) && $index < 0){
-			$array = array_slice($array,$index,1);
-			return $array[0];
-		}
-		return $array[$index];
-	}
 	///takes an array of keys to extract out of one array and into another array
 	static function &extract($keys,$extactee,&$extractTo=null,$forceKeys=true){
 		if(!is_array($extractTo)){
@@ -430,7 +402,7 @@ class Arrays{
 			$set = array('sue','bill');
 	
 	*/
-	static function orderedSubset($subset,$set,$start=0){
+	static function isOrderedSubset($subset,$set,$start=0){
 		for($i=0;$i<$start;$i++){
 			next($set);
 		}

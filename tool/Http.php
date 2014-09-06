@@ -13,7 +13,7 @@ class Http{
 			list($key,$value) = explode('=',$part);
 			$key = urldecode($key);
 			$value = urldecode($value);
-			if($specialSyntax && ($matches = self::getSpecialSyntaxKeys($key))){
+			if($specialSyntax && ($matches = self::specialSyntaxKeys($key))){
 				if(Arrays::isElement($matches,$array)){
 					$currentValue = Arrays::getElement($matches,$array);
 					if(is_array($currentValue)){
@@ -57,7 +57,7 @@ class Http{
 		return Arrays::implode('&',array($phpquery,$standard));
 	}
 	///get all the keys invovled in a string that represents an array.  Ex: "bob[sue][joe]" yields array('bob','sue','joe')
-	static function getSpecialSyntaxKeys($string){
+	static function specialSyntaxKeys($string){
 		if(preg_match('@^([^\[]+)((\[[^\]]*\])+)$@',$string,$match)){
 			//match[1] = array name, match[2] = all keys
 			
@@ -153,7 +153,7 @@ class Http{
 		return $url;
 	}
 	//resolves relative url paths into absolute url paths
-	static  function getAbsoluteUrl($url,$relativeTo=null){
+	static  function absoluteUrl($url,$relativeTo=null){
 		list($uPath,$query) = explode('?',$url);
 		preg_match('@(^.*?://.*?)(/.*$|$)@',$uPath,$match);
 		if(!$match){
@@ -234,7 +234,7 @@ The HTTP status code changes the way browsers and robots handle redirects, so if
 	/**
 	$config['loadBalancerIps'] is removed from 	HTTP_X_FORWARDED_FOR, after which slicePoint applies
 	*/ 
-	static function getIp($slicePoint=-1){
+	static function ip($slicePoint=-1){
 		if(!self::$ip){
 			if($_SERVER['HTTP_X_FORWARDED_FOR']){
 				#get first ip (should be client's ip)

@@ -4,34 +4,34 @@ class InputValidate{
 //+	basic validators{
 			'exists' => 'Missing field {_FIELD_}',
 			'filled' => 'Missing field {_FIELD_}',
-			'existsInTable' => 'No record of {_FIELD_} found',
-			'notExistsInTable' => 'A record of {_FIELD_} already present',
+			'inTable' => 'No record of {_FIELD_} found',
+			'notInTable' => 'A record of {_FIELD_} already present',
 			'isInteger' => '{_FIELD_} must be an integer',
 			'isFloat' => '{_FIELD_} must be a decimal',
-			'matchRegex' => '{_FIELD_} must match %s',
-			'existsAsKey' => '{_FIELD_} did not contain an accepted value',
-			'existsAsValue' => '{_FIELD_} did not contain an accepted value',
+			'regex' => '{_FIELD_} must match %s',
+			'key' => '{_FIELD_} did not contain an accepted value',
+			'in' => '{_FIELD_} did not contain an accepted value',
 			'email' => '{_FIELD_} must be a valid email',
 			'emailLine' => '{_FIELD_} did not match the format "NAME &lt;EMAIL&gt;',
 			'url' => '{_FIELD_} must be a URL',
-			'intInRange.max' => '{_FIELD_} must be %s or less',
-			'intInRange.min' => '{_FIELD_} must be %s or more',
+			'range_max' => '{_FIELD_} must be %s or less',
+			'range_min' => '{_FIELD_} must be %s or more',
 			'length' => '{_FIELD_} must be a of a length equal to %s',
-			'lengthRange.max' => '{_FIELD_} must have a length of %s or less',
-			'lengthRange.min' => '{_FIELD_} must have a length of %s or more',
+			'lengthRange_max' => '{_FIELD_} must have a length of %s or less',
+			'lengthRange_min' => '{_FIELD_} must have a length of %s or more',
 			'date' => '{_FIELD_} must be a date.  Most date formats are accepted',
 			'timezone' => '{_FIELD_} must be a timezone',
 			'noTagIntegrity' => '{_FIELD_} is lacking HTML Tag context integrity.  That might pass on congress.gov, but not here.',
-			'matchValue' => '{_FIELD_} does not match expected value',
+			'value' => '{_FIELD_} does not match expected value',
 			'mime' => '{_FIELD_} must have one of the following mimes: %s',
 			'notMime' => '{_FIELD_} must not have any of the following mimes: %s',
 //+	}
 //+	More specialized validators{			
-			'phone.area' => 'Please include an area code in {_FIELD_}',
-			'phone.check' => 'Please check {_FIELD_}',
+			'phone_area' => 'Please include an area code in {_FIELD_}',
+			'phone_check' => 'Please check {_FIELD_}',
 			'zip' => '{_FIELD_} was malformed',
-			'age.max' => '{_FIELD_} too old.  Must be at most %s',
-			'age.min' => '{_FIELD_} too recent.  Must be at least %s',
+			'age_max' => '{_FIELD_} too old.  Must be at most %s',
+			'age_min' => '{_FIELD_} too recent.  Must be at least %s',
 //+	}
 		);
 	///true or false return instead of exception
@@ -60,14 +60,14 @@ class InputValidate{
 			Debug::toss(self::$errorMessages['filled'],'InputException');
 		}
 	}
-	static function existsInTable(&$value,$table,$field='id'){
+	static function inTable(&$value,$table,$field='id'){
 		if(!Db::check($table,array($field=>$value))){
-			Debug::toss(self::$errorMessages['existsInTable'],'InputException');
+			Debug::toss(self::$errorMessages['inTable'],'InputException');
 		}
 	}
-	static function notExistsInTable(&$value,$table,$field='id'){
+	static function notInTable(&$value,$table,$field='id'){
 		if(Db::check($table,array($field=>$value))){
-			Debug::toss(self::$errorMessages['notExistsInTable'],'InputException');
+			Debug::toss(self::$errorMessages['notInTable'],'InputException');
 		}
 	}
 	static function isInteger(&$value){
@@ -80,24 +80,25 @@ class InputValidate{
 			Debug::toss(self::$errorMessages['isFloat'],'InputException');
 		}
 	}
-	static function matchValue(&$value,$match){
+	static function value(&$value,$match){
 		if($value !== $match){
-			Debug::toss(self::$errorMessages['matchValue'],'InputException');
+			Debug::toss(self::$errorMessages['value'],'InputException');
 		}
 	}
-	static function matchRegex(&$value,$regex,$matchModel=null){
+	static function regex(&$value,$regex,$matchModel=null){
 		if(!preg_match($regex,$value)){
 			if(!$matchModel){
 				$matchModel = Tool::regexExpand($regex);
 			}
-			Debug::toss(sprintf(self::$errorMessages['matchRegex'],'"'.$matchModel.'"'),'InputException');
+			Debug::toss(sprintf(self::$errorMessages['regex'],'"'.$matchModel.'"'),'InputException');
 		}
 	}
-	static function isKey(&$value,$array){
+	static function key(&$value,$array){
 		if(!isset($array[$value])){
-			Debug::toss(self::$errorMessages['existsAsKey'],'InputException');
+			Debug::toss(self::$errorMessages['key'],'InputException');
 		}
 	}
+	///see if value is in array.  Either array as 2nd parameter, or taken as remaining parameters
 	static function in(&$value){
 		$args = func_get_args();
 		array_shift($args);
@@ -107,7 +108,7 @@ class InputValidate{
 			$array = $args;
 		}
 		if(!in_array($value,$array)){
-			Debug::toss(self::$errorMessages['existsAsValue'],'InputException');
+			Debug::toss(self::$errorMessages['in'],'InputException');
 		}
 	}
 	static function email($value){
@@ -137,12 +138,12 @@ class InputValidate{
 			Debug::toss(self::$errorMessages['url'],'InputException');
 		}
 	}
-	static function intInRange($value,$min=null,$max=null){
-		if(Tool::isInt($max) && $value > $max){
-			Debug::toss(sprintf(self::$errorMessages['inRange.max'],$max),'InputException');
+	static function range($value,$min=null,$max=null){
+		if($max !== '' && $max !== null && $value > $max){
+			Debug::toss(sprintf(self::$errorMessages['range_max'],$max),'InputException');
 		}
-		if(Tool::isInt($min) && $value < $min){
-			Debug::toss(sprintf(self::$errorMessages['inRange.min'],$min),'InputException');
+		if($min !== '' && $min !== null && $value < $min){
+			Debug::toss(sprintf(self::$errorMessages['range_min'],$min),'InputException');
 		}
 	}
 	static function length($value,$length){
@@ -154,10 +155,10 @@ class InputValidate{
 	static function lengthRange($value,$min=null,$max=null){
 		$actualLength = strlen($value);
 		if(Tool::isInt($max) && $actualLength > $max){
-			Debug::toss(sprintf(self::$errorMessages['lengthRange.max'],$max),'InputException');
+			Debug::toss(sprintf(self::$errorMessages['lengthRange_max'],$max),'InputException');
 		}
 		if(Tool::isInt($min) && $actualLength < $min){
-			Debug::toss(sprintf(self::$errorMessages['lengthRange.min'],$min),'InputException');
+			Debug::toss(sprintf(self::$errorMessages['lengthRange_min'],$min),'InputException');
 		}
 	}
 	static function timezone($value){
@@ -215,11 +216,11 @@ class InputValidate{
 			$value = substr($value,1);
 		}
 		if(strlen($value) == 7){
-			Debug::toss(self::$errorMessages['phone.area'],'InputException');
+			Debug::toss(self::$errorMessages['phone_area'],'InputException');
 		}
 		
 		if(strlen($value) != 10){
-			Debug::toss(self::$errorMessages['phone.check'],'InputException');
+			Debug::toss(self::$errorMessages['phone_check'],'InputException');
 		}
 	}
 	
@@ -227,10 +228,10 @@ class InputValidate{
 		$time = new Time($value);
 		$age = $time->diff(new Time('now'));
 		if(Tool::isInt($max) && $age->y > $max){
-			Debug::toss(sprintf(self::$errorMessages['age.max'],$max),'InputException');
+			Debug::toss(sprintf(self::$errorMessages['age_max'],$max),'InputException');
 		}
 		if(Tool::isInt($min) && $age->y < $min){
-			Debug::toss(sprintf(self::$errorMessages['age.min'],$min),'InputException');
+			Debug::toss(sprintf(self::$errorMessages['age_min'],$min),'InputException');
 		}
 	}
 	static function htmlTagContextIntegrity($value){

@@ -17,7 +17,7 @@ Route Rules Logic
 		
 
 Controls Calling Logic:
-	All controls are optional.  However, if the Route is still looping tokens (stop it by exiting or emptying $unparsedUrlTokens) and the last token does not match a control, page not found returned
+	All controls are optional.  However, if the Route is still looping tokens (stop it by exiting or emptying $unparsedTokens) and the last token does not match a control, page not found returned
 	
 	http://bobery.com/bob/bill/sue:
 		control/control.php
@@ -33,21 +33,21 @@ File Routing
 */
 class Route{
 	static $stopRouting;///<stops more rules from being called; use within rule file
-	static $urlTokens = array();///<an array of url path parts; rules can change this array
-	static $realUrlTokens = array();///<the original array of url path parts
-	static $parsedUrlTokens = array();///<used internally
-	static $unparsedUrlTokens = array();///<used internally
+	static $tokens = array();///<an array of url path parts; rules can change this array
+	static $realTokens = array();///<the original array of url path parts
+	static $parsedTokens = array();///<used internally
+	static $unparsedTokens = array();///<used internally
 	static $matchedRules;///<list of rules that were matched
-	static $urlBase;///<the string, untokenised, path of the url.  Use $_SERVER to get actual url
+	static $path;///<the resulting url path
 	static $currentToken;///<used internally; serves as the item compared on token compared rules
 	///parses url, routes it, then calls off all the control until no more or told to stop
 	static function handle($uri){
 		self::parseRequest($uri);
 		
 		//url corresponds to public file directory, provide file
-		if(self::$urlTokens[0] == $_ENV['urlProjectFileToken']){
+		if(self::$tokens[0] == $_ENV['urlProjectFileToken']){
 			self::sendFile($_ENV['instancePublicFolder']);
-		}elseif(self::$urlTokens[0] == $_ENV['urlSystemFileToken']){
+		}elseif(self::$tokens[0] == $_ENV['urlSystemFileToken']){
 			self::sendFile($_ENV['systemPublicFolder']);
 		}
 		
@@ -58,21 +58,21 @@ class Route{
 		global $control;
 		$control = \Control::init();//we are now in the realm of dynamic pages
 		
-		//after this following line, self::$urlTokens has no more influence on routing.  Modify self::$unparsedUrlTokens if you want modify control flow
-		self::$unparsedUrlTokens = array_merge([''],self::$urlTokens);//blank token loads in control
+		//after this following line, self::$tokens has no more influence on routing.  Modify self::$unparsedTokens if you want modify control flow
+		self::$unparsedTokens = array_merge([''],self::$tokens);//blank token loads in control
 		
 		self::addLocalTool($_ENV['projectFolder'].'tool/local/');
 		
 		//get the section and page control
-		while(self::$unparsedUrlTokens){
+		while(self::$unparsedTokens){
 			$loaded = false;
-			self::$currentToken = array_shift(self::$unparsedUrlTokens);
+			self::$currentToken = array_shift(self::$unparsedTokens);
 			if(self::$currentToken){//ignore blank tokens
-				self::$parsedUrlTokens[] = self::$currentToken;
+				self::$parsedTokens[] = self::$currentToken;
 			}
 			
 			//++ load the control {
-			$path = $_ENV['controlFolder'].implode('/',self::$parsedUrlTokens);
+			$path = $_ENV['controlFolder'].implode('/',self::$parsedTokens);
 			//if named file, load, otherwise load generic control in directory
 			if(is_file($path.'.php')){
 				$loaded = \Files::inc($path.'.php',['control'],self::$regexMatch);
@@ -82,12 +82,12 @@ class Route{
 			//++ }
 			
 			//not loaded and was last token, page not found
-			if($loaded === false && !self::$unparsedUrlTokens){
+			if($loaded === false && !self::$unparsedTokens){
 				if($_ENV['pageNotFound']){
 					\Config::loadUserFiles($_ENV['pageNotFound'],'control',array('control'));
 					exit;
 				}else{
-					Debug::toss('Request handler encountered unresolvable token at control level.'."\nCurrent token: ".self::$currentToken."\nTokens parsed".print_r(self::$parsedUrlTokens,true));
+					Debug::toss('Request handler encountered unresolvable token at control level.'."\nCurrent token: ".self::$currentToken."\nTokens parsed".print_r(self::$parsedTokens,true));
 				}
 			}
 		}
@@ -95,7 +95,7 @@ class Route{
 	}
 	///find the most specific tool
 	private static function addLocalTool($base){
-		$tokens = self::$urlTokens;
+		$tokens = self::$tokens;
 		while($tokens){
 			if(is_file($base.implode('/',$tokens).'.php')){
 				break;
@@ -113,27 +113,27 @@ class Route{
 	}
 	///internal use. initial breaking apart of url
 	private static function parseRequest($uri){
-		self::$realUrlTokens = explode('?',$uri,2);
-		self::tokenise(self::$realUrlTokens[0]);
+		self::$realTokens = explode('?',$uri,2);
+		self::tokenise(self::$realTokens[0]);
 		
 		//urldecode tokens.  Note, this can make some things relying on domain path info for file path info insecure
-		foreach(self::$urlTokens as &$token){
+		foreach(self::$tokens as &$token){
 			$token = urldecode($token);
 		}
 		unset($token);
 		
-		//Potentially, the urlTokens will change according to routes, but the real ones may be referenced
-		self::$realUrlTokens = self::$urlTokens;
+		//Potentially, the tokens will change according to routes, but the real ones may be referenced
+		self::$realTokens = self::$tokens;
 	}
 	/// internal use. tokenises url
 	/** splits url path on "/"
 	@param	urlDir	str	path part of url string
 	*/
-	static $urlCaselessBase;///<urlBase, but cases removed
+	static $caselessPath;///<path, but cases removed
 	private static function tokenise($urlDir){
-		self::$urlTokens = \Tool::explode('/',$urlDir);
-		self::$urlBase = $urlDir;
-		self::$urlCaselessBase = strtolower($urlDir);
+		self::$tokens = \Tool::explode('/',$urlDir);
+		self::$path = $urlDir;
+		self::$caselessPath = strtolower($urlDir);
 	}
 	static $regexMatch=[];
 	///internal use. Parses all current files and rules
@@ -164,9 +164,9 @@ class Route{
 			}
 			
 			if($rule['flags']['caseless']){
-				$subject = self::$urlCaselessBase;
+				$subject = self::$caselessPath;
 			}else{
-				$subject = self::$urlBase;
+				$subject = self::$path;
 			}
 			
 			//test match
@@ -184,7 +184,7 @@ class Route{
 				self::$matchedRules[] = $rule;
 				//++ apply replacement logic {
 				if($rule['flags']['regex']){
-					$replacement = preg_replace($rule['match'],$rule[1],self::$urlBase);
+					$replacement = preg_replace($rule['match'],$rule[1],self::$path);
 				}else{
 					$replacement = $rule[1];
 				}
@@ -199,8 +199,8 @@ class Route{
 			
 				//remake url with replacement
 				self::tokenise($replacement);
-				self::$parsedUrlTokens = [];
-				self::$unparsedUrlTokens = array_merge([''],self::$urlTokens);
+				self::$parsedTokens = [];
+				self::$unparsedTokens = array_merge([''],self::$tokens);
 				//++ }
 				
 				//++ apply parse flag {
@@ -209,7 +209,7 @@ class Route{
 				}elseif($rule['flags']['file:last']){
 					unset(self::$ruleSets[$path]);
 				}elseif($rule['flags']['loop:last']){
-					self::$unparsedUrlTokens = [];
+					self::$unparsedTokens = [];
 				}
 				//++ }
 				
@@ -224,15 +224,15 @@ class Route{
 	
 	///internal use. Gets files and then applies rules for routing
 	private static function routeRequest(){
-		self::$unparsedUrlTokens = array_merge([''],self::$urlTokens);
+		self::$unparsedTokens = array_merge([''],self::$tokens);
 		
-		while(self::$unparsedUrlTokens && !self::$stopRouting){
-			self::$currentToken = array_shift(self::$unparsedUrlTokens);
+		while(self::$unparsedTokens && !self::$stopRouting){
+			self::$currentToken = array_shift(self::$unparsedTokens);
 			if(self::$currentToken){
-				self::$parsedUrlTokens[] = self::$currentToken;
+				self::$parsedTokens[] = self::$currentToken;
 			}
 			
-			$path = $_ENV['controlFolder'].implode('/',self::$parsedUrlTokens);
+			$path = $_ENV['controlFolder'].implode('/',self::$parsedTokens);
 			if(!isset(self::$ruleSets[$path])){
 				self::$ruleSets[$path] = (array)\Files::inc($path.'/routes.php',null,null,['rules'])['rules'];
 			}
@@ -243,11 +243,11 @@ class Route{
 			self::matchRules($path,self::$ruleSets[$path]);
 		}
 		
-		self::$parsedUrlTokens = [];
+		self::$parsedTokens = [];
 	}
-	///internal use. Gets a file based on next token in the unparsedUrlTokens variable
+	///internal use. Gets a file based on next token in the unparsedTokens variable
 	private static function getTokenFile($defaultName,$globalize=null,$extract=null){
-		$path = $_ENV['controlFolder'].implode('/',self::$parsedUrlTokens);
+		$path = $_ENV['controlFolder'].implode('/',self::$parsedTokens);
 		//if path not directory, possibly is file
 		if(!is_dir($path)){
 			$file = $path.'.php';
@@ -258,8 +258,8 @@ class Route{
 	}
 	///internal use. attempts to find non php file and send it to the browser
 	private static function sendFile($base){
-		array_shift(self::$urlTokens);
-		$filePath = escapeshellcmd(implode('/',self::$urlTokens));
+		array_shift(self::$tokens);
+		$filePath = escapeshellcmd(implode('/',self::$tokens));
 		if($filePath == 'index.php'){
 			\Config::loadUserFiles($_ENV['pageNotFound'],'control',array('page'));
 		}
@@ -270,6 +270,6 @@ class Route{
 		\View::sendFile($path,$saveAs);
 	}
 	static function currentPath(){
-		return '/'.implode('/',self::$parsedUrlTokens).'/';
+		return '/'.implode('/',self::$parsedTokens).'/';
 	}
 }

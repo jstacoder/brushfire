@@ -14,7 +14,7 @@ class Common{
 	protected function getId(){
 		$id = abs($this->control->in['id']);
 		if(!$id){
-			$tokens = Route::$urlTokens;
+			$tokens = Route::$tokens;
 			krsort($tokens);
 			foreach($tokens as $token){
 				$id = abs($token);
