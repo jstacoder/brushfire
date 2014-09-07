@@ -545,6 +545,8 @@ array(
 				$column['limit'] = self::parseColumnLimit($row['Type']);
 				$column['nullable'] = $row['Null'] == 'NO' ? false : true;
 				$column['autoIncrement'] = preg_match('@auto_increment@',$row['Extra']) ? true : false;
+				$column['default'] = $row['Default'];
+				$column['key'] = $row['Key'];
 			}
 		}
 		return $columns;
@@ -558,7 +560,7 @@ array(
 			return 'decimal';
 		}elseif(preg_match('@float@i',$type)){
 			return 'float';
-		}elseif(in_array($type,array('datetime','date'))){
+		}elseif(in_array($type,array('datetime','date','timestamp'))){
 			return $type;
 		}elseif(in_array($type,array('varchar','text'))){
 			return 'text';

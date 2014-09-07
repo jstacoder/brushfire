@@ -49,12 +49,13 @@ class CrudModel{
 				}
 				switch($columns[$column]['type']){
 					case 'datetime':
+					case 'timestamp':
 						$validaters[$column][] = '!v:date';
 						$validaters[$column][] = 'f:toDatetime';
 					break;
 					case 'date':
 						$validaters[$column][] = '!v:date';
-						$validaters[$column][] = 'f:toDatetime';
+						$validaters[$column][] = 'f:toDate';
 					break;
 					case 'text':
 						if($columns[$column]['limit']){
