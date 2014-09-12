@@ -49,12 +49,13 @@ class CrudModel{
 				}
 				switch($columns[$column]['type']){
 					case 'datetime':
+					case 'timestamp':
 						$validaters[$column][] = '!v:date';
 						$validaters[$column][] = 'f:datetime';
 					break;
 					case 'date':
 						$validaters[$column][] = '!v:date';
-						$validaters[$column][] = 'f:datetime';
+						$validaters[$column][] = 'f:toDate';
 					break;
 					case 'text':
 						if($columns[$column]['limit']){
@@ -89,26 +90,32 @@ class CrudModel{
 		return !$this->control->errors();
 	}
 	
-	//only run db changer functions if $this->lt->model['table'] available
+	///@only call $this->lt->model['table'] available
 	function create(){
 		if($this->validate()){
-			//since used keys can be dynamically generated, if the input does not contain a matching key, do not set it on the insert or update.  
-			// However, if the key exists but the value is null, the update and insert should include this key with value null
-			$this->insert = Arrays::extract($this->usedColumns,$this->control->in,$x=null,false);
-			unset($this->insert['id']);
-			$this->lt->insert = $this->insert;
-			$this->control->id = $id = Db::insert($this->lt->model['table'],$this->insert);
-			return $id;
+			return $this->doCreate($this->usedColumns, $this->lt->model['table']);
 		}
+	}
+	///extract fields from input and do insert on table
+	function doCreate($columns,$table){
+		//include nulls, but don't force keys
+		$this->insert = Arrays::extract($columns,$this->control->in,$x=null,false);
+		unset($this->insert['id']);
+		$this->lt->insert = $this->insert;
+		$this->control->id = $id = Db::insert($table,$this->insert);
+		return $id;
 	}
 	function update(){
 		if($this->validate()){
-			$this->update = Arrays::extract($this->usedColumns,$this->control->in,$x=null,false);
-			unset($this->update['id']);
-			$this->lt->update = $this->update;
-			Db::update($this->lt->model['table'],$this->update,$this->control->id);
-			return true;
+			return $this->doUpdate($this->usedColumns, $this->lt->model['table']);
 		}
+	}
+	function  doUpdate($columns,$table){
+		$this->update = Arrays::extract($columns,$this->control->in,$x=null,false);
+		unset($this->update['id']);
+		$this->lt->update = $this->update;
+		Db::update($table,$this->update,$this->control->id);
+		return true;
 	}
 	///standardized to return id
 	function delete(){

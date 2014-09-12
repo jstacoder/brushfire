@@ -487,15 +487,15 @@ array(
 	}
 //+	}	
 	///standard js object that gets turned into json for pages, ajax, or api.  Various information loaded into it on calling this
-	public $stdJson = null;
+	public $json = null;
 	///prints the self::$json into the tp.json object.  Requires the previous declaration of tp js object on the page
 	protected function getStdJson(){
-		$this->stdJson['messages'] = $this->control->messages;
-		$this->stdJson['in'] = $this->control->in;
-		$this->stdJson['id'] = $this->control->id;
-		$this->stdJson['route']['parsed'] = \control\Route::$parsedTokens;
+		$this->json['messages'] = $this->control->messages;
+		$this->json['in'] = $this->control->in;
+		$this->json['id'] = $this->control->id;
+		$this->json['route']['parsed'] = \control\Route::$parsedTokens;
 		Hook::run('stdJson',$this);
-		return json_encode($this->stdJson);
+		return json_encode($this->json);
 	}
 	///end the script with stdJson
 	protected function endStdJson(){

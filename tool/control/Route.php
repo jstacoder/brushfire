@@ -55,13 +55,18 @@ class Route{
 	
 //+	load controls and section page{
 	
-		global $control;
 		$control = \Control::init();//we are now in the realm of dynamic pages
+		$view = new \View($control); //any most pages on this web framework use the view
 		
 		//after this following line, self::$tokens has no more influence on routing.  Modify self::$unparsedTokens if you want modify control flow
 		self::$unparsedTokens = array_merge([''],self::$tokens);//blank token loads in control
 		
 		self::addLocalTool($_ENV['projectFolder'].'tool/local/');
+		
+		//control files included variables
+		$incVars = self::$regexMatch;
+		$incVars['control'] = $control;
+		$incVars['view'] = $view;
 		
 		//get the section and page control
 		while(self::$unparsedTokens){
@@ -73,18 +78,19 @@ class Route{
 			
 			//++ load the control {
 			$path = $_ENV['controlFolder'].implode('/',self::$parsedTokens);
+			#\Debug::out($path);
 			//if named file, load, otherwise load generic control in directory
 			if(is_file($path.'.php')){
-				$loaded = \Files::inc($path.'.php',['control'],self::$regexMatch);
+				$loaded = \Files::inc($path.'.php',null,$incVars);
 			}elseif(is_file($path.'/control.php')){
-				$loaded = \Files::inc($path.'/control.php',['control'],self::$regexMatch);
+				$loaded = \Files::inc($path.'/control.php',null,$incVars);
 			}
 			//++ }
 			
 			//not loaded and was last token, page not found
 			if($loaded === false && !self::$unparsedTokens){
 				if($_ENV['pageNotFound']){
-					\Config::loadUserFiles($_ENV['pageNotFound'],'control',array('control'));
+					\Config::loadUserFiles($_ENV['pageNotFound'],'control',null,$incVars);
 					exit;
 				}else{
 					Debug::toss('Request handler encountered unresolvable token at control level.'."\nCurrent token: ".self::$currentToken."\nTokens parsed".print_r(self::$parsedTokens,true));

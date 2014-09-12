@@ -253,7 +253,7 @@ class ControlPublic{
 	/**
 	@param	rules	string or array	
 		Rules can be an array of rules, or a string separated by "," for each rule.  
-		Each rule can be a string or an array.  
+		Each rule can be a string or arrays
 		As a string, the rule should be in one of the following forms:
 				"f.name|param1;param2" indicates InputFilter method
 				"v.name|param1;param2" indicates InputValidate function
@@ -261,18 +261,19 @@ class ControlPublic{
 				"class.name|param1,param2,param3" indicates static method "name: of class "class" 
 				"l.name|param1,param2,param3" Local tool method
 				"name" replaced by Field fieldType of the same name
-		As an array, the rule function part (type:method) is the first element, and the parameters to the function part are the following elements.  Useful if function arguments contain commas or semicolons.  Ex:
-			array('type:method','arg1','arg2','arg3')
+		As an array, the rule function part (type:method) is the first element, and the parameters to the function part are the following elements.
 		
-		The "type:method" part can be prefixed with "!" to indicate there should be a break on error, and no more rules for that field should be applied
-		The "type:method" part can be prefixed with "!!" to indicate there should be a break on error and no more rules for any field should be applied
+		The fn part can be prefixed with "!" to break on error with no more rules for that field should be applied
+		The fn part can be prefixed with "!!" to break on error with no more rules for any field should be applied
+		The fn part can be prefixed with "?" to indicate the validation is optional, and not to throw an error (useful when combined with '!' => '?!v.filled,email')
+		
 		
 		If array, first part of rule is taken as string with the behavior above without parameters and the second part is taken as the parameters; useful for parameters that include commas or semicolons or which aren't strings
 		
 		Examples for rules:
-			1: 'v:email|bob.com,customClass:method|param1;param2',
-			2: array('v:email|bob.com','customClass:method|param1;param2'),
-			3: array(array('v:email','bob.com'),array('customClass:method','param1','param2')),
+			'f.trim,v.email'
+			'CustomValidation.method|param2,param3'
+			['f.trim',['v.regex','regex']]
 	*/
 	function applyFilterValidateRules($field, $rules, $errorOptions){
 		$originalRules = $rules;

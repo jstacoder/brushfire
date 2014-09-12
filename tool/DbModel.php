@@ -28,8 +28,8 @@ class DbModel{
 		$this->loadModel();
 		return $this->tables;
 	}
-	function  __construct($db,$savePath=null){
-		$this->db = $db;
+	function  __construct($db=null,$savePath=null){
+		$this->db = $db ? $db : Db::primary();
 		$this->savePath = $savePath;
 		if(!$this->savePath){
 			$connectionInfo = $this->db->connectionInfo;
@@ -79,21 +79,23 @@ class DbModel{
 				$parts = explode('__',substr($match[2],3));
 				$absoluteTable = self::getAbsolute($basePath,$part[0],$match[1]);
 				$mTable['links'][] = array('ft'=>$absoluteTable,'fc'=>$part[1],'dc'=>$column);
+			}elseif($column == 'type_id'){
+				$mTable['links'][] = array('ft'=>$table.'_type','fc'=>'id','dc'=>$column);
 			}else{
-				//+	Id Column referencing {
+				//++ Id Column referencing {
 				if($column[0] != '_' && preg_match('@(.+)_id($|__)@',$column,$match)){//named column
 					$mTable['links'][] = array('ft'=>$match[1],'fc'=>'id','dc'=>$column);
-				}elseif(preg_match('@^(_+)id($|__)@',$column,$match)){//purely backwards relative + "id"
+				}elseif(preg_match('@^(_+)id($|__)@',$column,$match)){//backwards relative id
 					$relativity = $match[1];
 					$absoluteTable = self::getAbsolute($basePath,'',$relativity);
 					$mTable['links'][] = array('ft'=>$absoluteTable,'fc'=>'id','dc'=>$column);
-				}elseif(preg_match('@^(_+)(.*)?(_id($|__))@',$column,$match)){//relative id columns
-					$relativity = $match[1];
+				}elseif(preg_match('@^(_+)(.*)?(_id($|__))@',$column,$match)){//backwards/forwards relative id
+					$relativity = substr($match[1],1);//first _ is counted as current path
 					$relativeTable = $match[2];
 					$absoluteTable = self::getAbsolute($basePath,$relativeTable,$relativity);
 					$mTable['links'][] = array('ft'=>$absoluteTable,'fc'=>'id','dc'=>$column);
 				}
-				//+	}
+				//++ }
 			}
 		}
 		return $mTable;
