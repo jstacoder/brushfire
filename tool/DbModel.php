@@ -56,6 +56,7 @@ class DbModel{
 			unlink($this->savePath);	
 		}
 		$this->loadModel();
+		return $this->tables;
 	}
 	///generate the array that represents the model and put it into static::$models
 	protected function model(){
@@ -71,29 +72,29 @@ class DbModel{
 		
 		$mTable['columns'] = $columns = $db->columnsInfo($table);
 		$basePath = '/'.str_replace('_','/',$table).'/';
-		$mTable['links'] = array();
+		$mTable['out'] = array();
 		foreach($columns as $column=>$info){
 			//first, check for fc_ indicater
 			if(preg_match('@^fc_@',$column)){
 				preg_match('@(^_+)(.*)@',$column,$match);
 				$parts = explode('__',substr($match[2],3));
 				$absoluteTable = self::getAbsolute($basePath,$part[0],$match[1]);
-				$mTable['links'][] = array('ft'=>$absoluteTable,'fc'=>$part[1],'dc'=>$column);
+				$mTable['out'][$column] = $absoluteTable;
 			}elseif($column == 'type_id'){
-				$mTable['links'][] = array('ft'=>$table.'_type','fc'=>'id','dc'=>$column);
+				$mTable['out'][$column] = $table;
 			}else{
 				//++ Id Column referencing {
 				if($column[0] != '_' && preg_match('@(.+)_id($|__)@',$column,$match)){//named column
-					$mTable['links'][] = array('ft'=>$match[1],'fc'=>'id','dc'=>$column);
+					$mTable['out'][$column] = $match[1];
 				}elseif(preg_match('@^(_+)id($|__)@',$column,$match)){//backwards relative id
 					$relativity = $match[1];
 					$absoluteTable = self::getAbsolute($basePath,'',$relativity);
-					$mTable['links'][] = array('ft'=>$absoluteTable,'fc'=>'id','dc'=>$column);
+					$mTable['out'][$column] = $absoluteTable;
 				}elseif(preg_match('@^(_+)(.*)?(_id($|__))@',$column,$match)){//backwards/forwards relative id
 					$relativity = substr($match[1],1);//first _ is counted as current path
 					$relativeTable = $match[2];
 					$absoluteTable = self::getAbsolute($basePath,$relativeTable,$relativity);
-					$mTable['links'][] = array('ft'=>$absoluteTable,'fc'=>'id','dc'=>$column);
+					$mTable['out'][$column] = $absoluteTable;
 				}
 				//++ }
 			}
@@ -104,8 +105,8 @@ class DbModel{
 	protected function shareLinks(){
 		$tables = $this->tables;///going to be modifying links, so make a copy
 		foreach($tables as $name=>$table){
-			foreach($table['links'] as $link){
-				$this->tables[$link['ft']]['links'][] = array('ft'=>$name,'fc'=>$link['dc'],'dc'=>$link['fc']);
+			foreach($table['out'] as $column=>$foreignTable){
+				$this->tables[$foreignTable]['in'][] = array('ft'=>$name,'fc'=>$column);
 			}
 		}
 	}

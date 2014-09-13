@@ -534,22 +534,26 @@ array(
 			return $this->column('show tables');
 		}
 	}
+	public $columnsInfo = [];
 	//get database table column information
 	protected function columnsInfo($table){
-		$columns = array();
-		if($this->connectionInfo['driver'] == 'mysql'){
-			$rows = $this->rows('describe '.$this->quoteIdentity($table));
-			foreach($rows as $row){
-				$column =& $columns[$row['Field']];
-				$column['type'] = self::parseColumnType($row['Type']);
-				$column['limit'] = self::parseColumnLimit($row['Type']);
-				$column['nullable'] = $row['Null'] == 'NO' ? false : true;
-				$column['autoIncrement'] = preg_match('@auto_increment@',$row['Extra']) ? true : false;
-				$column['default'] = $row['Default'];
-				$column['key'] = $row['Key'];
+		if(!$columnsInfo[$table]){
+			$columns = array();
+			if($this->connectionInfo['driver'] == 'mysql'){
+				$rows = $this->rows('describe '.$this->quoteIdentity($table));
+				foreach($rows as $row){
+					$column =& $columns[$row['Field']];
+					$column['type'] = self::parseColumnType($row['Type']);
+					$column['limit'] = self::parseColumnLimit($row['Type']);
+					$column['nullable'] = $row['Null'] == 'NO' ? false : true;
+					$column['autoIncrement'] = preg_match('@auto_increment@',$row['Extra']) ? true : false;
+					$column['default'] = $row['Default'];
+					$column['key'] = $row['Key'];
+				}
 			}
+			$columnsInfo[$table] = $columns;
 		}
-		return $columns;
+		return $columnsInfo[$table];
 	}
 	//take db specific column type and translate it to general
 	static function parseColumnType($type){
