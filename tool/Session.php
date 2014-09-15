@@ -125,8 +125,8 @@ class Session {
 				//file is not folder and is not permanent session
 				if(!is_dir($_ENV['sessionFolder'].$file) && !preg_match('@\.permanent$@',$file)){
 					//file is older than expiry time
-					if(filectime($_ENV['sessionFolder'].$file) < strtotime($_ENV['sessionExpiry'])){
-						unlink($_ENV['sessionFolder'].$file);
+					if(@filectime($_ENV['sessionFolder'].$file) < strtotime($_ENV['sessionExpiry'])){
+						@unlink($_ENV['sessionFolder'].$file);
 					}
 				}
 			}

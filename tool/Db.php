@@ -69,6 +69,9 @@ array(
 			$error = "--DATABASE ERROR--\n".' ===ERROR: '.$error[0].'|'.$error[1].'|'.$error[2]."\n ===SQL: ".$sql;
 			Debug::toss($error,__CLASS__.'Exception');
 		}
+		if(!$this->result){
+			Debug::toss("--DATABASE ERROR--\nNo result, likely connection timeout",__CLASS__.'Exception');
+		}
 		return $this->result;
 	}
 
