@@ -56,7 +56,7 @@ class Route{
 //+	load controls and section page{
 	
 		$control = \Control::init();//we are now in the realm of dynamic pages
-		$view = new \View($control); //any most pages on this web framework use the view
+		$view = \View::init(null,$control); //any most pages on this web framework use the view
 		
 		//after this following line, self::$tokens has no more influence on routing.  Modify self::$unparsedTokens if you want modify control flow
 		self::$unparsedTokens = array_merge([''],self::$tokens);//blank token loads in control

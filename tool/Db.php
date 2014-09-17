@@ -540,7 +540,7 @@ array(
 	public $columnsInfo = [];
 	//get database table column information
 	protected function columnsInfo($table){
-		if(!$columnsInfo[$table]){
+		if(!$this->columnsInfo[$table]){
 			$columns = array();
 			if($this->connectionInfo['driver'] == 'mysql'){
 				$rows = $this->rows('describe '.$this->quoteIdentity($table));
@@ -554,9 +554,9 @@ array(
 					$column['key'] = $row['Key'];
 				}
 			}
-			$columnsInfo[$table] = $columns;
+			$this->columnsInfo[$table] = $columns;
 		}
-		return $columnsInfo[$table];
+		return $this->columnsInfo[$table];
 	}
 	//take db specific column type and translate it to general
 	static function parseColumnType($type){
@@ -579,6 +579,20 @@ array(
 			$limit = explode(',',$match[1]);
 			return $limit[0];
 		}
+	}
+	public $keys;
+	protected function keys($table){
+		if(!$this->keys[$table]){
+			$rows = $this->rows('show indexes in '.$this->quoteIdentity($table));
+			foreach($rows as $row){
+				if(!$keys[$row['Key_name']]){
+					$keys[$row['Key_name']] = ['unique'=>!(bool)$row['Non_unique']];
+				}
+				$keys[$row['Key_name']]['columns'][$row['Seq_in_index']] = $row['Column_name'];
+			}
+			$this->keys[$table] = $keys;
+		}
+		return $this->keys[$table];
 	}
 //+ }
 }

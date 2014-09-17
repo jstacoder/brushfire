@@ -136,4 +136,11 @@ class InputFilter{
 		}
 		return $collected;
 	}
+	static function unsetMissing(){
+		$control = Control::primary();
+		if($value === null || $value === ''){
+			unset($control->in[$control->currentField]);
+		}
+		#Debug::quit($control->in);
+	}
 }

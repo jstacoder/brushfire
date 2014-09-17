@@ -250,6 +250,7 @@ class ControlPublic{
 		return !$this->hasError();
 	}
 	
+	public $currentField = '';///< current field being parseds
 	/**
 	@param	rules	string or array	
 		Rules can be an array of rules, or a string separated by "," for each rule.  
@@ -276,11 +277,23 @@ class ControlPublic{
 			['f.trim',['v.regex','regex']]
 	*/
 	function applyFilterValidateRules($field, $rules, $errorOptions){
+		$this->currentField = $field;
+		
 		$originalRules = $rules;
 		$rules = Arrays::stringArray($rules);
 		for($i=0;$i<count($rules);$i++){
 			$rule = $rules[$i];
-			$params = array(&$this->in[$field]);
+			
+			//since you may not want a field to be set if it was not input
+			if(isset($this->in[$field])){
+				$params = array(&$this->in[$field]);
+			}else{
+				$fieldValue = null;
+				$params = array(&$fieldValue);
+			}
+			
+			
+			
 			if(is_array($rule)){
 				$callback = array_shift($rule);
 				$params2 = &$rule;
@@ -369,6 +382,11 @@ class ControlPublic{
 				if($break){
 					break;
 				}
+			}
+			
+			//the substitute field was manipulated.  So, create it in input array
+			if($fieldValue){
+				$this->in[$field] = $fieldValue;
 			}
 		}
 		return true;

@@ -5,12 +5,9 @@
 */
 class CrudModel{
 	function __construct(){
-		if(!$control){
-			$control = Control::primary();
-		}
+		$control = Control::primary();
 		$this->control = $control;
 		$this->lt = $control->lt;
-		$this->db = $this->control->db;
 	}
 	function columns($table=null){
 		$table = $table ? $table : $this->lt->model['table'];
@@ -22,76 +19,104 @@ class CrudModel{
 	//determine various filters and validators based on database columns
 	function handleColumns(){
 		$columns = self::columns($this->lt->model['table']);
-		$usedColumns = $this->lt->model['columns'] ? $this->lt->model['columns'] : array_keys($columns);
+		if($this->lt->model['columns']){
+			$columns = Arrays::extract($this->lt->model['columns'],$columns,$x=null,false);
+		}
+		if($this->action == 'update'){
+			$columns = Arrays::extract(array_keys($this->control->in),$columns,$x=null,false);
+		}
 		
+		
+		$validaters = $this->getColumnValidations($columns);
+		
+		if($this->action){
+			$validaters[''][] = 'v.checkUniqueKeys|'.$this->lt->model['table'].';'.$this->action;
+		}
+		
+		$this->usedColumns = array_keys($columns);
+		$this->validaters = $validaters;
+	}
+	function getColumnValidations($columns){
 		//create validation and deal with special columns
-		foreach($usedColumns as $column){
+		foreach($columns as $column=>$info){
 			//special columns
 			if($column == 'created'){
 				$this->control->in[$column] = new Time('now',$_ENV['timezone']);
 			}elseif($column == 'updated'){
 				$this->control->in[$column] = new Time('now',$_ENV['timezone']);
 			}elseif($column == 'id'){
-				$validaters[$column][] = 'f:toString';
-				$validaters[$column][] = '?!v:filled';
-				$validaters[$column][] = '!v:inTable|'.$this->lt->model['table'];
+				$validaters[$column][] = 'f.toString';
+				$validaters[$column][] = '?!v.filled';
+				$validaters[$column][] = '!v.inTable|'.$this->lt->model['table'];
 			}else{
-				$validaters[$column][] = 'f:toString';
-				if(!$columns[$column]['nullable']){
-					//column must be present
-					$validaters[$column][] = '!v:exists';
+				$validaters[$column][] = 'f.toString';
+				if(!$info['nullable']){
+					if($info['default'] === null){
+						//column must be present
+						$validaters[$column][] = '!v.exists';
+					}else{
+						$validaters[$column][] = ['f.unsetMissing'];
+						$validaters[$column][] = ['?!v.filled'];
+					}
 				}else{
 					//for nullable columns, empty inputs (0 character strings) are null
-					$validaters[$column][] = array('f:default',null);
+					$validaters[$column][] = array('f.toDefault',null);
 					
 					//column may not be present.  Only validate if present
-					$validaters[$column][] = '?!v:filled';
+					$validaters[$column][] = '?!v.filled';
 				}
-				switch($columns[$column]['type']){
+				switch($info['type']){
 					case 'datetime':
 					case 'timestamp':
-						$validaters[$column][] = '!v:date';
-						$validaters[$column][] = 'f:datetime';
+						$validaters[$column][] = '!v.date';
+						$validaters[$column][] = 'f.datetime';
 					break;
 					case 'date':
-						$validaters[$column][] = '!v:date';
-						$validaters[$column][] = 'f:toDate';
+						$validaters[$column][] = '!v.date';
+						$validaters[$column][] = 'f.toDate';
 					break;
 					case 'text':
-						if($columns[$column]['limit']){
-							$validaters[$column][] = '!v:lengthRange|0,'.$columns[$column]['limit'][0];
+						if($info['limit']){
+							$validaters[$column][] = '!v.lengthRange|0;'.$info['limit'];
 						}
 					break;
 					case 'int':
-						$validaters[$column][] = 'f:trim';
-						$validaters[$column][] = '!v:isInteger';
+						$validaters[$column][] = 'f.trim';
+						$validaters[$column][] = '!v.isInteger';
 					break;
 					case 'decimal':
 					case 'float':
-						$validaters[$column][] = 'f:trim';
-						$validaters[$column][] = '!v:isFloat';
+						$validaters[$column][] = 'f.trim';
+						$validaters[$column][] = '!v.isFloat';
 					break;
 				}
 			}
 		}
-		$this->usedColumns = $usedColumns;
-		$this->validaters = $validaters;
+		return $validaters;
 	}
 	
 	function validate(){
 		$this->handleColumns();
-		if(method_exists($this->lt,'validate')){
+		if($ltHasValidation = method_exists($this->lt,'validate')){
 			$this->lt->validate();
 		}
+		
 		//Crud standard validaters come after due to them being just the requisite validaters for entering db; input might be changed to fit requisite by Page validaters.
-		if($this->validaters){
-			$this->control->filterAndValidate($this->validaters);
+		if(!$this->control->hasError() && $this->validaters){
+			if($ltHasValidation){
+				$this->control->filterAndValidate($this->validaters);
+			}else{
+				$this->control->validate($this->validaters);
+			}
 		}
-		return !$this->control->errors();
+		return !$this->control->hasError();
 	}
+	
+	public $action;
 	
 	///@only call $this->lt->model['table'] available
 	function create(){
+		$this->action = 'create';
 		if($this->validate()){
 			return $this->doCreate($this->usedColumns, $this->lt->model['table']);
 		}
@@ -106,6 +131,7 @@ class CrudModel{
 		return $id;
 	}
 	function update(){
+		$this->action = 'update';
 		if($this->validate()){
 			return $this->doUpdate($this->usedColumns, $this->lt->model['table']);
 		}

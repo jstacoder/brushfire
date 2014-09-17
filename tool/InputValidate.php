@@ -258,5 +258,28 @@ class InputValidate{
 			}
 		}
 	}
+	static function checkUniqueKeys($value, $table,$type){
+		$control = Control::primary();
+		$keys = Db::keys($table);
+		foreach($keys as $name => $key){
+			if($key['unique']){
+				if($name != 'PRIMARY'){
+					foreach($key['columns'] as $column){
+						if(!isset($control->in[$column]) || $control->in[$column] === null){
+							//null keys can overlap
+							continue 2;
+						}
+					}
+					$where = Arrays::extract($key['columns'],$control->in);
+					if($type != 'create'){
+						$where['id?<>'] = $control->id;
+					}
+					if(Db::check($table,$where)){
+						Debug::toss('Unique key contraint not met: '.implode(', ',$key['columns']),'InputException');
+					}
+				}
+			}
+		}
+	}
 }
 //+	}

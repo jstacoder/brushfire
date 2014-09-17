@@ -2,7 +2,7 @@
 namespace control;
 class Field{
 	static $ruleAliases = array(
-		'phone' => 'f.toDigits,!v.filled,v.phone',
+		'phone' => 'f.digits,!v.filled,v.phone',
 		'zip' => '!v.filled,v.zip',
 		'name' => 'f.name,f.trim,!v.filled',
 		'email' => '!v.filled,v.email',
