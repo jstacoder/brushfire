@@ -48,7 +48,8 @@ class Model{
 			if($this->interdependency[$column]){
 				$this->getSubOptions($column);
 			}else{
-				$this->options[$column] = Db::row($table);
+				$tableModel = $this->linkedTable($table);
+				$this->options[$column] = Db::columnKey('id',$table,null,'id,'.Db::quoteIdentity($tableModel->getNameColumn()));
 			}
 		}
 	}
@@ -56,6 +57,31 @@ class Model{
 		if($this->interdependency[$column]){
 			
 		}
+	}
+	
+	//get the row, along with the name of rows linked to the row
+	/**
+	primary table aliased as 't1'
+	connected tables aliased as fc
+	default select connects name-like column as fc'_name'
+	*/
+	function read($selects=null){
+		$joins = [];
+		if(!$selects){
+			$selects[] = 't1.*';
+			$doSelects = true;
+		}
+		foreach((array)$this->info['out'] as $column=>$table){
+			$tableModel = $this->linkedTable($table);
+			$newTableName = Db::quoteIdentity($column);
+			$joins[] = 'left join '.Db::quoteIdentity($table).' as '.$newTableName.' on t1.'.Db::quoteIdentity($column).' = '.$newTableName.'.id';
+			if($doSelects){
+				$selects[] = $newTableName.'.'.Db::quoteIdentity($tableModel->getNameColumn()).' as '.Db::quoteIdentity($column.'_name');
+			}
+		}
+		return Db::row('select '.implode(',',$selects).' 
+			from '.Db::quoteIdentity($this->name).' as t1 '.implode("\n",$joins).'
+			where t1.id = '.Control::primary()->id);
 	}
 	public $tables = [];
 	function linkedTable($name){

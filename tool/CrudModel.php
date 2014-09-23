@@ -4,13 +4,16 @@
 	Will default to use all table columns, and select from the input that which is avaible (set), but can be modified to use only certain columns.  
 */
 class CrudModel{
-	function __construct(){
+	function __construct($table=null,$selectedColumns=null){
 		$control = Control::primary();
 		$this->control = $control;
-		$this->lt = $control->lt;
+		$this->lt = $this->control->lt;
+		
+		$this->table = $table;
+		$this->selectedColumns = $selectedColumns;
 	}
 	function columns($table=null){
-		$table = $table ? $table : $this->lt->model['table'];
+		$table = $table ? $table : $this->table;
 		if(!$this->columns[$table]){
 			$this->columns[$table] = Db::columnsInfo($table);
 		}
@@ -18,9 +21,9 @@ class CrudModel{
 	}
 	//determine various filters and validators based on database columns
 	function handleColumns(){
-		$columns = self::columns($this->lt->model['table']);
-		if($this->lt->model['columns']){
-			$columns = Arrays::extract($this->lt->model['columns'],$columns,$x=null,false);
+		$columns = self::columns();
+		if($this->selectedColumns){
+			$columns = Arrays::extract($this->selectedColumns,$columns,$x=null,false);
 		}
 		if($this->action == 'update'){
 			$columns = Arrays::extract(array_keys($this->control->in),$columns,$x=null,false);
@@ -30,7 +33,7 @@ class CrudModel{
 		$validaters = $this->getColumnValidations($columns);
 		
 		if($this->action){
-			$validaters[''][] = 'v.checkUniqueKeys|'.$this->lt->model['table'].';'.$this->action;
+			$validaters[''][] = 'v.checkUniqueKeys|'.$this->table.';'.$this->action;
 		}
 		
 		$this->usedColumns = array_keys($columns);
@@ -47,7 +50,7 @@ class CrudModel{
 			}elseif($column == 'id'){
 				$validaters[$column][] = 'f.toString';
 				$validaters[$column][] = '?!v.filled';
-				$validaters[$column][] = '!v.inTable|'.$this->lt->model['table'];
+				$validaters[$column][] = '!v.inTable|'.$this->table;
 			}else{
 				$validaters[$column][] = 'f.toString';
 				if(!$info['nullable']){
@@ -114,11 +117,11 @@ class CrudModel{
 	
 	public $action;
 	
-	///@only call $this->lt->model['table'] available
+	///@only call $this->table available
 	function create(){
 		$this->action = 'create';
 		if($this->validate()){
-			return $this->doCreate($this->usedColumns, $this->lt->model['table']);
+			return $this->doCreate($this->usedColumns, $this->table);
 		}
 	}
 	///extract fields from input and do insert on table
@@ -133,7 +136,7 @@ class CrudModel{
 	function update(){
 		$this->action = 'update';
 		if($this->validate()){
-			return $this->doUpdate($this->usedColumns, $this->lt->model['table']);
+			return $this->doUpdate($this->usedColumns, $this->table);
 		}
 	}
 	function  doUpdate($columns,$table){
@@ -145,12 +148,12 @@ class CrudModel{
 	}
 	///standardized to return id
 	function delete(){
-		if(Db::delete($this->lt->model['table'],$this->control->id)){
+		if(Db::delete($this->table,$this->control->id)){
 			return $this->control->id;
 		}
 	}
 	function read(){
-		if($this->lt->item = Db::row($this->lt->model['table'],$this->control->id)){
+		if($this->lt->item = Db::row($this->table,$this->control->id)){
 			return true;
 		}
 		if($_ENV['CrudbadIdCallback']){

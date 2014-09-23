@@ -113,9 +113,7 @@ class Route{
 			}
 			array_pop($tokens);
 		}
-		if($tokens){
-			\Control::addLocalTool($tokens);
-		}
+		\Control::addLocalTool($tokens);
 	}
 	///internal use. initial breaking apart of url
 	private static function parseRequest($uri){

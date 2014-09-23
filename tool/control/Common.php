@@ -24,14 +24,22 @@ class Common{
 			}
 		}
 		
-		$this->control->id = $id;
-		return $id;
+		if($id){
+			$this->control->id = $id;
+			return $id;
+		}
+	}
+	protected function reqId($failCallback=null){
+		return $this->primaryId($failCallback);
 	}
 	///setup .  Since this is a primaryId, error 
-	protected function primaryId($type=null){
+	protected function primaryId($failCallback=null){
 		$id = $this->getId();
 		if(!$id){
-			self::badId();
+			if(!$failCallback){
+				return call_user_func($failCallback);
+			}
+			$this->error('Id not found');
 		}
 		return $id;
 	}
@@ -39,10 +47,6 @@ class Common{
 		$this->control->error($message);
 		\Config::loadUserFiles($_ENV['errorPage'],null,null,array('error'=>$message));
 		exit;
-	}
-	protected function badId(){
-		unset($this->control->id);
-		$this->error('Id not found');
 	}
 	protected function getOwner($item){
 		if($item['user_id__owner']){
