@@ -2,82 +2,52 @@
 namespace control;
 ///Create Read Update Delete general class
 class Crud{
-	use \SingletonDefault;
-	function __construct($control=null){
-		$this->control = $control ? $control : Control::primary();
-	}
-	function __call($fnName,$args){
-		if(in_array($fnName,array('create','update','delete','read'))){
-			return $this->handle(array($fnName),$args[0]);
-		}
-		return $this->__testCall($fnName,$args);
+	function __construct($control=null,$model=null){
+		$this->control = $control ? $control : \Control::primary();
+		$this->model = $model ? $model : $this->control->model;
 	}
 	/**
 	@param	commands	list of commands to look for in input for running (will only run one, order by priority)
 	@param	default	the command to use if none of the provided were found.  Will be run regardless of whether corersponding input command found
 	*/
-	protected function handle($commands=array(),$default='read'){
-		$commands = \Arrays::stringArray($commands);
-		
-		$this->attempted = $this->called = array();
+	function handle($commands=[],$default='read'){
 		foreach($commands as $command){
-			if($this->control->in['_cmd_'.$command]){
-				$return = $this->callFunction($command);
-				if($return === null || $return === false){
-					continue;
-				}
-				return new CrudResult($command,$return,$this->control->in['_cmd_'.$command],array('control'=>$this));
+			if($this->control->in['_'.$command]){
+				$commandFn = $this->resolveFunction($command);
+				$return = $commandFn($command);
+				return ['command'=>$command,
+					'return'=>$return,
+					$command=>$return];
 			}
 		}
-		if($default && !in_array($default,$this->attempted)){
-			$return = $this->callFunction($default,$this->control->in['_cmd_'.$command]);
-			return new CrudResult($default,$return,null,array('control'=>$this));
-		}
-		return new CrudResult('',null);
+		return [];
 	}
-	protected function getFunction($command,$subcommand=null){
-		if(!$subcommand){
-			$subcommand = $this->control->in['_cmd_'.$command];
+	function resolveFunction($command){
+		if(method_exists($this->control->lt,$command)){
+			return [$this->control->lt,$command];
 		}
-		if(method_exists($this->control->local,$command.'_'.$subcommand)){
-			return array($this->control->local,$command.'_'.$subcommand);
-		}elseif(method_exists($this->control->local,$command)){
-			return array($this->control->local,$command);
-		}elseif(isset($this->control->local->model) 
-			&& $this->control->local->model['table'] 
-			&& $this->control->local->CrudModel
-			&& method_exists($this->control->local->CrudModel,$command)
-		){
-			return array($this->control->local->CrudModel,$command);
+		if($this->model && method_exists($this->model,$command)){
+			return [$this->model,$command];
 		}
-		return false;
+		return function($command){\Debug::toss('No handler function on CRUD with command '.$command);};
 	}
-	//callbacks applied at base for antibot behavior
-	protected function callFunction($command,$subcommand=null,$error=false){
-		$this->attempted[] = $command;
-		$function = $this->getFunction($command);
-		if($function){
-			$this->called[] = $command;
-			$return = call_user_func($function);
-			return $return;
+	function whereEquals($fields){
+		$where = [];
+		foreach($fields as $field){
+			$nonContextedField = end(explode('.',$field));
+			unset($value);
+			if(isset($this->control->in[$field])){
+				$value = $this->control->in[$field];
+			}elseif(isset($this->control->in[$nonContextedField])){
+				$value = $this->control->in[$nonContextedField];
+			}
+			if(isset($value)){
+				$line = \Db::ftvf($field,$value,$type);
+				if($line){
+					$where[] = $line;
+				}
+			}
 		}
-		if($error){
-			$this->control->error('Unsupported command');
-		}
-	}
-}
-/*Note, the handling of a result in a standard way would potentially require standard action names, item titles, directory structure, id parameters, etc.  So, just make it easy to handle, don't actually handle*/
-class CrudResult{
-	function __construct($type,$return,$subType=null,$info=null){
-		$this->type = $type;
-		$this->return = $return;
-		$this->subType = $subType;
-		if($info){
-			$this->attempted = $info['control']->attempted;
-			$this->called = $info['control']->called;
-		}
-		if($type){
-			$this->$type = $return;
-		}
+		return $where;
 	}
 }

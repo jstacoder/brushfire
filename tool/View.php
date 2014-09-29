@@ -471,6 +471,8 @@ array(
 		if section open, place output into keyed array, close section, and then open new section
 	if called without name
 		if section open, put output into keyed array, close section
+	
+	@note If section already exists, will overwrite
 	*/
 	protected function section($name=''){
 		if($this->openSection){
@@ -482,7 +484,16 @@ array(
 			ob_start();
 		}
 	}
-	protected function getSection($name){
+	///gets the string collected under a section name.  If not name specified, returns the close the open section and return it
+	protected function getSection($name=null){
+		if(!$name){
+			if($name = $this->openSection){
+				$this->section();
+				return $this->getSection($name);
+			}else{
+				Debug::toss('Vieww::getSection called without section to get');
+			}
+		}
 		return $this->sections[$name];
 	}
 //+	}	
@@ -579,4 +590,9 @@ array(
 		$relativeTo = $this->baseUrl.substr($_SERVER['REQUEST_URI'],1);//request uri always starts with '/'
 		return Http::absoluteUrl($path,$relativeTo);
 	}
+}
+
+///alias for htmlspecialchars
+function hsc(){
+	return call_user_func_array('htmlspecialchars',func_get_args());
 }

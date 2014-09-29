@@ -96,15 +96,15 @@ class Tool{
 	@param	string	string to capitalize
 	@return	a string various words capitalized and some not
 	*/
-	static function capitalize($string){
-		$exclude = array('to', 'the', 'in', 'at', 'for', 'or', 'and', 'so', 'with', 'if', 'a', 'an', 'of', 
+	static function capitalize($string,$split='\t _',$fullCaps=null,$excludes=null){
+		$excludes = $excludes ? $excludes : array('to', 'the', 'in', 'at', 'for', 'or', 'and', 'so', 'with', 'if', 'a', 'an', 'of', 
 			'to', 'on', 'with', 'by', 'from', 'nor', 'not', 'after', 'when', 'while');
-		$fullCap = array('cc');
-		$words = preg_split('@[\t ]+@',$string);
+		$fullCaps = $fullCaps ? $fullCaps : array('cc');
+		$words = preg_split('@['.$split.']+@',$string);
 		foreach($words as &$v){
-			if(in_array($v,$fullCap)){
+			if(in_array($v,$fullCaps)){
 				$v = strtoupper($v);
-			}elseif(!in_array($v,$exclude)){
+			}elseif(!in_array($v,$excludes)){
 				$v = ucfirst($v);
 			}
 		}unset($v);

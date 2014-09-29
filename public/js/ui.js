@@ -90,39 +90,42 @@ bf.ui = {
 	*/
 	parseMessage: function(message,map){
 		if(message.name){
-			var title = message.name			
-			while(true){//to avoid large nesting
-				if(map){
-					if(map[message.name]){
-						title = map[message.name]
-						break
-					}
-				}
-				var holder = $('[data-field="'+message.name+'"][data-title]')
-				if(holder.size()){
-					title = holder.text()
-					break
-				}
-				holder = $('[name='+message.name+'][data-title]')
-				if(holder.size()){
-					title = holder.attr('data-title')
-					break
-				}
-				holder = $('[for='+message.name+']')
-				if(holder.size()){
-					title = holder.text()
-					break
-				}
-				if($('[name='+message.name+'][placeholder]').size()){
-					title = $('[name='+message.name+'][placeholder]').attr('placeholder')
-					break
-				}
-				title = message.name
-				break
-			}
+			var title = bf.ui.fieldTitle(message.name,map)
 			message.content = message.content.replace(/\{_FIELD_\}/g,'"'+title+'"');
 		}
 		return message
+	},
+	fieldTitle: function(field, map){
+		while(true){//to avoid large nesting
+			if(map){
+				if(map[field]){
+					title = map[field]
+					break
+				}
+			}
+			var holder = $('[data-field="'+field+'"][data-title]')
+			if(holder.size()){
+				title = holder.text()
+				break
+			}
+			holder = $('[name='+field+'][data-title]')
+			if(holder.size()){
+				title = holder.attr('data-title')
+				break
+			}
+			holder = $('[for='+field+']')
+			if(holder.size()){
+				title = holder.text()
+				break
+			}
+			if($('[name='+field+'][placeholder]').size()){
+				title = $('[name='+field+'][placeholder]').attr('placeholder')
+				break
+			}
+			title = field
+			break
+		}
+		return title
 	},
 	/**
 	supports 2 types of error containers
@@ -243,6 +246,51 @@ bf.ui = {
 		}else{
 			closeEle.click(function(){$(this).parent().fadeOut()})
 		}
+	},
+	form: {
+		/**
+		For subcategory options, the dependent field (depender) has a data-dependee attribute pointing to the parent category field.  This sets up a call to get the suboptions based on the parent fieldss
+		*/
+		getOptions:function(field){
+			var depender = $('[name="'+field+'"]')
+			var dependee = $('[name="'+depender.attr('data-dependee')+'"]')
+			var post = {_getSubOptions:true}
+			post[dependee.attr('name')] = dependee.val()
+			$.post('',post,function(json){
+					var formerValue = depender.val()
+					bf.ui.form.replaceOptions(depender,json.options[field],{value:0,text:'Select '+bf.ui.fieldTitle(field)})
+				},'json')
+		},
+		///removes select options and replaces them with those in obj, optionally preserving the value
+		replaceOptions: function(select,obj,first,preserveValue){
+			preserveValue = preserveValue === false ? false : true
+			if(preserveValue){
+				var formerValue = select.val()
+			}
+			$('option',select).remove()
+			bf.ui.form.addOptions(select,obj,first)
+			if(preserveValue){
+				if(bf.ui.form.selectOption(select,formerValue).size()){
+					select.val(formerValue)
+				}
+			}
+		},
+		///appends optins from obj into a select
+		addOptions: function(select,obj,first){
+			if(first){
+				$('<option></option>').val(first.value).text(first.text).appendTo(select)
+			}
+			for(i in obj){
+				$('<option></option>').val(i).text(obj[i]).appendTo(select)
+			}
+		},
+		///get an option within a select that has some value
+		selectOption: function(select,value){
+			match = $('option',select).filter(function() {
+				return this.value === value;
+				})
+			return match
+		}
 	}
 //+	}
 }
@@ -256,121 +304,141 @@ $(function(){
 			bf.ui.insertMessages(bf.json.messages)
 		}
 //+	}
+	}
+	//form dependent dynamics
+	if($('form').size()){
+//+ add message containers on certain conditions {
+		var addMessageEle = $('[data-addMessageContainers]')
+		if(addMessageEle.size() > 0){
+			$('input, select, textarea',addMessageEle).each(function(){
+					$(this).after('<div class="messageContainer" data-field="'+$(this).attr('name')+'"></div>')
+				})
+		}
+//+ }
+//+ handle dependent data fields {
+		$('[data-dependee]').each(function(){
+				var dependeeField = $(this).attr('data-dependee')
+				var field = $(this).attr('name')
+				$('[name="'+dependeeField+'"]').change(function(){bf.ui.form.getOptions(field)}).change()
+			})
+//+ }
+	}
+
 //+	handle paging and sorting{
 //+		sorting{
-		if($('.sortContainer').size()){
-			bf.sorts = []
-			var sort = bf.getRequestVar('_sort');
-			if(sort){//use URL if sort passed, otherwise use html sort data
-				$('.sortContainer:not(.inlineSort)').attr('data-sort',sort);
-			}else{
-				sort = $('.sortContainer:not(.inlineSort)').attr('data-sort');
-			}
-			if(sort){
-				bf.sorts = sort.split(',')
-				bf.ui.headerArrows();//byproduct is to standardize the sorts
-			}
-			//add click event to sortable columns
-			$('.sortContainer:not(.inlineSort) *[data-field]').click(function(e){
-				var field = $(this).attr('data-field')
-				//if shift clicked, just append sort
-				if(e.shiftKey){
-					bf.ui.appendSort(field)
-				}else{
-					bf.ui.changeSort(field)
-				}
-				bf.ui.sortPage()
-			})
+	if($('.sortContainer').size()){
+		bf.sorts = []
+		var sort = bf.getRequestVar('_sort');
+		if(sort){//use URL if sort passed, otherwise use html sort data
+			$('.sortContainer:not(.inlineSort)').attr('data-sort',sort);
+		}else{
+			sort = $('.sortContainer:not(.inlineSort)').attr('data-sort');
 		}
+		if(sort){
+			bf.sorts = sort.split(',')
+			bf.ui.headerArrows();//byproduct is to standardize the sorts
+		}
+		//add click event to sortable columns
+		$('.sortContainer:not(.inlineSort) *[data-field]').click(function(e){
+			var field = $(this).attr('data-field')
+			//if shift clicked, just append sort
+			if(e.shiftKey){
+				bf.ui.appendSort(field)
+			}else{
+				bf.ui.changeSort(field)
+			}
+			bf.ui.sortPage()
+		})
+	}
 //+		}
 //+		paging{
-		var pagingContainer = $('*[data-paging]')
-		if(pagingContainer.size()){
-			var paging = bf.ui.getPaging(); var page = paging.page; var total = paging.total
-			if(total > 1){
-				//+	make the html paginater skeleton {
-				if($('.paging').size()){
-					var pagingEle = $('.paging')
-				}else{
-					var pagingEle = $('<div class="paging"></div>')
-					pagingContainer.append(pagingEle)
-				}
-				var paginaterDiv = $("<div class='paginater'></div>")
-				pagingEle.append(paginaterDiv)
-				//+ }
-				
-				//+	center the current page if possible {
-				var context = 2;//only  show context * 2 + 1 page buttons
-				var start = Math.max((page - context),1)
-				var end = Math.min((page + context),total)
-				var extraContext = context - (page - start)
-				if(extraContext){
-					end = Math.min(end + extraContext,total)
-				}else{
-					var extraContext = context - (end - page)
-					if(extraContext){
-						start = Math.max(start - extraContext,1)
-					}
-				}
-				//+	}
-				
-				//+ complete the paginater {
-				if(page != 1){
-					paginaterDiv.append('<div class="clk first">&lt;&lt;</div><div class="clk prev">&nbsp;&lt;&nbsp;</div>')
-				}
-				
-				var pages = []
-				for(var i=start;i <= end; i++){
-					var current = i == page ? ' current' : ''
-					paginaterDiv.append('<div class="clk pg'+current+'">'+i+'</div>')
-				}
-				if(page != total){
-					paginaterDiv.append('<div class="clk next">&nbsp;&gt;&nbsp;</div><div class="clk last">&gt;&gt;</div>')
-				}
-				paginaterDiv.append("<div class='direct'>\
-							<input title='Total of "+total+"' type='text' name='directPg' value='"+page+"'/>\
-							<div class='clk go'>Go</div>\
-						</div>")
-				
-				//+	}
-				
-				//clicks
-				$('.clk:not(.disabled)',paginaterDiv).click(function(e){
-					var paging = bf.ui.getPaging(); var page = paging.page; var total = paging.total
-					//var target = $(e.target)
-					var target = $(this)
-					if(target.hasClass('pg')){
-						page = target.text()
-					}else if(target.hasClass('next')){
-						page = page + 1
-					}else if(target.hasClass('last')){
-						page = total
-					}else if(target.hasClass('first')){
-						page = 1
-					}else if(target.hasClass('prev')){
-						page = page - 1
-					}else if(target.hasClass('go')){
-						var parent = target.parents('.paginater')
-						page = Math.abs($('input',parent).val())
-					}
-					bf.ui.goToPage(page)
-				})
-				
-				//ensure enter on "go" field changes page, not some other form
-				$('input',paginaterDiv).keypress(function(e){
-					if (e.which == 13) {
-						e.preventDefault();
-						$('.go',paginaterDiv).click();
-					}
-				});
-				
-				
-				
+	var pagingContainer = $('*[data-paging]')
+	if(pagingContainer.size()){
+		var paging = bf.ui.getPaging(); var page = paging.page; var total = paging.total
+		if(total > 1){
+			//+	make the html paginater skeleton {
+			if($('.paging').size()){
+				var pagingEle = $('.paging')
+			}else{
+				var pagingEle = $('<div class="paging"></div>')
+				pagingContainer.append(pagingEle)
 			}
+			var paginaterDiv = $("<div class='paginater'></div>")
+			pagingEle.append(paginaterDiv)
+			//+ }
+			
+			//+	center the current page if possible {
+			var context = 2;//only  show context * 2 + 1 page buttons
+			var start = Math.max((page - context),1)
+			var end = Math.min((page + context),total)
+			var extraContext = context - (page - start)
+			if(extraContext){
+				end = Math.min(end + extraContext,total)
+			}else{
+				var extraContext = context - (end - page)
+				if(extraContext){
+					start = Math.max(start - extraContext,1)
+				}
+			}
+			//+	}
+			
+			//+ complete the paginater {
+			if(page != 1){
+				paginaterDiv.append('<div class="clk first">&lt;&lt;</div><div class="clk prev">&nbsp;&lt;&nbsp;</div>')
+			}
+			
+			var pages = []
+			for(var i=start;i <= end; i++){
+				var current = i == page ? ' current' : ''
+				paginaterDiv.append('<div class="clk pg'+current+'">'+i+'</div>')
+			}
+			if(page != total){
+				paginaterDiv.append('<div class="clk next">&nbsp;&gt;&nbsp;</div><div class="clk last">&gt;&gt;</div>')
+			}
+			paginaterDiv.append("<div class='direct'>\
+						<input title='Total of "+total+"' type='text' name='directPg' value='"+page+"'/>\
+						<div class='clk go'>Go</div>\
+					</div>")
+			
+			//+	}
+			
+			//clicks
+			$('.clk:not(.disabled)',paginaterDiv).click(function(e){
+				var paging = bf.ui.getPaging(); var page = paging.page; var total = paging.total
+				//var target = $(e.target)
+				var target = $(this)
+				if(target.hasClass('pg')){
+					page = target.text()
+				}else if(target.hasClass('next')){
+					page = page + 1
+				}else if(target.hasClass('last')){
+					page = total
+				}else if(target.hasClass('first')){
+					page = 1
+				}else if(target.hasClass('prev')){
+					page = page - 1
+				}else if(target.hasClass('go')){
+					var parent = target.parents('.paginater')
+					page = Math.abs($('input',parent).val())
+				}
+				bf.ui.goToPage(page)
+			})
+			
+			//ensure enter on "go" field changes page, not some other form
+			$('input',paginaterDiv).keypress(function(e){
+				if (e.which == 13) {
+					e.preventDefault();
+					$('.go',paginaterDiv).click();
+				}
+			});
+			
+			
+			
 		}
+	}
 //+		}
 //+	}
-	}
+	
 //+	tool tips {
 	///add [?] to open tool tips from the data-help attribute value
 	$('*[data-help]').each(function(){
@@ -449,5 +517,19 @@ $(function(){
 		return false
 	})
 	
+//+ handle inline value formatting {
+	$('[data-timeFormat]').each(function(){
+			var format = $(this).attr('data-timeFormat')
+			var date = bf.date.strtotime($(this).text())
+			$(this).text(bf.date.format(format,date))
+		})
+	$('[data-timeAgo]').each(function(){
+			var options = $(this).attr('data-timeAgo')
+			options = JSON.parse(options ? options : '{}');
+			var date = bf.date.strtotime($(this).text())
+			$(this).text(bf.date.timeAgo(date,options.round,options.type))
+		})
+	$('.datepicker').datepicker()
+//+ }
 });
 

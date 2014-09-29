@@ -35,6 +35,8 @@ class ControlPublic{
 	public $originalIn;///<an unmodified version of $in
 	public $messages;///<system messages to display to the user
 	public $inputRuleAliases = null;///<when an input rule has no prefix, consider it an alias for other rules found in this->inputRuleAliases[rule].  Defaults to Field::$ruleAliases
+	public $item;///<when a page is involving one item, use this variable to hold the data
+	public $items;///<when a page is involving multiple items of the same type, use this variable to hold the data
 	function __construct($in=false,$cookieMessagesName=false){
 		//+	parse input{
 		if($in===false){//apply default
@@ -243,7 +245,17 @@ class ControlPublic{
 		}
 		
 		foreach($rules as $field=>$ruleSet){
+			unset($fieldValue, $byReference);
+			$fieldValue = null;
+			if(isset($this->in[$field])){
+				$fieldValue = &$this->in[$field];
+				$byReference = true;
+			}
 			$continue = $this->applyFilterValidateRules($field, $ruleSet, $options['errorOptions']);
+			//since there was no in[field], yet the surrogate was manipulated, set the in[field] to the surrogate
+			if(!$byReference && $fieldValue){
+				$this->in[$field] = $fieldValue;
+			}
 			if(!$continue){
 				break;
 			}
@@ -268,6 +280,7 @@ class ControlPublic{
 		The fn part can be prefixed with "!" to break on error with no more rules for that field should be applied
 		The fn part can be prefixed with "!!" to break on error with no more rules for any field should be applied
 		The fn part can be prefixed with "?" to indicate the validation is optional, and not to throw an error (useful when combined with '!' => '?!v.filled,email')
+		The fn part can be prefixed with "~" to indicate if the validation does not fail, then there was an error
 		
 		
 		If array, first part of rule is taken as string with the behavior above without parameters and the second part is taken as the parameters; useful for parameters that include commas or semicolons or which aren't strings
@@ -275,8 +288,148 @@ class ControlPublic{
 		Examples for rules:
 			'f.trim,v.email'
 			'CustomValidation.method|param2,param3'
-			['f.trim',['v.regex','regex']]
+			['f.trim',['v.regex','PATTERN']]
+			['f.trim',[['!',['InputValidate','regex']],'PATTERN']]
 	*/
+	function applyFieldRules($field, &$value, $rules, $localTool, $errorOptions){
+		//initialise with aliases
+		if($this->inputRuleAliases === null){
+			$this->inputRuleAliases = \control\Field::$ruleAliases;
+		}
+		
+		$this->currentField = $field;
+		$rules = Arrays::stringArray($rules);
+		for($i=0;$i<count($rules);$i++){
+			$rule = $rules[$i];
+			unset($prefixOptions);
+			$params = array(&$value);
+			
+			if(is_array($rule)){
+				$callback = array_shift($rule);
+				if(is_array($callback)){
+					list($prefixOptions) = $this->rulePrefixOptions($callback[0]);
+					$callback = $callback[1];
+				}
+				$paramsAdditional = &$rule;
+			}else{
+				list($callback,$paramsAdditional) = explode('|',$rule);
+				
+				if($paramsAdditional){
+					$paramsAdditional = explode(';',$paramsAdditional);
+				}
+			}
+			///merge field value param with the user provided params
+			if($paramsAdditional){
+				Arrays::mergeInto($params,$paramsAdditional);
+			}
+			
+			if(!$prefixOptions){
+				list($prefixOptions,$callback) = $this->rulePrefixOptions($callback);
+			}
+			
+			//handle the base of the callback being an alias for more rules
+			if(is_string($callback) && $this->inputRuleAliases[$callback]){
+				$newRules = Arrays::stringArray($this->inputRuleAliases[$callback]);
+				if($i + 1 < count($rules)){///there are rules after this alias, so combine alias with those existing after
+					$newRules = array_merge($newRules,array_slice($rules,$i + 1));
+				}
+				$rules = $newRules;
+				$i = -1;
+				continue;
+			}
+			
+			
+			$callback = $this->ruleCallable($callback);
+			if(!is_callable($callback)){
+				Debug::toss('Rule not callable: '.var_export($rule,true));
+			}
+			try{
+				call_user_func_array($callback,$params);
+				if($prefixOptions['not']){
+					$prefixOptions['not'] = false;
+					Debug::toss('Failed to fail a notted rule: '.var_export($rule,true));
+				}
+			}catch(InputException $e){
+				//this is considered a pass
+				if($prefixOptions['not']){
+					continue;
+				}
+				//add error to messages
+				if(!$prefixOptions['ignoreError']){
+					$this->error($e->getMessage(),$field,$errorOptions);
+				}
+				//super break will break out of all fields
+				if($prefixOptions['superBreak']){
+					return false;
+				}
+				//break will stop validators for this one field
+				if($prefixOptions['break']){
+					break;
+				}
+			}
+		}
+		return true;
+	}
+	function ruleCallable($callback){
+		if(is_string($callback)){
+			list($type,$method = explode('.',$callback,2);
+			if(!$method){
+				$method = $type;
+				unset($type);
+			}
+		}else{
+			return $callback;
+		}
+		
+		if(!$callback){
+			Debug::toss('Failed to provide callback for input handler');
+		}
+		switch($type){
+			case 'f':
+				return ['InputFilter',$method];
+			break;
+			case 'v':
+				return ['InputValidate',$method];
+			break;
+			case 'l':
+				return [$this->lt,$method];
+			break;
+			case 'g':
+				$method;
+			break;
+			default:
+				if($type){
+					return [$type,$method];
+				}
+				return $callback
+			break;
+		}
+	}
+	function rulePrefixOptions($string){
+		//used in combination with !, like ?! for fields that, if not empty, should be validated, otherwise, ignored.
+		for($length = strlen($string), $i=0;	$i<$length,	$i++){
+			switch($string[$i]){
+				case '?':
+					$options['ignoreError'] = true;
+					break;
+				case '!':
+					if($string[$i + 1] == '!'){
+						$i++;
+						$options['superBreak'] = true;
+					}else{
+						$options['break'] = true;
+					}
+					break;
+				case '~':
+					$options['not'] = true;
+					break;
+				default:
+					break 2;
+			}
+		}
+		return  [$options,substr($string,$i)];
+	}
+	
 	function applyFilterValidateRules($field, $rules, $errorOptions){
 		$this->currentField = $field;
 		

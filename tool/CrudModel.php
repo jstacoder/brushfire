@@ -4,7 +4,7 @@
 	Will default to use all table columns, and select from the input that which is avaible (set), but can be modified to use only certain columns.  
 */
 class CrudModel{
-	function __construct($table=null,$selectedColumns=null){
+	function __construct($table,$selectedColumns=null){
 		$control = Control::primary();
 		$this->control = $control;
 		$this->lt = $this->control->lt;
@@ -103,13 +103,20 @@ class CrudModel{
 		if($ltHasValidation = method_exists($this->lt,'validate')){
 			$this->lt->validate();
 		}
-		
-		//Crud standard validaters come after due to them being just the requisite validaters for entering db; input might be changed to fit requisite by Page validaters.
-		if(!$this->control->hasError() && $this->validaters){
-			if($ltHasValidation){
-				$this->control->filterAndValidate($this->validaters);
-			}else{
-				$this->control->validate($this->validaters);
+		//only apply additional validators if no error to avoid duplicate errors and to avoid running error-free-dependent code
+		if(!$this->control->hasError()){
+			//run any validation from arbitrary tools
+			Hook::run('crudValidateInput');
+			
+			if(!$this->control->hasError()){
+				//run default validation
+				if($this->validaters){
+					if($ltHasValidation){
+						$this->control->filterAndValidate($this->validaters);
+					}else{
+						$this->control->validate($this->validaters);
+					}
+				}
 			}
 		}
 		return !$this->control->hasError();
@@ -121,7 +128,10 @@ class CrudModel{
 	function create(){
 		$this->action = 'create';
 		if($this->validate()){
-			return $this->doCreate($this->usedColumns, $this->table);
+			Hook::run('crudPreCreate');
+			$return = $this->doCreate($this->usedColumns, $this->table);
+			Hook::run('crudPostCreate');
+			return $return;
 		}
 	}
 	///extract fields from input and do insert on table
@@ -136,7 +146,10 @@ class CrudModel{
 	function update(){
 		$this->action = 'update';
 		if($this->validate()){
-			return $this->doUpdate($this->usedColumns, $this->table);
+			Hook::run('crudPreUpdate');
+			$this->doUpdate($this->usedColumns, $this->table);
+			Hook::run('crudPostUpdate');
+			return true;
 		}
 	}
 	function  doUpdate($columns,$table){

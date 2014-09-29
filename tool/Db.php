@@ -190,7 +190,7 @@ array(
 		}
 	}
 	
-	/// internal use.	Key to value formatter (used for where clauses and updates)
+	///Key to value formatter (used for where clauses and updates)
 	/**
 	@param	kvA	various special syntax is applied:
 		normally, sets key = to value, like "key = 'value'" with the value escaped
@@ -205,38 +205,53 @@ array(
 	*/
 	protected function ktvf($kvA,$type=1){
 		foreach($kvA as $k=>$v){
-			if($k[0]=='"'){
-				$kvtA[] = $v;
-			}else{
-				if(strpos($k,'?')!==false){
-					preg_match('@(^[^?]+)\?([^?]+)$@',$k,$match);
-					$k = $match[1];
-					$equator = $match[2];
-				}else{
-					$equator = '=';
+			$line = $this->ftvf($k,$v,$type);
+			 if($line){
+				 $kvtA[] = $line;
+			 }
+		}
+		return (array)$kvtA;
+	}
+	///Field to value formatter (used for where clauses and updates)
+	protected function ftvf($field,$value,$type=1){
+		if($field[0]=='"'){//quote v exactly (don't escape), 
+			return $value;
+		}elseif(is_int($field)){//the key is auto-generated, don't quote
+			return $value;
+		}else{
+			if($field[0]=='?'){//optinal pair, dependent on there being a value
+				if(!$value){
+					return;
 				}
-				
-				if($k[0]==':'){
-					$k = substr($k,1);
-					if($v == 'null' || $v === null){
-						if($type == 1){
-							$equator = 'is';
-						}
-						$v = 'null';
-					}
-				}elseif($v === null){
+				$field = substr($field,1);
+			}
+			if(strpos($field,'?')!==false){
+				preg_match('@(^[^?]+)\?([^?]+)$@',$field,$match);
+				$field = $match[1];
+				$equator = $match[2];
+			}else{
+				$equator = '=';
+			}
+			
+			if($field[0]==':'){
+				$field = substr($field,1);
+				if($value == 'null' || $value === null){
 					if($type == 1){
 						$equator = 'is';
 					}
-					$v = 'null';
-				}else{
-					$v = $this->quote($v);
+					$value = 'null';
 				}
-				$k = self::quoteIdentity($k);
-				$kvtA[] = $k.' '.$equator.' '.$v;
+			}elseif($value === null){
+				if($type == 1){
+					$equator = 'is';
+				}
+				$value = 'null';
+			}else{
+				$value = $this->quote($value);
 			}
+			$field = self::quoteIdentity($field);
+			return $field.' '.$equator.' '.$value;
 		}
-		return (array)$kvtA;
 	}
 	
 	///so as to prevent the column, or the table prefix from be mistaken by db as db construct, quote the column
@@ -551,7 +566,7 @@ array(
 					$column['nullable'] = $row['Null'] == 'NO' ? false : true;
 					$column['autoIncrement'] = preg_match('@auto_increment@',$row['Extra']) ? true : false;
 					$column['default'] = $row['Default'];
-					$column['key'] = $row['Key'];
+					$column['key'] = $row['Key'] == 'PRI' ? 'primary' : $row['Key'];
 				}
 			}
 			$this->columnsInfo[$table] = $columns;
