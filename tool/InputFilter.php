@@ -136,11 +136,14 @@ class InputFilter{
 		}
 		return $collected;
 	}
-	static function unsetMissing(){
+	static function unsetMissing($value){
 		$control = Control::primary();
 		if($value === null || $value === ''){
 			unset($control->in[$control->currentField]);
 		}
-		#Debug::quit($control->in);
+	}
+	static function currency($value){
+		$value = preg_replace('@[^\-0-9.]@','',$value);
+		$value = round((float)$value,2);
 	}
 }

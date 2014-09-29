@@ -1,7 +1,6 @@
 <?
 class Model{
 	public $relations = [];
-	///[$localC]
 	public $interdependency = [];
 	function __construct(){
 		$this->name = $this->name ? $this->name : array_pop(explode('\\',get_called_class()));
@@ -22,9 +21,12 @@ class Model{
 			}
 		}
 		
-		foreach((array)$columnHandlers as $column=>$handler){
+		foreach((array)$this->columnHandlers as $column=>$handler){
 			$this->setColumnHandler($column,$handler);
 		}
+	}
+	function __json(){
+		return json_encode(Arrays::convert($this));
 	}
 	function setColumnHandler($column,$handler){
 		call_user_func([$this,'handle_'.$handler],$column);
@@ -148,6 +150,17 @@ class Model{
 		return 'select '.implode(',',$selects).'
 			from '.Db::quoteIdentity($this->name).' as t1 '.implode("\n",$joins).' ';
 	}
+	///applies customisations to items
+	function customItems(){
+		foreach($this->control->items as &$item){
+			$item = $this->customItem($item);
+		}
+	}
+	///returns any customisations needed to be placed on the item
+	function customItem($item){
+		return $item;
+	}
+	
 	public $tables = [];
 	///get the table model and store it in local array
 	function tableModel($name){
@@ -181,12 +194,12 @@ class Model{
 	
 //+	column handlers {
 	function handle_dollar($column){
-		Hook::add('crudValidateInput',[$this,'validateInterdependentKeys'],['deleteAfter'=>1]);
-		\view\Form::text($column,null,['@data-dollar'=>true]);
-		\view\Format::_dollar($this->control->item[$column]);
-		
-		$this->info['columns'][$column]['displayInput'];
-		$this->info['columns'][$column]['displayData'];
+		Hook::add('crudValidateInput',(new Bound([$this,'validateDollar'],$column)),['deleteAfter'=>1]);
+		$this->info['columns'][$column]['displayInput'] = new Bound('\view\Form::text',$column,null,['@data-dollar'=>true]);
+		$this->info['columns'][$column]['displayData'] = new Bound(function($column){return \view\Format::_dollar($this->control->item[$column]);},$column);
+	}
+	function validateDollar($column){
+		return $this->control->applyFieldRules($column, $this->control->in[$column], 'f.currency', $this->control->lt);
 	}
 //+	}
 }

@@ -251,7 +251,7 @@ class ControlPublic{
 				$fieldValue = &$this->in[$field];
 				$byReference = true;
 			}
-			$continue = $this->applyFilterValidateRules($field, $ruleSet, $options['errorOptions']);
+			$continue = $this->applyFieldRules($field, $fieldValue, $ruleSet, $this->lt, $options['errorOptions']);
 			//since there was no in[field], yet the surrogate was manipulated, set the in[field] to the surrogate
 			if(!$byReference && $fieldValue){
 				$this->in[$field] = $fieldValue;
@@ -372,7 +372,7 @@ class ControlPublic{
 	}
 	function ruleCallable($callback){
 		if(is_string($callback)){
-			list($type,$method = explode('.',$callback,2);
+			list($type,$method) = explode('.',$callback,2);
 			if(!$method){
 				$method = $type;
 				unset($type);
@@ -401,13 +401,13 @@ class ControlPublic{
 				if($type){
 					return [$type,$method];
 				}
-				return $callback
+				return $callback;
 			break;
 		}
 	}
 	function rulePrefixOptions($string){
 		//used in combination with !, like ?! for fields that, if not empty, should be validated, otherwise, ignored.
-		for($length = strlen($string), $i=0;	$i<$length,	$i++){
+		for($length = strlen($string), $i=0;	$i<$length;	$i++){
 			switch($string[$i]){
 				case '?':
 					$options['ignoreError'] = true;
@@ -428,122 +428,6 @@ class ControlPublic{
 			}
 		}
 		return  [$options,substr($string,$i)];
-	}
-	
-	function applyFilterValidateRules($field, $rules, $errorOptions){
-		$this->currentField = $field;
-		
-		$originalRules = $rules;
-		$rules = Arrays::stringArray($rules);
-		for($i=0;$i<count($rules);$i++){
-			$rule = $rules[$i];
-			
-			//since you may not want a field to be set if it was not input
-			if(isset($this->in[$field])){
-				$params = array(&$this->in[$field]);
-			}else{
-				$fieldValue = null;
-				$params = array(&$fieldValue);
-			}
-			
-			
-			
-			if(is_array($rule)){
-				$callback = array_shift($rule);
-				$params2 = &$rule;
-			}else{
-				list($callback,$params2) = explode('|',$rule);
-				
-				if($params2){
-					$params2 = explode(';',$params2);
-				}
-			}
-			///merge field value param with the user provided params
-			if($params2){
-				Arrays::mergeInto($params,$params2);
-			}
-			
-			//used in combination with !, like ?! for fields that, if not empty, should be validated, otherwise, ignored.
-			$ignoreError = false;
-			if(substr($callback,0,1) == '?'){
-				$callback = substr($callback,1);
-				$ignoreError = true;
-			}
-			
-			if(substr($callback,0,2) == '!!'){
-				$callback = substr($callback,2);
-				$superBreak = true;
-			}
-			if(substr($callback,0,1) == '!'){
-				$callback = substr($callback,1);
-				$break = true;
-			}
-			
-			list($type,$method) = explode('.',$callback,2);
-			if(!$method){
-				$method = $type;
-				$type = '';
-			}
-			
-			if(!$method){
-				Debug::quit('Failed to provide method for input handler on field: '.$field, 'Rules:', $rules);
-			}
-			
-			try{
-				switch($type){
-					case 'f':
-						call_user_func_array(array('InputFilter',$method),$params);
-					break;
-					case 'v':
-						call_user_func_array(array('InputValidate',$method),$params);
-					break;
-					case 'l':
-						call_user_func_array(array($this->lt,$method),$params);
-					break;
-					case 'g':
-						call_user_func_array($method,$params);
-					break;
-					case '':
-						if($this->inputRuleAliases === null){
-							$this->inputRuleAliases = \control\Field::$ruleAliases;
-						}
-						//get new named rules and parse
-						if(!$this->inputRuleAliases[$method]){
-							Debug::toss('Unknown input rule alias on field '.$field.' Rule:'.$rule);
-						}
-						$newRules = Arrays::stringArray($this->inputRuleAliases[$method]);
-						if($i + 1 < count($rules)){///there are rules after this alias, so combine alias with those existing after
-							$newRules = array_merge($newRules,array_slice($rules,$i + 1));
-						}
-						$rules = $newRules;
-						$i = -1;
-					break;
-					default:
-						call_user_func_array(array($type,$method),$params);
-					break;
-				}
-			}catch(InputException $e){
-				//add error to messages
-				if(!$ignoreError){
-					$this->error($e->getMessage(),$field,$errorOptions);
-				}
-				
-				//super break will break out of all fields
-				if($superBreak){
-					return false;
-				}
-				//break will stop validators for this one field
-				if($break){
-					break;
-				}
-			}
-			
-			//the substitute field was manipulated.  So, create it in input array
-			if($fieldValue){
-				$this->in[$field] = $fieldValue;
-			}
-		}
-		return true;
 	}
 	///to prevent fabrication of system messages.  No spurious success messages!
 	static function saveMessagesCode($data){

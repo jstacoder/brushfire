@@ -428,4 +428,25 @@ class Arrays{
 		}
 		return $count;
 	}
+	//takes and object and converts it into an array.  Ignores nested objects
+	static function convert($variable,$parseObject=true){
+		if(is_object($variable)){
+			if($parseObject){
+				$parts = get_object_vars($variable);
+				foreach($parts as $k=>$part){
+					$return[$k] = self::convert($part,false);
+				}
+				return $return;
+			}elseif(method_exists($variable,'__toString')){
+				return (string)$variable;
+			}
+		}elseif(is_array($variable)){
+			foreach($variable as $k=>$part){
+				$return[$k] = self::convert($part,false);
+			}
+			return $return;
+		}else{
+			return $variable;
+		}
+	}
 }

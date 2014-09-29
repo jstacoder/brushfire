@@ -411,16 +411,7 @@ bf.tool.decbin = function(dec){
 	}
 	return bits.split('').reverse().join('');
 }
-//will render string according to php rules
-bf.str = function(str){
-	if(typeof(str) == 'number'){
-		return str+'';
-	}
-	if(!str){
-		return '';
-	}
-	return str;
-}
+
 bf.toInt = function(s){
 	if(typeof(s) == 'string'){	
 		s = s.replace(/[^0-9]+/g,' ');
@@ -444,7 +435,16 @@ bf.math.round = function(num, precision){
 	return Math.round(num * divider) / divider;
 }
 
-
+//will render string according to php rules
+bf.str = function(str){
+	if(typeof(str) == 'number'){
+		return str+'';
+	}
+	if(!str){
+		return '';
+	}
+	return str;
+}
 bf.str.pad = function(str,len,padChar,type){
 	str = new String(str);
 	if(!padChar){
@@ -483,6 +483,15 @@ bf.str.ucwords = function(string){
 bf.str.capitalize = function(string){
 	return string.charAt(0).toUpperCase() + string.slice(1);
 }
+///htmlspecialchars()
+bf.str.hsc = function(string){
+	if(string === null){
+		return ''
+	}
+	return $('<a></a>').text(string).html()
+}
+
+
 bf.toggle = function(value,values){
 	if(value == values[0]) return values[1]
 	return values[0]

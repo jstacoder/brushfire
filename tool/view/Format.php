@@ -68,6 +68,9 @@ class Format{
 	static function dollar($value,$default=null){
 		return self::roundTo($value,2,$default,'$');
 	}
+	static function _dollar($value,$round=2){
+		return '<span data-dollar>'.$value.'</span>';
+	}
 	///takes some value and returns a percentage presentation if value is not null or '-'
 	static function percent($value,$round=2,$default=null){
 		if($value === '-' || $value === null){
