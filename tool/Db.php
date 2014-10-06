@@ -219,13 +219,13 @@ array(
 				if($k[0]==':'){
 					$k = substr($k,1);
 					if($v == 'null' || $v === null){
-						if($type == 1){
+						if($type == 1 && $equator == '='){
 							$equator = 'is';
 						}
 						$v = 'null';
 					}
 				}elseif($v === null){
-					if($type == 1){
+					if($type == 1 && $equator == '='){
 						$equator = 'is';
 					}
 					$v = 'null';
