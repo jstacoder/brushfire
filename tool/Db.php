@@ -33,7 +33,8 @@ array(
 		if($this->connectionInfo['dsn']){
 			$dsn = $this->connectionInfo['dsn'];
 		}else{
-			$dsn = $this->connectionInfo['driver'].':dbname='.$this->connectionInfo['database'].';host='.$this->connectionInfo['host'];
+			$this->connectionInfo['port'] = $this->connectionInfo['port'] ? $this->connectionInfo['port'] : '3306';
+			$dsn = $this->connectionInfo['driver'].':dbname='.$this->connectionInfo['database'].';host='.$this->connectionInfo['host'].';port='.$this->connectionInfo['port'];
 		}
 		$this->under = new PDO($dsn,$this->connectionInfo['user'],$this->connectionInfo['password']);
 		if($this->under->getAttribute(PDO::ATTR_DRIVER_NAME)=='mysql'){
