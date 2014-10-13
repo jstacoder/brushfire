@@ -33,15 +33,27 @@ array(
 		if($this->connectionInfo['dsn']){
 			$dsn = $this->connectionInfo['dsn'];
 		}else{
-			$this->connectionInfo['port'] = $this->connectionInfo['port'] ? $this->connectionInfo['port'] : '3306';
-			$dsn = $this->connectionInfo['driver'].':dbname='.$this->connectionInfo['database'].';host='.$this->connectionInfo['host'].';port='.$this->connectionInfo['port'];
+			$dsn = $this->makeDsn($this->connectionInfo);
 		}
-		$this->under = new PDO($dsn,$this->connectionInfo['user'],$this->connectionInfo['password']);
+		try{
+			$this->under = new PDO($dsn,$this->connectionInfo['user'],$this->connectionInfo['password']);
+		}catch(PDOException $e){
+			if($this->connectionInfo['backup']){
+				$this->connectionInfo = $this->connectionInfo['backup'];
+				$this->load();
+				return;
+			}
+			throw $e;
+		}
 		if($this->under->getAttribute(PDO::ATTR_DRIVER_NAME)=='mysql'){
 			$this->query('SET SESSION sql_mode=\'ANSI\'');
 			$this->query('SET SESSION time_zone=\'+00:00\'');
 			#$this->under->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
 		}
+	}
+	function makeDsn($connectionInfo){
+		$connectionInfo['port'] = $connectionInfo['port'] ? $connectionInfo['port'] : '3306';
+		return $connectionInfo['driver'].':dbname='.$connectionInfo['database'].';host='.$connectionInfo['host'].';port='.$connectionInfo['port'];
 	}
 	/// returns escaped string with quotes.	Use on values to prevent injection.
 	/**
@@ -71,7 +83,11 @@ array(
 			Debug::toss($error,__CLASS__.'Exception');
 		}
 		if(!$this->result){
-			Debug::toss("--DATABASE ERROR--\nNo result, likely connection timeout",__CLASS__.'Exception');
+			$this->load();
+			$this->result = $this->under->query($sql);
+			if(!$this->result){
+				Debug::toss("--DATABASE ERROR--\nNo result, likely connection timeout",__CLASS__.'Exception');
+			}
 		}
 		return $this->result;
 	}
