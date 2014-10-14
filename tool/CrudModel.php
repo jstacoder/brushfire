@@ -166,7 +166,7 @@ class CrudModel{
 		}
 	}
 	function read(){
-		if($this->lt->item = Db::row($this->table,$this->control->id)){
+		if($this->control->item = Db::row($this->table,$this->control->id)){
 			return true;
 		}
 		if($_ENV['CrudbadIdCallback']){

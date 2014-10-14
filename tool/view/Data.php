@@ -162,6 +162,9 @@ class Data{
 		}
 	}
 	protected function field($field, $column=null){
+		return $this->formatValue($field,$this->control->item,$column);
+	}
+	protected function formatValue($field,$item,$column=null){
 		if(!$column){
 			$column = &$this->model->info['columns'][$field];
 		}
@@ -170,19 +173,19 @@ class Data{
 		
 		if($column['displayItem']){
 			if(is_callable($column['displayItem'])){
-				return call_user_func($column['displayItem'],$field,$column);
+				return call_user_func($column['displayItem'],$field,$item,$column);
 			}else{
 				return $column['displayItem'];
 			}
 		}
 		
 		if(in_array($column['type'],['date','datetime','timestamp'])){
-			return \view\Format::_datetime($this->control->item[$field]);
+			return \view\Format::_datetime($item[$field]);
 		}
-		if($this->model->info['out'][$field] && isset($this->control->item[$field.'_name'])){
-			return '<span data-id="'.$this->control->item[$field].'" data-table="'.$this->model->info['out'][$field].'">'.htmlspecialchars($this->control->item[$field.'_name']).'</span>';
+		if($this->model->info['out'][$field] && isset($item[$field.'_name'])){
+			return '<span data-id="'.$this->control->item[$field].'" data-table="'.$this->model->info['out'][$field].'">'.htmlspecialchars($item[$field.'_name']).'</span>';
 		}
-		return htmlspecialchars($this->control->item[$field]);
+		return htmlspecialchars($item[$field]);
 	}
 	protected function wrapDataLine($column,$content){
 		return $this->wrapDataLineTemplate($column['name'],htmlspecialchars($column['displayName']),$content);

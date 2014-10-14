@@ -1,13 +1,13 @@
-bf.ui = {
+bf.view = {
 //+	pageSorting {
 	///account for defaults, and split order and field
 	parseSort: function(sort){
 		var order = sort.substring(0,1)
 		if(order != '-' && order != '+'){
 			order = '+'
-			field = sort
+			var field = sort
 		}else{
-			field = sort.substring(1)
+			var field = sort.substring(1)
 		}
 		return {order:order,field:field}
 		
@@ -16,7 +16,7 @@ bf.ui = {
 	headerArrows: function(){
 		//direct  the arrows according to the sorts
 		for(i in bf.sorts){
-			var sort = bf.ui.parseSort(bf.sorts[i])
+			var sort = bf.view.parseSort(bf.sorts[i])
 			var column = $('.sortContainer [data-field="'+sort.field+'"]')
 			if(sort.order == '+'){
 				column.addClass('sortAsc')
@@ -27,8 +27,8 @@ bf.ui = {
 	},
 	///shift clicks on sort header
 	appendSort: function(newField){
-		for(i in bf.sorts){
-			var sort = bf.ui.parseSort(bf.sorts[i])
+		for(var i in bf.sorts){
+			var sort = bf.view.parseSort(bf.sorts[i])
 			if(newField == sort.field){
 				sort.order = bf.toggle(sort.order,['+','-'])
 				bf.sorts[i] = sort.order + sort.field
@@ -40,7 +40,7 @@ bf.ui = {
 	///non-shift clicks on sort header
 	changeSort: function(newField){
 		for(i in bf.sorts){
-			var sort = bf.ui.parseSort(bf.sorts[i])
+			var sort = bf.view.parseSort(bf.sorts[i])
 			if(newField == sort.field){
 				sort.order = bf.toggle(sort.order,['+','-'])
 				bf.sorts = [sort.order + sort.field]
@@ -90,7 +90,7 @@ bf.ui = {
 	*/
 	parseMessage: function(message,map){
 		if(message.name){
-			var title = bf.ui.fieldTitle(message.name,map)
+			var title = bf.view.fieldTitle(message.name,map)
 			message.content = message.content.replace(/\{_FIELD_\}/g,'"'+title+'"');
 		}
 		return message
@@ -133,7 +133,7 @@ bf.ui = {
 		. 'data-'context'MessageContainer'
 	*/
 	applyMessage: function(message){
-		bf.ui.highlightField(message)
+		bf.view.highlightField(message)
 		
 		//++ add message text{
 		//Unfortunately, no browser standard yet
@@ -149,7 +149,7 @@ bf.ui = {
 		messageEle.hide().appendTo(messageContainer).fadeIn({duration:'slow'})
 		//++ }
 		if(message.expiry || message.closeable){
-			bf.ui.closeButton(messageEle)
+			bf.view.closeButton(messageEle)
 		}
 		if(message.expiry){
 			if(message.expiry < 86400){//less than a day, it's an offset, not unix time
@@ -199,8 +199,8 @@ bf.ui = {
 	insertMessage: function(message){
 		//set error status if applicable
 		if(message.type == 'error'){
-			bf.ui.hasError = true
-			bf.ui.hasContextError[message.context] = true
+			bf.view.hasError = true
+			bf.view.hasContextError[message.context] = true
 		}
 		
 		//message context prefixes field name
@@ -208,31 +208,31 @@ bf.ui = {
 			message.name = message.context+'-'+message.name
 		}
 		
-		if(bf.ui.customeMessageParser){
-			message = bf.ui.customMessageParser(message)
+		if(bf.view.customeMessageParser){
+			message = bf.view.customMessageParser(message)
 		}else{
-			message = bf.ui.parseMessage(message)
+			message = bf.view.parseMessage(message)
 		}
-		if(bf.ui.customMessageApplier){
-			bf.ui.customMessageApplier(message)
+		if(bf.view.customMessageApplier){
+			bf.view.customMessageApplier(message)
 		}else{
-			bf.ui.applyMessage(message)
+			bf.view.applyMessage(message)
 		}
 	},
 	///it is assumed that, if this function is used for ajax, the poster pre-removes existing messages
 	insertMessages: function(messages){
 		for(k in messages){
-			bf.ui.insertMessage(messages[k])
+			bf.view.insertMessage(messages[k])
 		}
 	},
 	///attempts to remove all evidence of inserted messages
 	uninsertMessages: function(){
-		bf.ui.hasError = false
-		for(context in bf.ui.hasContextError){
-			bf.ui.hasContextError[context] = false
+		bf.view.hasError = false
+		for(context in bf.view.hasContextError){
+			bf.view.hasContextError[context] = false
 		}
 		
-		bf.ui.unhighlightFields()
+		bf.view.unhighlightFields()
 		
 		$('.messageContainer').empty();
 	},
@@ -258,7 +258,7 @@ bf.ui = {
 			post[dependee.attr('name')] = dependee.val()
 			$.post('',post,function(json){
 					var formerValue = depender.val()
-					bf.ui.form.replaceOptions(depender,json.options[field],{value:0,text:'Select '+bf.ui.fieldTitle(field)})
+					bf.view.form.replaceOptions(depender,json.options[field],{value:0,text:'Select '+bf.view.fieldTitle(field)})
 				},'json')
 		},
 		///removes select options and replaces them with those in obj, optionally preserving the value
@@ -268,9 +268,9 @@ bf.ui = {
 				var formerValue = select.val()
 			}
 			$('option',select).remove()
-			bf.ui.form.addOptions(select,obj,first)
+			bf.view.form.addOptions(select,obj,first)
 			if(preserveValue){
-				if(bf.ui.form.selectOption(select,formerValue).size()){
+				if(bf.view.form.selectOption(select,formerValue).size()){
 					select.val(formerValue)
 				}
 			}
@@ -301,7 +301,7 @@ $(function(){
 	if(bf.json){
 //+	handle system messages{
 		if(bf.json.messages){
-			bf.ui.insertMessages(bf.json.messages)
+			bf.view.insertMessages(bf.json.messages)
 		}
 //+	}
 	}
@@ -319,7 +319,7 @@ $(function(){
 		$('[data-dependee]').each(function(){
 				var dependeeField = $(this).attr('data-dependee')
 				var field = $(this).attr('name')
-				$('[name="'+dependeeField+'"]').change(function(){bf.ui.form.getOptions(field)}).change()
+				$('[name="'+dependeeField+'"]').change(function(){bf.view.form.getOptions(field)}).change()
 			})
 //+ }
 	}
@@ -336,25 +336,25 @@ $(function(){
 		}
 		if(sort){
 			bf.sorts = sort.split(',')
-			bf.ui.headerArrows();//byproduct is to standardize the sorts
+			bf.view.headerArrows();//byproduct is to standardize the sorts
 		}
 		//add click event to sortable columns
 		$('.sortContainer:not(.inlineSort) *[data-field]').click(function(e){
 			var field = $(this).attr('data-field')
 			//if shift clicked, just append sort
 			if(e.shiftKey){
-				bf.ui.appendSort(field)
+				bf.view.appendSort(field)
 			}else{
-				bf.ui.changeSort(field)
+				bf.view.changeSort(field)
 			}
-			bf.ui.sortPage()
+			bf.view.sortPage()
 		})
 	}
 //+		}
 //+		paging{
 	var pagingContainer = $('*[data-paging]')
 	if(pagingContainer.size()){
-		var paging = bf.ui.getPaging(); var page = paging.page; var total = paging.total
+		var paging = bf.view.getPaging(); var page = paging.page; var total = paging.total
 		if(total > 1){
 			//+	make the html paginater skeleton {
 			if($('.paging').size()){
@@ -404,7 +404,7 @@ $(function(){
 			
 			//clicks
 			$('.clk:not(.disabled)',paginaterDiv).click(function(e){
-				var paging = bf.ui.getPaging(); var page = paging.page; var total = paging.total
+				var paging = bf.view.getPaging(); var page = paging.page; var total = paging.total
 				//var target = $(e.target)
 				var target = $(this)
 				if(target.hasClass('pg')){
@@ -421,7 +421,7 @@ $(function(){
 					var parent = target.parents('.paginater')
 					page = Math.abs($('input',parent).val())
 				}
-				bf.ui.goToPage(page)
+				bf.view.goToPage(page)
 			})
 			
 			//ensure enter on "go" field changes page, not some other form
@@ -487,7 +487,7 @@ $(function(){
 			
 		}else{	
 			var tooltip = $('<div/>',{html:toolTipData,class:'tooltip',id:'tooltip-'+markerId}).prependTo('body')
-			bf.ui.closeButton(tooltip,true)
+			bf.view.closeButton(tooltip,true)
 			
 			tooltipMaker.click(function(e){
 				var tooltipMaker = $(this)

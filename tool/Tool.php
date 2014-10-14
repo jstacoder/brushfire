@@ -299,4 +299,18 @@ class Tool{
 	static function slashUnescape($text,$characters='\"'){
 		return preg_replace('@\\\(['.preg_quote($characters).'])@','$1',$text);
 	}
+	///runs callable in fork.  Returns on parent, exits on fork.
+	///@note watch out for objects having __destroy() methods.  The closed fork will call those methods (and close resources in the parent)
+	static function fork($callable){
+		$pid = pcntl_fork();
+		if ($pid == -1) {
+			Debug::toss('could not fork');
+		}elseif($pid) {
+			// we are the parent
+			return;
+		}else{
+			call_user_func_array($callable,array_slice(func_get_args(),1));
+			exit;
+		}
+	}
 }
