@@ -297,9 +297,14 @@ class Debug{
 		}
 	}
 	static function open($limitSize=true){
-		$file = $_ENV['logFolder'].date('Ymd').'.log';
+		if($_ENV['logFile']){
+			$file = $_ENV['logFile'];
+		}else{
+			$file = $_ENV['logFolder'].date('Ymd').'.log';
+		}
 		if(!is_file($file)){
 			touch($file);
+			chmod($file,0777);
 			clearstatcache();
 		}
 		$mode = 'a+';

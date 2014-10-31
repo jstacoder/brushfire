@@ -25,6 +25,23 @@ class Curl{
 	
 	public $request = null;
 	
+	public $headerGroups = [
+		'default'=>[/*'Content-Type'=>'application/x-www-form-urlencoded',*/],
+		'json'=>['Content-Type'=>'application/json',]];
+	public function setHeaderGroup($type){
+		foreach((array)$this->headerGroups[$type] as $name=>$value){
+			$this->headers[$name] = $value;
+		}
+	}
+	public function unsetHeaderGroup($type){
+		foreach((array)$this->headerGroups[$type] as $name=>$value){
+			if($this->headerGroups['default'][$name]){
+				$this->headers[$name] = $this->headerGroups['default'][$name];
+			}else{
+				unset($this->headers[$name]);
+			}
+		}
+	}
 	public function __construct(){
 		$this->user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Curl/PHP '.PHP_VERSION;
 		$this->cookie_file = '/tmp/curl.'.str_replace(' ','_',microtime());
