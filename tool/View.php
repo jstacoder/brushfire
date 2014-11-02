@@ -502,12 +502,18 @@ array(
 	///prints the self::$json into the tp.json object.  Requires the previous declaration of tp js object on the page
 	protected function getStdJson($full=true){
 		if($full){
-			$this->json['in'] = $this->control->in;
+			if($this->control->in){
+				$this->json['in'] = $this->control->in;
+			}
 			$this->json['route']['parsed'] = \control\Route::$parsedTokens;
 		}
 		
-		$this->json['messages'] = $this->control->messages;
-		$this->json['id'] = $this->control->id;
+		if($this->control->messages){
+			$this->json['messages'] = $this->control->messages;
+		}
+		if($this->control->id){
+			$this->json['id'] = $this->control->id;
+		}
 		
 		Hook::run('stdJson',$this);
 		return json_encode($this->json);
