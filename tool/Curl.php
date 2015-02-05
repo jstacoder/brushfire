@@ -150,6 +150,9 @@ class Curl{
 			if ($this->validate_ssl){
 				curl_setopt($this->request,CURLOPT_SSL_VERIFYPEER, true);
 				curl_setopt($this->request, CURLOPT_CAINFO, dirname(__FILE__).'/cacert.pem');
+			}elseif($this->ignore_ssl){
+				curl_setopt($this->request, CURLOPT_SSL_VERIFYPEER, false);
+				curl_setopt($this->request, CURLOPT_SSL_VERIFYHOST, 0);
 			}else{
 				curl_setopt($this->request, CURLOPT_SSL_VERIFYPEER, false);
 				curl_setopt($this->request, CURLOPT_SSL_VERIFYHOST, 2);
