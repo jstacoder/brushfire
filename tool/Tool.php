@@ -45,6 +45,11 @@ class Tool{
 	
 	Regex pattern:  Can evaluate to false (which defaults to alphanumeric).  Should be delimeted.  Defaults to '@[a-z0-9]@i'
 	
+  ex:
+    Tool::randomString(12)
+    Tool::randomString(12,'[a-z]')
+    Tool::randomString(12,24,'[a-z]')
+  
 	@return	random string matching the regex pattern
 	*/
 	static function randomString(){

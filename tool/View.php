@@ -590,6 +590,21 @@ array(
 	/**
 	@param	path	path and include parameters, but will be individually overwritten by passed $params arg
 	@param	params	params to append to the url
+	@examples
+		relative paths
+			::url('bob')
+				page bob is loaded in current directory
+			::url('/bob')
+				the file bob at the root is shown
+		query parts
+			::url('?bob=sue')
+				bob=sue is the only query
+			::url(null,['bob'=>'sue'])
+				bob=sue is appended to existing query
+			::url('/bob?bill=sue',['bob'=>'sue'])
+				bill=sue and bob=sue are the only query parts
+			::url('',['bob'=>'sue'])
+				bob=sue is the only query part (the blank '' is a present path, which relatively resolves to current file and removes existing query)
 	*/
 	protected function url($path='',$params=null){
 		$path = Http::appendsUrl($params,$path);

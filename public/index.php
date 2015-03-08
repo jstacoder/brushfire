@@ -14,11 +14,11 @@ If in command line, Config "inScript" is set to true
 */
 //if run by command line, argc (count) should always be >= 1, otherwise, if not run by command line, should not exist.
 if($argc){
-	$config['inScript'] = true;
+	$_ENV['inScript'] = true;
 	
 	$args = getopt('p:q:m:c:h:',array('path:','query:','mode:','config:','cookie:','host:'));
 	
-	$config['envMode'] = $args['mode'] ? $args['mode'] : $args['m'];
+	$_ENV['envMode'] = $args['mode'] ? $args['mode'] : $args['m'];
 	
 	$_SERVER['QUERY_STRING'] = $args['query'] ? $args['query'] : $args['q'];
 	$_SERVER['HTTP_HOST'] = $args['host'] ? $args['host'] : $args['h'];
@@ -31,12 +31,17 @@ if($argc){
 	//system depends completely on request uri for path request handling
 	$_SERVER['REQUEST_URI'] = $args['path'] ? $args['path'] : $args['p'];
 	
-	$configFile = $args['config'] ? $args['config'] : $args['c'];
-	require_once ($configFile ? $configFile : __DIR__.'/../config.php');
-	
+	$_ENVFile = $args['config'] ? $args['config'] : $args['c'];
+  if($_ENVFile){
+    require_once($_ENVFile);
+  }elseif($_ENV['projectFolder'] && is_file($_ENV['projectFolder'].'apt/config.php')){
+    require_once($_ENV['projectFolder'].'apt/config.php');
+  }
 }else{
-	$config['envMode'] = getenv('mode');
-	require_once __DIR__.'/../config.php';
+  $_ENV['envMode'] = getenv('mode');
+  if($_ENV['projectFolder'] && is_file($_ENV['projectFolder'].'apt/config.php')){
+    require_once($_ENV['projectFolder'].'apt/config.php');
+  }
 }
 
-require_once $config['systemLocation'].'/system/loader.php';
+require_once $_ENV['systemFolder'].'loader.php';
