@@ -4,7 +4,7 @@ class Lock{
 	use SingletonDefault, OverClass { 
 		OverClass::__call insteadof SingletonDefault; }
 	static $types = array('file'=>'FileLock','cache'=>'CacheLock');
-	public $typePreferences=['cache','file'];
+	public $typePreferences=['file','cache'];//prefer file b/c it can handle forked processes
 }
 ///shared memory (Cache Class) locking.  Usually better than file locking.
 class CacheLock{
@@ -21,31 +21,20 @@ class CacheLock{
 	}
 	///ensure lock by using mutual exclusion logic
 	function lock($name){
-		if(Cache::get($name) == false){
-			$token = mt_rand(1,999999);
-			Cache::set($name.'-interest',$token);
-			if(!Cache::get($name.'-interested')){
-				Cache::set($name.'-interested',1);//must have passed if on all contenders
-				$existingToken = Cache::get($name.'-interest');
-				if($existingToken == $token && !Cache::get($name)){//only one contender will match existing token
-					Cache::set($name,1);
-					Cache::delete($name.'-interest');
-					return true;
-				}
-			}
-			Cache::delete($name.'-interest');
-		}
-		return false;
+		//Don't use with forking.  forking will cause response code 47 (temporarily unavailable) for some time after forks end
+		return Cache::add($name,1);
 	}
 	function on($name,$timeout=0){
 		$cacheName = 'lock-'.$name;
+		$start = time();
+		
 		while($this->locks[$name] || !$this->lock($cacheName)){
 			if(!$timeout || time() - $start >= $timeout){
 				return false;
 			}
 			usleep(200000);//u:micro: 10^-6
 		}
-		$this->locks[$name] = $fh;
+		$this->locks[$name] = 1;
 		return true;
 	}
 	function req($name,$timeout=0){
@@ -64,7 +53,6 @@ class CacheLock{
 		$cacheName = 'lock-'.$name;
 		Cache::delete($cacheName);
 		unset($this->locks[$name]);
-		Cache::delete($cacheName.'-interested');//variable excution point makes deleting this in lock() to be impractical
 	}
 }
 ///Uses flock.  Flock does not persist after termination of the script, so locks will not persist then either.
@@ -80,7 +68,7 @@ class FileLock{
 	function on($name,$timeout=0){
 		$file = $this->storageFolder.'lock-'.$name;
 		$fh = fopen($file,'w');
-		
+		$start = time();
 		while($this->locks[$name] || !flock($fh,LOCK_EX|LOCK_NB)){
 			if(!$timeout || time() - $start >= $timeout){
 				return false;
@@ -110,7 +98,7 @@ class FileLock{
 		}
 		clearstatcache();
 		if(is_file($file)){
-			unlink($file);
+			@unlink($file);
 		}
 	}
 }
