@@ -4,7 +4,7 @@ class Lock{
 	use SingletonDefault, OverClass { 
 		OverClass::__call insteadof SingletonDefault; }
 	static $types = array('file'=>'FileLock','cache'=>'CacheLock');
-	public $typePreferences=['file','cache'];//prefer file b/c it can handle forked processes
+	public $typePreferences=['cache','file'];
 }
 ///shared memory (Cache Class) locking.  Usually better than file locking.
 class CacheLock{
@@ -20,21 +20,60 @@ class CacheLock{
 		}
 	}
 	///ensure lock by using mutual exclusion logic
-	function lock($name){
+	/**
+	param	options	[
+		processLink=>boolean, #whether to link lock to the process.  Defaults to true
+		timeLink=timeout in seconds #whether to timeout lock hold, and if so, how many seconds to hold lock for before timeout.  Defaults to false
+		]
+	*/
+	function lock($name,$options=[]){
 		//Don't use with forking.  forking will cause response code 47 (temporarily unavailable) for some time after forks end
-		return Cache::add($name,1);
+		$lockPackage = [];
+		if(!isset($options['processLink']) || $options['processLink']){
+			$lockPackage['pid'] = getmypid();
+		}
+		if($options['timeLink']){
+			$lockPackage['time'] = time();
+			$lockPackage['timeout'] = $options['timeLink'];
+		}
+		$lockPackage = json_encode($lockPackage);
+		
+		$initial = Cache::add($name,$lockPackage);
+		if(!$initial){
+			$existingLockPackage = json_decode(Cache::get($name),true);
+			if(is_array($existingLockPackage)){
+				if($existingLockPackage['pid']){
+					$processFile = '/proc/'.$existingLockPackage['pid'];
+					clearstatcache(false,$processFile);
+					//process is no longer running, attempt to get lock
+					if(!file_exists($processFile)){
+						Cache::delete($name);
+						$return = Cache::add($name,$lockPackage);
+						return $return;
+					}
+				}
+				if($existingLockPackage['time']){
+					//timeout period has passed, unlock and attempt to gt lock
+					if(time() - $existingLockPackage['time'] > $existingLockPackage['timeout']){
+						Cache::delete($name);
+						return Cache::add($name,$lockPackage);
+					}
+				}
+			}
+		}else{
+			return $initial;
+		}
 	}
-	function on($name,$timeout=0){
+	function on($name,$timeout=0,$options=[]){
 		$cacheName = 'lock-'.$name;
 		$start = time();
 		
-		while($this->locks[$name] || !$this->lock($cacheName)){
+		while(!$this->lock($cacheName,$options)){
 			if(!$timeout || time() - $start >= $timeout){
 				return false;
 			}
 			usleep(200000);//u:micro: 10^-6
 		}
-		$this->locks[$name] = 1;
 		return true;
 	}
 	function req($name,$timeout=0){
@@ -52,10 +91,10 @@ class CacheLock{
 	function off($name){
 		$cacheName = 'lock-'.$name;
 		Cache::delete($cacheName);
-		unset($this->locks[$name]);
 	}
 }
 ///Uses flock.  Flock does not persist after termination of the script, so locks will not persist then either.
+//Also, does not work between processes.  Seems to work between threads.
 /** With multiple servers, would either need to make the storage folder networked or use separate locking mechanism*/
 class FileLock{
 	public $_success = true;
