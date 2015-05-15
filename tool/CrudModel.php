@@ -1,7 +1,7 @@
 <?
 /**
 	For standardized validation, inserting, deleting, and updating.  Based on a db table, will handle validation and filtering based on column attributes such as type.
-	Will default to use all table columns, and select from the input that which is avaible (set), but can be modified to use only certain columns.  
+	Will default to use all table columns, and select from the input that is available, but can be modified to use only certain columns.  
 */
 class CrudModel{
 	function __construct($table,$selectedColumns=null){
@@ -103,7 +103,7 @@ class CrudModel{
 		if($ltHasValidation = method_exists($this->lt,'validate')){
 			$this->lt->validate();
 		}
-		//only apply additional validators if no error to avoid duplicate errors and to avoid running error-free-dependent code
+		//only apply additional validators if no error to avoid duplicate errors and to avoid running code relying on no errors
 		if(!$this->control->hasError()){
 			//run any validation from arbitrary tools
 			Hook::run('crudValidateInput');

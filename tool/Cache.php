@@ -140,6 +140,15 @@ class MemCacher extends Cache{
 	function casGet($name){
 		$got = $this->under->get($name,null,$this->casToken);
 	}
+	function getAndCasToken($name){
+		$casToken = 0.0;
+		$got = $this->under->get($name,null,$casToken);
+		if($casToken == 0.0){
+			$this->under->set($name,0);
+			$got = $this->under->get($name,null,$casToken);
+		}
+		return [$got,$casToken];
+	}
 }
 class ApCacher extends Cache{
 	public $_success = false;
