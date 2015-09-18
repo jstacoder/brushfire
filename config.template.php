@@ -1,94 +1,86 @@
 <?
-//recommendation: put your credentials info outside repo, and include file some where here
-
-$base = realpath(dirname(__FILE__));
-require $base.'/../preload.php';
-
 ///for use by system in things such as combined log
-$config['projectName'] = 'Hot tub';
+$_ENV['projectName'] = 'Hot tub';
+///@note $_SERVER['HTTP_HOST'] is dependent upon request HTTP headers.  These can be fabricated (ex, mod /etc/hosts).  Consequently, it is wise to overwrite this default with manually entered domain
+$_ENV['httpHost'] = $_SERVER['HTTP_HOST'];
 
 //+	Path configs{
 //where the framework lies on your system
-$config['systemFolder'] = '/www/brushfire/v9/versioned/';
+#$_ENV['systemFolder'] = '/www/brushfire/v9/versioned/';
 //system public web resources
-$config['systemPublicFolder'] = $config['systemFolder'].'public/';
-//wherein lies project non-deployment specfic code
-$config['projectFolder'] = $base.'/';
+$_ENV['systemPublicFolder'] = $_ENV['systemFolder'].'public/';
 //project public web resources
-$config['projectPublicFolder'] = $config['projectFolder'].'public/';
+$_ENV['projectPublicFolder'] = $_ENV['projectFolder'].'public/';
 
-///path to view folder
-$config['viewFolder'] = $config['projectFolder'].'view/';
 ///path to template folder (in case you want to use some common templates folder)
-$config['templateFolder'] = $config['viewFolder'].'templates/';
+$_ENV['templateFolder'] = $_ENV['projectFolder'].'template/';
 ///path to storage folder
-$config['storageFolder'] = $config['projectFolder'].'storage/';
+$_ENV['storageFolder'] = $_ENV['projectFolder'].'storage/';
 ///path to the control files
-$config['controlFolder'] = $config['projectFolder'].'control/';
-
+$_ENV['controlFolder'] = $_ENV['projectFolder'].'control/';
+///path to extra config
+$_ENV['configFolder'] = $_ENV['projectFolder'].'../config/';
 //+	}
 
 //+	Log configs {
 ///log location
 /** path is relative to project folder*/
-$config['logLocation'] = 'log';
+$_ENV['logLocation'] = 'log';
 ///Max log size.  If you want only one error to show at a time, set this to 0
-$config['maxLogSize'] = '0mb';
+$_ENV['maxLogSize'] = '0mb';
 //+	}
 
 
 //+	Route config {
 ///what file to call when page was not found; relative to instance/control/
-$config['pageNotFound'] = '404page.php';
+$_ENV['pageNotFound'] = '404page.php';
 ///what file to call when resource was not found; relative to instance/control/
-$config['resourceNotFound'] = '404page.php';
+$_ENV['resourceNotFound'] = '404page.php';
 ///file to use for directory index page
 /**when the Route is at the end of a path and hasn't called a control with a page name, it will see if this file exists within the last directory and try to load it.  If this config equates to false, the Route will not use any index page*/
-$config['useIndex'] = 'index.php';
+$_ENV['useIndex'] = 'index.php';
 ///the starting url path token that indicates that the system should look in the project public directory
-$config['urlProjectFileToken'] = 'public';
+$_ENV['urlProjectFileToken'] = 'public';
 ///the starting url path token that indicates that the system should look in the system public directory
-$config['urlSystemFileToken'] = 'brushfire';
+$_ENV['urlSystemFileToken'] = 'brushfire';
 ///A parameter in the post or get that indicates a file is supposed to be downloaded instead of served.  Works for non-parse public directory files.  Additionally, serves to name the file if the param value is more than one character.
-$config['downloadParamIndicator'] = 'download';
+$_ENV['downloadParamIndicator'] = 'download';
 //+	}
 
 //+	Error config {
 ///custom error handler.  Defaults to system error handler.
-$config['errorHandler'] = 'Debug::handleError';
+$_ENV['errorHandler'] = 'Debug::handleError';
 ///custom error handler.  Defaults to system error handler.
-$config['exceptionHandler'] = 'Debug::handleException';
+$_ENV['exceptionHandler'] = 'Debug::handleException';
 ///type of errors handled
-$config['errorsHandled'] = E_ALL & ~ E_NOTICE & ~ E_STRICT;
-///error page relative path to instance/.  Just make sure the error page doesn't have any errors
-$config['errorPage'] = '';
-///Messages to display in liue of an error page.  Can be set to single string or an array of strings.  If an array, random is chosen.
-$config['errorMessage'] = array(
-		"System error.  Contact Admin.  Error details follow:",
+$_ENV['errorsHandled'] = E_ALL & ~ E_NOTICE & ~ E_STRICT;
+///Messages to display if no error page.  string or array.  $errorId will be replaced with actual error id
+$_ENV['errorMessage'] = array(
+		'System error.  Contact Admin with error id "$errorId".  Error details follow:',
 	);
-///Assumes system files won't error and thus excludes them from debug report
-$config['debugAssumePerfection'] = false;
 ///Determines the level of detail provided in the error message, 0-3
-$config['errorDetail'] = 2;
+$_ENV['errorDetail'] = 2;
 ///Display errors
-$config['displayErrors'] = true;
-///the view page used by the system to display user level errors on
-$config['errorPage'] = 'view/templates/error.php';
+$_ENV['displayErrors'] = true;
+///on error, include.  Passed $errorId
+$_ENV['errorPage'] = 'template/error.php';
+///regex match on file for stack parts to exclude from error stack output
+$_ENV['errorStackExclude'] = [];#['@^system:@'];
 
 //+	}
 //+	Session config {
 ///date in the past after which inactive sessions should be considered expired
-$config['sessionExpiry'] = '-1 day';
+$_ENV['sessionExpiry'] = '-1 day';
 ///folder to keep the file sessions if file sessions are used.  Php must be able to write to the folder.
-$config['sessionFolder'] = $config['storageFolder'].'sessions/';
+$_ENV['sessionFolder'] = $_ENV['storageFolder'].'sessions/';
 ///determines whether to use the database for session data
-$config['sessionUseDb'] = true;
+$_ENV['sessionUseDb'] = true;
 ///determines which table in the database to use for session data
-$config['sessionDbTable'] = 'session';
--///the time at which the cookie is set to expire.
--$config['sessionCookieExpiry'] = '+1 year';
+$_ENV['sessionDbTable'] = 'session';
+-///the time at which the cookie is set to expire.  0 for while browser open, other was passed into Time
+-$_ENV['sessionCookieExpiry'] = '+1 year';
 -///cookie expiry refresh probability; the denominator that an existing session cookie will be updated with the current sessionCookieExpiry on page load.  0, false, null = don't refresh
--$config['sessionCookieExpiryRefresh'] = 100;
+-$_ENV['sessionCookieExpiryRefresh'] = 100;
 //probability is probability/divisor
 ini_set('session.gc_probability', 1);
 ini_set('session.gc_divisor', 100);
@@ -96,47 +88,43 @@ ini_set('session.gc_divisor', 100);
 
 //+	Encryption config {
 ///the cipher to use for the framework encyption class
-$config['cryptCipher'] = MCRYPT_RIJNDAEL_128;
+$_ENV['cryptCipher'] = MCRYPT_RIJNDAEL_128;
 ///the cipher mode to use for the framework encyption class
-$config['cryptMode'] = MCRYPT_MODE_ECB;
+$_ENV['cryptMode'] = MCRYPT_MODE_ECB;
 ///the cipher key to use for the framework encyption class.  Clearly, the safest thing would be to keep it as the default!
-$config['cryptKey'] = $config['projectName'];
+$_ENV['cryptKey'] = $_ENV['projectName'];
 //+	}
 
+//+	Autoload config {
 ///a list of directories to search recursively.  See Doc:Autoload Includes
-$config['autoloadIncludes'] = array(
+$_ENV['autoloadIncludes'] = array(
 		'default'=>array(
-			$config['systemFolder'].'tool/',
-			array($config['projectFolder'].'tool/',array('moveDown'=>true,'stopFolders'=>['section','module'])),
-			$config['systemFolder'].'view/tool/',
-			array($config['projectFolder'].'view/tool/',array('moveDown'=>true,'stopFolders'=>['section','module'])),
-			'/www/composer/',
-		),
+			$_ENV['systemFolder'].'tool/',
+			array($_ENV['projectFolder'].'tool/',array('moveDown'=>true,'stopFolders'=>['section','module'])),),
+		'\local'=>array($_ENV['projectFolder'].'tool/local/')
 	);
-///tells autoloader to attempt to autoload class from the utility/section folder in broadening scope, starting with the last urlToken and end at utility/section
-$config['autoloadSection'] = true;
+$_ENV['composerFolder'] = $_ENV['projectFolder'].'vendor/';
+//+	}
 
 //+	Display related config {
-///used to make the View::show function call other functions before parsing templates.  No arguments passed.
-/**
-@note, you can modify the View::show() arguments by modifying View::$showArgs;
-*/
 ///used for @name like shortcuts in View::get template array.  See example in system/view/aliases.php
-$config['aliasesFiles'] = $config['projectFolder'].'view/aliases.php';
+$_ENV['aliasesFiles'] = $_ENV['templateFolder'].'aliases.php';
+///the standard template that contains specific pages. used, manually or within modules, to prefix show arguments
+$_ENV['template'] = '@standard';
 //+	}
 
-//+	Crud related config {
-//what to call when Crud model encounters a bad id
-$config['CrudbadIdCallback'] = 'badId';
+//+	CRUD related config {
+//what to call when CRUD model encounters a bad id
+$_ENV['CRUDbadIdCallback'] = 'badId';
 //+	}
 
 //+	Misc config {
 ///email unique identifier; 
 /**when sending an email, you have to generate a message id.  To prevent collisions, this id will be used in addition to some random string*/
-$config['emailUniqueId'] = $config['projectName'].'-mail';
+$_ENV['emailUniqueId'] = $_ENV['projectName'].'-mail';
 
 ///cookie default options for use by Cookie class
-$config['cookieDefaultOptions'] = array(
+$_ENV['cookieDefaultOptions'] = array(
 		'expire' => 0,
 		'path'	=> '/',
 		'domain' => null,
@@ -145,17 +133,32 @@ $config['cookieDefaultOptions'] = array(
 	);
 	
 ///time zone (db, internal functions)
-$config['timezone'] = 'UTC';
+$_ENV['timezone'] = 'UTC';
 //input taken from and output given to user.
-$config['inOutTimezone'] = 'UTC';
+$_ENV['inOutTimezone'] = 'UTC';
 
+///whether to strip out context from input names
+$_ENV['stripInputContexts'] = true;
 
 ///whether to parse input using php '[]' special syntax
-$config['pageInPHPStyle'] = true;
+$_ENV['pageInPHPStyle'] = true;
 ///user not authorized page
-$config['notAuthorizedPage'] = 'standardPage,,,notAuthorized';
+$_ENV['notAuthorizedPage'] = 'standardPage,,,notAuthorized';
 ///for finding first IP outside network on HTTP_X_FORWARDED_FOR
-$config['loadBalancerIps'] = array();
+$_ENV['loadBalancerIps'] = array();
 
-$config['startTime'] = microtime(true);
+$_ENV['startTime'] = microtime(true);
 //+	}
+
+
+//+ modules {
+//+		user {
+///Whether to apply user logging functions
+$_ENV['module']['user']['logging'] = true;
+///path to user home
+$_ENV['module']['user']['home'] = '/user/';
+///password salt
+$_ENV['module']['user']['passwordSalt'] = 'defaultSalt';
+//+		}
+//+ }
+
